@@ -14,8 +14,8 @@ O.COURSE={FR:250,IND:42,PULL:330,CAP:330,WALL_E:.62,BUMP_E:.78,KICK:470,TEE:70};
 O.course=function(id){
   const d=O.MONSTERS[id];if(!d)return null;const L=d.layout(),hs=O.hash('course'+id),r=O.rng(hs);
   /* every creature's course has its own character, fixed by its name: a length, how far the holes spread across, an outline and a bend */
-  const rank=d.rank,big=rank==='boss'?2:rank==='mini'?1:0,len=Math.round(([1300,1550,1800][big])*(.94+r()*.12)/20)*20;
-  const ys=[...L.holes,...L.bumps].map(o=>o.y),yMin=Math.min(...ys),yMax=Math.max(...ys),toY=ly=>340+(yMax-ly)/Math.max(1,yMax-yMin)*(len-480);
+  const rank=d.rank,big=rank==='boss'?2:rank==='mini'?1:0,len=Math.round(([1300,1550,1800][big])*(.94+r()*.12)/20)*20+140;
+  const ys=[...L.holes,...L.bumps].map(o=>o.y),yMin=Math.min(...ys),yMax=Math.max(...ys),toY=ly=>480+(yMax-ly)/Math.max(1,yMax-yMin)*(len-620);                 // an open approach before the first holes, so none is a free putt
   const xs=[...L.holes.map(h=>Math.abs(h.x)+h.rad*.5),...L.bumps.map(b=>Math.abs(b.x))],spread=[230,268,298][big]+r()*55,sx=Math.max(.95,Math.min(2.2,spread/Math.max(60,...xs))),flip=r()<.5?-1:1;
   const SHAPES=['even','bowl','fan','funnel','hourglass','lobes'],shape=SHAPES[Math.floor(r()*SHAPES.length)],base=[255,280,302][big]*(.92+r()*.16);
   const prof=t=>shape==='bowl'?.84+.34*Math.sin(Math.PI*t):shape==='fan'?.8+.42*t:shape==='funnel'?1.2-.36*t:shape==='hourglass'?1.16-.34*Math.sin(Math.PI*t):shape==='lobes'?1+.2*Math.sin(Math.PI*2*t-Math.PI/2)*-1:1;
@@ -25,6 +25,10 @@ O.course=function(id){
   const P=(x,y)=>{const yy=toY(y);return[flip*x*sx+cx(yy),yy]};
   const holes=L.holes.map((h,i)=>{const[x,y]=P(h.x,h.y);const rad=Math.round(h.rad*1.05);return Object.assign({},h,{i,x,y,rad,size:O.hSize(rad)})});
   const bumps=L.bumps.map(b=>{const[x,y]=P(b.x,b.y);return Object.assign({},b,{x,y})});
+  /* a front hole lying nearly straight down the line from the tee gets a stone post in the way: angle it, bank it off a rail, or lob it */
+  {const T=O.COURSE.TEE;for(const h of holes.slice().sort((a,b)=>a.y-b.y)){if(h.y>1120||h.armor)continue;const dx=h.x,dy=h.y-T,ang=Math.abs(Math.atan2(dx,dy)),win=Math.atan((h.rad+O.COURSE.IND*.5)/Math.hypot(dx,dy));if(ang>.26&&win<.08)continue;                 // nearly straight on, or simply too wide a target from the tee
+    let placed=false;for(const t of[.58,.5,.66,.44]){const off=(r()<.5?-1:1)*(3+r()*5),px=dx*t+off,py=T+dy*t,rad=14+Math.round(r()*4);
+      if(holes.some(o=>Math.hypot(o.x-px,o.y-py)<o.rad+rad+24)||bumps.some(b=>Math.hypot(b.x-px,b.y-py)<b.rad+rad+18))continue;bumps.push({x:px,y:py,rad,kind:'post',on:true,guard:1});placed=true;break}}}
   const sand=L.divots.map(q=>{const[x,y]=P(q.x,q.y);return{x,y,r:q.rad*1.5,on:true}});
   /* width: wide enough at every station for whatever stands there, smoothly varying */
   const N=Math.ceil(len/20)+1,hw=new Float32Array(N);
