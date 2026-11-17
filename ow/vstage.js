@@ -146,8 +146,8 @@ function syncHeroes(dt){
   /* each fighter's aim, drawn big at their tee while they pull on their phone: a sling, the ball drawn back, and an arrow the way it will leave */
   while(aimArrows.length<4){const g=mkSling();world.add(g);aimArrows.push(g)}
   const pv=new T.Vector3();
-  /* each fighter's last shot, a faint dashed line in their colour, so they can learn from it */
-  G.players.forEach((p,i)=>{let L=trails[i];const C=G.mons[0]&&G.mons[0].course,on=!!p&&!!C&&!!p.trail&&G.screen==='combat'&&G.phase==='aim'&&!G.cine;
+  /* the shooter's own last shot, a faint dashed line in their colour, so they can learn from it */
+  G.players.forEach((p,i)=>{let L=trails[i];const C=G.mons[0]&&G.mons[0].course,on=!!p&&!!C&&!!p.trail&&G.screen==='combat'&&G.phase==='aim'&&!G.cine&&!G.inspect&&!p.fired&&p.hp>0&&(G.players.length===1||G.shooter===p.id);          // only the fighter whose turn it is sees their own last shot
     if(!on){if(L)L.visible=false;return}
     if(!L||L.userData.n!==p.trailN){if(L){world.remove(L);L.geometry.dispose()}const pts=[];{const tr=p.trail;let acc=0;pts.push(new T.Vector3(wx(tr[0][0]),.03+tr[0][2]*W,wz(tr[0][1])));for(let k=1;k<tr.length;k++){const a0=tr[k-1],b0=tr[k],seg=Math.hypot(b0[0]-a0[0],b0[1]-a0[1],b0[2]-a0[2]);let t0=10-acc;while(t0<=seg){const f=t0/seg;pts.push(new T.Vector3(wx(a0[0]+(b0[0]-a0[0])*f),.03+(a0[2]+(b0[2]-a0[2])*f)*W,wz(a0[1]+(b0[1]-a0[1])*f)));t0+=10}acc=(acc+seg)%10}}
       L=new T.Points(new T.BufferGeometry().setFromPoints(pts),new T.PointsMaterial({color:LANES[p.slot],size:Math.max(4,renderer.domElement.height/170),sizeAttenuation:false,transparent:true,opacity:.75,depthTest:false}));L.renderOrder=4;L.userData.n=p.trailN;world.add(L);trails[i]=L}
