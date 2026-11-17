@@ -265,18 +265,26 @@ function mgKit(g,d,sl,t,x){const st=C.mgS||(C.mgS={});return{g,d,sl,t,x,s:st,fir
   meter(cls){const m=el('div','mgMeter '+(cls||''));const i=el('i');m.appendChild(i);m.set=f=>{i.style.width=Math.round(clamp(f,0,1)*100)+'%'};return m},
   canvas(h){const cv=document.createElement('canvas');cv.className='mgCv';cv.style.height=(h||320)+'px';return cv},
   fit(cv){const w=cv.clientWidth,h=cv.clientHeight,dpr=Math.min(2,devicePixelRatio||1);if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr)}const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);return[x,w,h]},
+  /* motion helpers for pads: mo is whether motion is in use; each is a no-op without it */
+  mo:MO.use(),tilt:()=>MO.tilt(),
+  /* tilt left/right picks one of n spots across a row (level is the middle); it only moves on once you are clearly past the halfway between spots */
+  slide(n,cur,fn,full){if(!MO.use())return;const t=clamp(MO.tilt().x/(full||.8),-1,1),f=(t+1)/2*(n-1),c=st._sl!=null?st._sl:cur;if(c==null||Math.abs(f-c)>.68){const k=Math.round(f);if(k!==c){st._sl=k;fn(k)}}},
+  /* a tilt gesture: lean past the line one way (0 top away, 1 right, 2 top toward you, 3 left) and it fires once; come back near level to arm it again. rep: repeat while held */
+  lean(fn,o){if(!MO.use())return;o=o||{};const tl=MO.tilt(),ax=Math.abs(tl.x)>=Math.abs(tl.y),v=ax?tl.x:tl.y,dir=ax?(v>0?1:3):(v>0?2:0),now=performance.now(),on=o.on||.45;
+    if(Math.abs(v)>=on){if(st._ld==null||(o.rep&&st._ld===dir&&now-st._lt>o.rep)){st._ld=dir;st._lt=now;fn(dir)}}else if(Math.abs(tl.x)<.22&&Math.abs(tl.y)<.22)st._ld=null},
+  shake(fn){if(MO.use())MO.onSwing=fn},jolt(fn){if(MO.use())MO.onJolt=fn},
   drawGlyph(x,name,cx,cy,s,col){const gl=O.GLYPHS[name]||O.GLYPHS.star;x.save();x.translate(cx-s/2,cy-s/2);x.scale(s/48,s/48);x.fillStyle=col||gl[0];x.fill(new Path2D(gl[1]),'evenodd');x.restore()}}}
 function mgStatus(g,d,sl){const r=el('div','mgStat');const hp=d.hp&&d.hp[sl],out=d.out&&d.out[sl]!=null;
   const D0=O.MG[g.k],mx=D0&&D0.hearts===true?3:(D0&&D0.hearts)||3;if(hp!=null&&!out){const h=el('span','mgHearts');for(let i=0;i<mx;i++)h.appendChild(el('i',i<hp?'on':null,'♥'));r.appendChild(h)}
   const pr=d.pr&&d.pr[sl];if(pr)r.appendChild(el('b',null,String(pr)));return r}
 function renderMg(g){
-  const pad=$('mgPad');pad.hidden=!g;if(!g){C.mgId=0;return}
+  const pad=$('mgPad');pad.hidden=!g;if(!g){C.mgId=0;MO.onSwing=null;MO.onJolt=null;return}
   const v0=getView(),me=v0&&v0.me,sl=me?me.sl:0;
-  if(C.mgId!==g.id){C.mgId=g.id;C.mgV='';C.mg=null;C.mgK='';C.mgSt='';C.mgS={};C.mgN=0;C.mgTaps=[];C.mgPicks=[];C.lkK=-1;C.mgPick=null;C.swN=0}
+  if(C.mgId!==g.id){MO.onSwing=null;MO.onJolt=null;C.mgId=g.id;C.mgV='';C.mg=null;C.mgK='';C.mgSt='';C.mgS={};C.mgN=0;C.mgTaps=[];C.mgPicks=[];C.lkK=-1;C.mgPick=null;C.swN=0}
   const D=O.MG[g.k],d=g.d||{},x=mgEl(),t=mgNow(g),dots=$('mgDots');$('mgT').textContent=d.name||D.name;$('mgBtn').hidden=true;dots.hidden=true;
-  const out=d.out&&d.out[sl]!=null,live=D.live||g.k==='lock'||g.k==='forge'||g.k==='pendulum';
+  const out=d.out&&d.out[sl]!=null,live=D.live||g.k==='lock'||g.k==='forge'||g.k==='pendulum'||(D.motion&&MO.use());
   const key=g.k+':'+g.st+':'+(D.motion?(MO.use()?'M':'m')+(MO.ok===false?'x':''):'')+(g.st==='brief'?(g.go?Math.ceil((O.MG_BRIEF||7)-t):'w')+'r'+Object.keys(d.rdy||{}).join(''):g.st==='play'?(out?'out'+(d.swn&&d.swn[sl])+(d.sw&&d.sw[sl]):mgKeyOf(g,d,sl,t)):'')+':'+g.ok;if(key===C.mgK&&!(live&&g.st==='play'&&!out))return;C.mgK=key;
-  if(C.mgSt!==g.st+(out?'o':'')){C.mgSt=g.st+(out?'o':'');x.textContent=''}
+  if(C.mgSt!==g.st+(out?'o':'')){C.mgSt=g.st+(out?'o':'');x.textContent='';if(g.st==='play'&&D.motion&&MO.use())MO.calibrate()}   // however they hold it now is level
   if(g.st==='brief'){x.textContent='';const waitR=!g.go,mrow=D.motion?motionRow(D):null;if(mrow)x.appendChild(mrow);const _=0,left=waitR?9:Math.ceil((O.MG_BRIEF||7)-t),bx=el('div','mgBrief');x.appendChild(bx);bx.appendChild(el('div','mgBig',D.kind==='trap'?'A trap!':'Get ready'));if(left<=3&&left>0)bx.appendChild(el('div','mgCount',String(left)));
     if(waitR){const rd=d.rdy||{},n=Math.max(0,G0n()-Object.keys(rd).length);if(!rd[sl])x.appendChild(mgBtn('I have read the rules: READY','go big',()=>{O.buzz(15);sendMg(g.id,'ready')}));else x.appendChild(el('p','mgNote',n?`Ready. Waiting for ${n} more…`:'Everyone is ready!'))}
     if(D.ctl)x.appendChild(el('p','mgGoal',D.ctl));$('mgP').textContent=D.brief;return}
@@ -343,7 +351,14 @@ const MO={on:false,ok:null,b:0,g:0,b0:0,g0:0,t:0,swT:0,onSwing:null,pref:(()=>{t
 function moOri(e){if(e.beta==null)return;MO.b=e.beta;MO.g=e.gamma;MO.t=performance.now()}
 function moMot(e){const a=e.acceleration,ag=e.accelerationIncludingGravity;let m=0;if(a&&a.x!=null)m=Math.hypot(a.x,a.y,a.z);else if(ag&&ag.x!=null)m=Math.abs(Math.hypot(ag.x,ag.y,ag.z)-9.81)*1.15;MO.t=performance.now();
   /* a swing: a sharp jolt, then a short rest before the next can count */
-  const now=performance.now();if(m>13&&now-MO.swT>230){MO.swT=now;if(MO.onSwing)try{MO.onSwing()}catch(q){}}}
+  const now=performance.now();if(m>13&&now-MO.swT>230){MO.swT=now;if(MO.onSwing)try{MO.onSwing()}catch(q){}}
+  /* a jolt with a direction: up / down (along real up, however the phone is held) or left / right (along the screen).
+     Some phones report motion with the signs flipped; resting readings against 'up' tell us which. */
+  const R=Math.PI/180,b=MO.b*R,g=MO.g*R,u=[-Math.sin(g)*Math.cos(b),Math.sin(b),Math.cos(g)*Math.cos(b)];
+  if(ag&&ag.x!=null){const gm=Math.hypot(ag.x,ag.y,ag.z);if(gm>8&&Math.abs(gm-9.81)<1.2){const dt=(ag.x*u[0]+ag.y*u[1]+ag.z*u[2])/gm;MO.sgv=MO.sgv==null?dt:MO.sgv*.92+dt*.08}}
+  const sg=(MO.sgv==null||MO.sgv>=0)?1:-1;let L=null;if(a&&a.x!=null)L=[a.x*sg,a.y*sg,a.z*sg];else if(ag&&ag.x!=null)L=[ag.x*sg-9.81*u[0],ag.y*sg-9.81*u[1],ag.z*sg-9.81*u[2]];
+  if(L&&MO.onJolt&&now-(MO.jT||0)>320){const an=MO.ang()*R,v=L[0]*u[0]+L[1]*u[1]+L[2]*u[2],lat=L[0]*Math.cos(an)-L[1]*Math.sin(an);
+    if(Math.abs(v)>9&&Math.abs(v)>=Math.abs(lat)){MO.jT=now;try{MO.onJolt(v>0?'up':'down')}catch(q){}}else if(Math.abs(lat)>9){MO.jT=now;try{MO.onJolt(lat>0?'right':'left')}catch(q){}}}}
 MO.supported=()=>typeof window.DeviceOrientationEvent!=='undefined'||typeof window.DeviceMotionEvent!=='undefined';
 MO.enable=async()=>{try{if(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==='function'){const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted'){MO.ok=false;return false}}
     if(window.DeviceMotionEvent&&typeof DeviceMotionEvent.requestPermission==='function'){try{await DeviceMotionEvent.requestPermission()}catch(q){}}}catch(e){MO.ok=false;return false}
@@ -353,7 +368,8 @@ MO.off=()=>{MO.pref=false;try{localStorage.setItem('ow_motion','0')}catch(q){}};
 MO.use=()=>MO.on&&MO.ok&&MO.pref;O.motionOn=MO.use;
 /* tilt in the screen's own directions, whichever way up the phone is turned. Worked from where 'up' points in the phone's own frame,
    so it stays steady even with the phone held near upright, where the raw roll angle swings wildly. x: right edge down is +, y: top edge up is +. */
-MO.raw=()=>{const an=window.screen&&screen.orientation&&typeof screen.orientation.angle==='number'?screen.orientation.angle:(typeof window.orientation==='number'?window.orientation:0),R=Math.PI/180,
+MO.ang=()=>window.screen&&screen.orientation&&typeof screen.orientation.angle==='number'?screen.orientation.angle:(typeof window.orientation==='number'?window.orientation:0);
+MO.raw=()=>{const an=MO.ang(),R=Math.PI/180,
   b=MO.b*R,g=MO.g*R,ux=-Math.sin(g)*Math.cos(b),uy=Math.sin(b),a=(((an%360)+360)%360)*R,sx=ux*Math.cos(a)-uy*Math.sin(a),sy=ux*Math.sin(a)+uy*Math.cos(a);
   return[Math.asin(clamp(-sx,-1,1))/R,Math.asin(clamp(sy,-1,1))/R]};
 MO.calibrate=()=>{const r=MO.raw();MO.x0=r[0];MO.y0=r[1]};MO.x0=0;MO.y0=0;

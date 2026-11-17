@@ -28,7 +28,7 @@ O.addMg({id:'thinice',dun:5,name:'Thin Ice',hearts:true,ctl:'Phone: four columns
 
 /* ===== 12 · Frostcrypt · The Frozen Kings: a king wakes; strike his pose before his eyes open fully ===== */
 const POSE=['Arms up','Crouch','Shield'];
-O.addMg({id:'kings',dun:5,name:'The Frozen Kings',hearts:true,ctl:'Phone: ARMS UP · CROUCH · SHIELD',
+O.addMg({id:'kings',dun:5,name:'The Frozen Kings',hearts:true,ctl:'Phone: ARMS UP · CROUCH · SHIELD',motion:1,mo:'Hold your phone in the pose: tip the top UP toward you for Arms up, tip it DOWN away from you to Crouch, tilt it hard to either side for Shield.',
  brief:'Three frozen kings line the crypt. When one wakes, frost gathers on him and his pose shows: arms up, crouched, or shield raised. Strike the same pose before his eyes open, and hold it while he looks. They wake faster, and sometimes two at once in the same pose.',
  setup(g){const r=H.rng(g.seed);g.d.wk=[];let t=1.4,prev=-1;for(let i=0;i<16;i++){const f=i/15,warn=+(1.05-.55*f).toFixed(2),look=1.1,pose=(prev+1+Math.floor(r()*2))%3;prev=pose;const kg=Math.floor(r()*3),two=i>9&&r()<.35;
      g.d.wk.push([+t.toFixed(2),+(t+warn).toFixed(2),+(t+warn+look).toFixed(2),pose,two?[kg,(kg+1)%3]:[kg]]);t+=warn+look+.6-.3*f}g.dur=t+.5;g.d.pose={};g.res=0},
@@ -45,6 +45,7 @@ O.addMg({id:'kings',dun:5,name:'The Frozen Kings',hearts:true,ctl:'Phone: ARMS U
        sp.visible=!!on;if(on&&sp.userData.p!==w[3]){sp.userData.p=w[3];sp.material.map=null;const s2=K.sym(icons[w[3]],.5);sp.material=s2.material}})}}},
  hud(x,w,h,g,HK){const wk=g.d.wk[g.res];if(wk&&g.t>=wk[0])HK.txt(x,(g.t>=wk[1]?'HOLD IT: ':'Strike the pose: ')+POSE[wk[3]].toUpperCase(),w/2,h*.1,Math.max(22,h*.05),'#c8e8ff')},
  pad(K){if(K.first){const ic=['crown','skull','shield'];K.x.append(K.row(3,...POSE.map((n,k)=>{const b=K.btn('','pose',()=>{K.buzz(12);K.send(String(k))});b.append(K.glyph(ic[k],48),K.el('small',null,n));return b})))}
+   if(K.mo){const tl=K.tilt(),k=tl.y>.4?0:tl.y<-.4?1:Math.abs(tl.x)>.45?2:-1,now=performance.now();if(k>=0&&k!==K.d.pose[K.sl]&&!(K.s.pk===k&&now-K.s.pkT<400)){K.s.pk=k;K.s.pkT=now;K.buzz(12);K.send(String(k))}}
    K.x.querySelectorAll('.pose').forEach((b,k)=>b.classList.toggle('on',k===K.d.pose[K.sl]))},
  hint:()=>'Strike the pose shown above the waking king, and hold it while his eyes are open.'});
 
@@ -101,7 +102,7 @@ O.addMg({id:'scales',dun:7,name:'Offering Scales',ctl:'Phone: offerings of 1, 2,
  hint:(g,d)=>`Make exactly ${d.tg[d.i]}. Go over and you start again.`});
 
 /* ===== 16 · The Sunken Temple · Gaze of the Drowned God: keep out of the turning stare ===== */
-O.addMg({id:'gaze',dun:7,name:'Gaze of the Drowned God',hearts:true,ctl:'Phone: step ◀ ▶ around the ring',live:true,
+O.addMg({id:'gaze',dun:7,name:'Gaze of the Drowned God',hearts:true,ctl:'Phone: step ◀ ▶ around the ring',motion:1,mo:'Tilt left or right to step around the ring, one pillar at a time; hold the tilt to keep walking.',live:true,
  brief:'A stone eye turns at the centre of a ring of eight pillars, its stare covering three of them. Step around the ring to stay out of it. It turns faster, and sometimes reverses: its rim glows gold just before it does.',
  setup(g){const r=H.rng(g.seed);g.d.ev=[];let t=0,dir=1,pos=0,iv=.95;g.d.at={};here().forEach((p,i)=>g.d.at[p.slot]=(4+i*2)%8);while(t<30){t+=iv;if(t>3&&r()<.16){g.d.ev.push([+(t-.8).toFixed(2),'w']);dir=-dir}pos=(pos+dir+8)%8;g.d.ev.push([+t.toFixed(2),pos]);iv=Math.max(.56,iv-.013)}g.dur=30;g.res=0;g.d.beam=0;g.hitT={}},
  input(g,p,v){const k=Math.floor(num(+v,-1));if(k>=0&&k<8)g.d.at[p.slot]=k},
@@ -114,8 +115,8 @@ O.addMg({id:'gaze',dun:7,name:'Gaze of the Drowned God',hearts:true,ctl:'Phone: 
    beam.rotation.x=Math.PI/2;beam.position.z=R*.6;const bw=new K.T.Group();bw.add(beam);eye.add(bw);eye.position.y=.7;G2.add(eye);
    return{g:G2,cam:[[0,6.4,4.2],[0,0,0]],spot:(p,i,n)=>{const a=(g.d.at[p.slot]||0)/8*Math.PI*2,mates=here().filter(q=>g.d.at[q.slot]===g.d.at[p.slot]),j=mates.indexOf(p);return[Math.sin(a)*(R-.25-j*.3),0,Math.cos(a)*(R-.25-j*.3),a+Math.PI]},
    update(m){const want=m.d.beam/8*Math.PI*2;let dr=want-bw.rotation.y;dr=Math.atan2(Math.sin(dr),Math.cos(dr));bw.rotation.y+=dr*.35;core.material.color.set(m.d.warn?'#ffd27a':'#70ffa0');beam.material.color.set(m.d.warn?'#ffd27a':'#70ffa0')}}},
- pad(K){const d=K.d,s=K.s;if(K.first){const mv=dl=>()=>{K.buzz(10);K.send(String(((K.live().d.at[K.sl]??0)+dl+8)%8))};K.x.append(K.el('p','mgNote watchTv','👀 Watch the ring on the big screen'),K.row(2,K.btn('◀','go big',mv(-1)),K.btn('▶','go big',mv(1))))}
-   },
+ pad(K){const d=K.d,s=K.s;if(K.first){const mv=dl=>()=>{K.buzz(10);K.send(String(((K.live().d.at[K.sl]??0)+dl+8)%8))};s.mv=mv;K.x.append(K.el('p','mgNote watchTv','👀 Watch the ring on the big screen'),K.row(2,K.btn('◀','go big',mv(-1)),K.btn('▶','go big',mv(1))))}
+   K.lean(k=>{if(k===1)s.mv(1)();else if(k===3)s.mv(-1)()},{rep:430})},
  hud(x,w,h,g,HK){const R=Math.min(w*.13,h*.26),cx=w-R-Math.max(30,w*.04),cy=h*.42,b=g.d.beam;HK.panel(x,cx-R-26,cy-R-26,R*2+52,R*2+52,.8);
    for(let k=0;k<8;k++){const a=k/8*Math.PI*2-Math.PI/2,dd=Math.min((k-b+8)%8,(b-k+8)%8);x.fillStyle=dd<=1?(g.d.warn?'#ffd27a':'#70ffa0'):'#3a5a48';x.beginPath();x.arc(cx+Math.cos(a)*R,cy+Math.sin(a)*R,R*.15,0,7);x.fill()}
    const ps=HK.players();ps.forEach((p,i)=>{const k=g.d.at[p.slot]||0,mates=ps.filter(q=>g.d.at[q.slot]===k),j=mates.indexOf(p),a=k/8*Math.PI*2-Math.PI/2;x.strokeStyle=HK.LANES[p.slot];x.lineWidth=4;x.beginPath();x.arc(cx+Math.cos(a)*R,cy+Math.sin(a)*R,R*.2+j*5,0,7);x.stroke()});
@@ -123,7 +124,7 @@ O.addMg({id:'gaze',dun:7,name:'Gaze of the Drowned God',hearts:true,ctl:'Phone: 
  hint:(g,d)=>d.warn?'It is about to REVERSE!':'Watch the big screen and keep out of the green stare.'});
 
 /* ===== 17 · The Bone Desert · Quicksand: climb only as the sand breathes out ===== */
-O.addMg({id:'quicksand',dun:8,name:'Quicksand',ctl:'Phone: CLIMB',live:true,
+O.addMg({id:'quicksand',dun:8,name:'Quicksand',ctl:'Phone: CLIMB',motion:1,mo:'Pump your phone up and down to haul yourself out, but only while the big screen says CLIMB. Pumping while it says wait sinks you.',live:true,
  brief:'You are sinking. The sand breathes in and out: tap CLIMB only while it breathes out (gold), and you pull yourself up. Climb while it breathes in (dark) and you sink faster. The breathing changes pace. Climb out before you are swallowed.',
  setup(g){g.dur=26;g.d.up={};g.d.per=[];let t=0,r=H.rng(g.seed);while(t<30){const p=+(1.85-.55*(t/30)+r()*.3).toFixed(2);g.d.per.push([+t.toFixed(2),p]);t+=p}},
  input(g,p,v){g.d.up[p.slot]=clamp(num(+v),0,100);if(here().every(q=>(g.d.up[q.slot]||0)>=100))g.end=1},
@@ -132,13 +133,13 @@ O.addMg({id:'quicksand',dun:8,name:'Quicksand',ctl:'Phone: CLIMB',live:true,
    return{g:G2,cam:[[0,2.6,4.8],[0,.4,0]],spot:(p,i,n)=>[slotX(i,n,.9),-1.2+((g.d.up[p.slot]||0)/100)*1.2,0,0],update(m){const ex=O.MG.quicksand.out(m,m.t);sand.material.color.copy(K.lin(ex?'#d8a858':'#6a4a28'))}}},
  out(g,t){const per=g.d.per;let k=per.length-1;while(k>0&&per[k][0]>t)k--;const[t0,p]=per[k];return(t-t0)/p>.4},
  hud(x,w,h,g,HK){const ex=O.MG.quicksand.out(g,g.t);HK.txt(x,ex?'CLIMB!':'wait…',w/2,h*.12,Math.max(28,h*.07),ex?'#ffc060':'#8a6a40')},
- pad(K){const s=K.s;if(K.first){s.up=10;s.last=performance.now();s.m=K.meter('sand');s.b=K.btn('CLIMB','go big',()=>{const ex=O.MG.quicksand.out(K.live(),K.now());if(ex){s.up=Math.min(100,s.up+5);K.buzz(6)}else{s.up=Math.max(0,s.up-3);K.buzz(70);O.sfx('mgBad')}K.send(s.up.toFixed(1))});K.x.append(s.m,s.b)}
+ pad(K){const s=K.s;if(K.first){s.up=10;s.last=performance.now();s.m=K.meter('sand');s.climb=()=>{const ex=O.MG.quicksand.out(K.live(),K.now());if(ex){s.up=Math.min(100,s.up+5);K.buzz(6)}else{s.up=Math.max(0,s.up-3);K.buzz(70);O.sfx('mgBad')}K.send(s.up.toFixed(1))};s.b=K.btn('CLIMB','go big',s.climb);K.x.append(s.m,s.b);K.shake(s.climb)}
    const now=performance.now(),dt=Math.min(.1,(now-s.last)/1000);s.last=now;if(s.up<100){s.up=Math.max(0,s.up-dt*(2+K.t*.06));if(!s.tx||now-s.tx>250){s.tx=now;K.send(s.up.toFixed(1))}}s.m.set(s.up/100);
    const ex=O.MG.quicksand.out(K.live(),K.now());s.b.classList.toggle('dim',!ex);s.b.textContent=s.up>=100?'OUT!':ex?'CLIMB':'wait…'},
- hint:()=>'Tap CLIMB only while the button is bright (the sand breathes out).'});
+ hint:()=>O.motionOn&&O.motionOn()?'Pump the phone while the big screen says CLIMB. Stop when it says wait.':'Tap CLIMB only while the button is bright (the sand breathes out).'});
 
 /* ===== 18 · The Bone Desert · Tomb Arrows: press the arrow; red means the opposite; a scarab means nothing ===== */
-O.addMg({id:'arrows',dun:8,name:'Tomb Arrows',hearts:true,ctl:'Phone: four directions',
+O.addMg({id:'arrows',dun:8,name:'Tomb Arrows',hearts:true,ctl:'Phone: four directions',motion:1,mo:'Tip your phone the way you answer: away from you is up, toward you is down, and left and right. Come back to level between arrows. A scarab: keep still.',
  brief:'The tomb calls a direction. Press it. A RED arrow means press the opposite way. A SCARAB means press nothing at all. The calls come faster.',
  setup(g){const r=H.rng(g.seed);g.d.c=[];let t=1.2;for(let i=0;i<30;i++){const f=i/29,win=+(1.4-.72*f).toFixed(2),q=r();g.d.c.push([+t.toFixed(2),+(t+win).toFixed(2),Math.floor(r()*4),i<3?0:q<.3?1:q<.42?2:0]);t+=win+.35}g.dur=t+.3;g.res=0;g.ans={}},
  input(g,p,v){const[n,k]=String(v).split(':').map(Number);const c=g.d.c[g.res];if(!c||g.t<c[0])return;const a=g.ans[p.slot]=g.ans[p.slot]||{};if(a[g.res]==null)a[g.res]=k},
@@ -149,7 +150,8 @@ O.addMg({id:'arrows',dun:8,name:'Tomb Arrows',hearts:true,ctl:'Phone: four direc
  hud(x,w,h,g,HK){const c=g.d.c[g.res];if(!c||g.t<c[0])return;const s=Math.min(w,h)*.22;if(c[3]===2){HK.txt(x,'DON’T MOVE',w/2,h*.62,Math.max(24,h*.05),'#40d0c0');return}
    x.save();x.translate(w/2,h*.42);x.rotate([-Math.PI/2,0,Math.PI/2,Math.PI][c[2]]);x.fillStyle=c[3]===1?'#ff3a2a':'#ffc060';x.strokeStyle='#000';x.lineWidth=6;x.beginPath();x.moveTo(s*.6,0);x.lineTo(-s*.1,-s*.45);x.lineTo(-s*.1,-s*.18);x.lineTo(-s*.6,-s*.18);x.lineTo(-s*.6,s*.18);x.lineTo(-s*.1,s*.18);x.lineTo(-s*.1,s*.45);x.closePath();x.stroke();x.fill();x.restore();
    if(c[3]===1)HK.txt(x,'OPPOSITE!',w/2,h*.66,Math.max(22,h*.045),'#ff7a6a');HK.bar(x,w*.4,h*.72,w*.2,6,1-(g.t-c[0])/(c[1]-c[0]),'#ffc060')},
- pad(K){if(K.first){const pad=K.el('div','dirPad');for(let k=0;k<4;k++)pad.appendChild(K.btn(ARW[k],'dir d'+k,()=>{K.buzz(10);K.s.n=(K.s.n||0)+1;K.send(K.s.n+':'+k)}));K.x.appendChild(pad)}},
+ pad(K){if(K.first){const pad=K.el('div','dirPad');for(let k=0;k<4;k++)pad.appendChild(K.btn(ARW[k],'dir d'+k,()=>{K.buzz(10);K.s.n=(K.s.n||0)+1;K.send(K.s.n+':'+k)}));K.x.appendChild(pad)}
+   K.lean(k=>{K.buzz(10);K.s.n=(K.s.n||0)+1;K.send(K.s.n+':'+k)},{on:.5})},
  hint:()=>'Gold arrow: press it. Red arrow: the opposite. Scarab: nothing.'});
 
 /* ===== 19 · Gloom Marsh · Will-o'-the-Wisps: count only the true lights ===== */
@@ -170,18 +172,22 @@ O.addMg({id:'wisps',dun:9,name:'Will-o’-the-Wisps',ctl:'Phone: a number pad',
  hint:(g,d)=>d.ph==='fly'?'Watch the big screen and count the gold lights.':'Enter your count.'});
 
 /* ===== 20 · Gloom Marsh · Stepping Stones: hop only onto a stone that is up ===== */
-O.addMg({id:'stones',dun:9,name:'Stepping Stones',ctl:'Phone: HOP',live:true,
+O.addMg({id:'stones',dun:9,name:'Stepping Stones',ctl:'Phone: HOP',motion:1,mo:'Flick your phone to HOP. Watch the stones on the big screen: hop only when the next one is up.',live:true,
  brief:'Twelve stones cross the marsh, each bobbing up and under on its own rhythm. HOP to the next stone only while it is up; land on a sunk one and you are dunked and lose a moment. Reach the far bank in time.',
  setup(g){const r=H.rng(g.seed);g.d.st=[];for(let i=0;i<12;i++)g.d.st.push([+(1.1+r()*1.2-i*.02).toFixed(2),+(r()*6.28).toFixed(2)]);g.dur=36;g.d.at={};g.d.hop={};g.d.dk={};for(const p of here())g.d.at[p.slot]=-1;g.n={}},
  up(g,i,t){if(i<0||i>=12)return true;const[p,ph]=g.d.st[i];return Math.sin(t*Math.PI*2/p+ph)>-.4},
  input(g,p,v,at){const n=num(+v);if(n<=(g.n[p.slot]||0))return;g.n[p.slot]=n;const k=p.slot;if(g.d.at[k]>=12||(g.d.hop[k]&&at-g.d.hop[k]<.35)||(g.d.dk[k]&&at-g.d.dk[k]<.8))return;g.d.hop[k]=+at.toFixed(2);
    const to=g.d.at[k]+1;if(this.up(g,to,at+.3)){g.d.at[k]=to;if(to>=12)H.ev('boon');else H.ev('mgTap')}else{g.d.at[k]=Math.max(-1,to-1);g.d.dk[k]=+at.toFixed(2);H.ev('mgHit',{slot:k})}if(here().every(q=>g.d.at[q.slot]>=12))g.end=1},
  pass:(g,p)=>g.d.at[p.slot]>=12,prog:(g,p)=>g.d.at[p.slot]>=12?'across!':`stone ${g.d.at[p.slot]+1}/12`,key:(g,d,sl)=>d.at[sl],
+ /* each fighter's next three stones, up or under, on the big screen */
+ hud(x,w,h,g,HK){HK.split(x,w,h,(x,X,Y,W,H,p)=>{const a=g.d.at[p.slot],dk=g.d.dk[p.slot]&&g.t-g.d.dk[p.slot]<.8;if(a>=12){HK.txt(x,'Across!',X+W/2,Y+H/2,Math.max(18,H*.2),'#9dffb0');return}const q=Math.min(W/3.4,H*.62);
+   for(let j=0;j<3;j++){const i=a+1+j,X0=X+W/2+(j-1)*q*1.08-q/2,Y0=Y+(H-q)/2,bank=i>=12,up=bank||O.MG.stones.up(g,i,g.t+.3);x.fillStyle=bank?'#3a6a3a':up?(j?'#5a8a5a':'#8adf8a'):'#1a2a2a';x.fillRect(X0,Y0,q,q);if(!j){x.strokeStyle='#fff';x.lineWidth=3;x.strokeRect(X0,Y0,q,q)}HK.txt(x,bank?'bank':String(i+1),X0+q/2,Y0+q/2,Math.max(12,q*.3),up?'#10200f':'#5a7a7a')}
+   if(dk)HK.txt(x,'Dunked!',X+W/2,Y+H-8,Math.max(12,H*.12),'#ff7a6a')},{top:.04,maxH:h*.26,maxW:w*.22})},
  tv(K,g){const G2=K.room({w:5,d:12,back:false}),T=K.T,W=new T.Mesh(new T.PlaneGeometry(6,14),new T.MeshBasicMaterial({color:K.lin('#1a3a30')}));W.rotation.x=-Math.PI/2;W.position.y=.02;G2.add(W);
    const st=g.d.st.map((q,i)=>{const s=K.vb(P2=>{for(let a=-3;a<3;a++)for(let b=-3;b<3;b++)if(Math.hypot(a+.5,b+.5)<3.2)P2.set(a,0,b,'l')},.12,Object.assign(K.pal(),{l:{c:'#6a7a6a',n:.1}}));s.position.set((i%2?.3:-.3),0,2.4-i*.62);G2.add(s);return s});
    return{g:G2,cam:[[4.6,4.8,6.4],[0,0,-1.2]],spot:(p,i,n)=>{const a=g.d.at[p.slot];const z=a<0?3.1:a>=12?2.4-12*.62:2.4-a*.62,x=a<0||a>=12?slotX(i,n,.4):(a%2?.3:-.3)+slotX(i,n,.12);return[x,a>=0&&a<12?st[a].position.y+.05:0,z,Math.PI]},
    update(m){const t=m.st==='play'?m.t:0;st.forEach((s,i)=>{s.position.y=O.MG.stones.up(m,i,t)?.06:-.3})}}},
- pad(K){const d=K.d,s=K.s;if(K.first){s.row=K.el('div','stoneRow');for(let i=0;i<3;i++)s.row.appendChild(K.el('i'));K.x.append(s.row,K.btn('HOP','go big',()=>{K.buzz(15);s.n=(s.n||0)+1;K.send(String(s.n))}))}
+ pad(K){const d=K.d,s=K.s;if(K.first){s.row=K.el('div','stoneRow');for(let i=0;i<3;i++)s.row.appendChild(K.el('i'));const hop=()=>{K.buzz(15);s.n=(s.n||0)+1;K.send(String(s.n))};K.x.append(s.row,K.btn('HOP','go big',hop));K.shake(hop)}
    const a=d.at[K.sl],t=K.now();[...s.row.children].forEach((c,j)=>{const i=a+1+j;c.className=i>=12?'bank':O.MG.stones.up(K.live(),i,t+.3)?'up':'down';c.textContent=i>=12?'bank':String(i+1)})},
- hint:()=>'HOP when the next stone (first square) is up.'});
+ hint:()=>O.motionOn&&O.motionOn()?'Flick to HOP when your next stone is up on the big screen.':'HOP when the next stone (first square) is up.'});
 })();

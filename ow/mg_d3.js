@@ -5,7 +5,7 @@ const slotX=(i,n,sp)=>(i-(n-1)/2)*(sp||.8);
 
 /* ===== 21 · The Iron Keep · Shield Wall: raise the shield to the archers' height; roll from the ballista ===== */
 const HTS=['High','Mid','Low'];
-O.addMg({id:'shieldwall',dun:10,name:'Shield Wall',hearts:true,ctl:'Phone: HIGH · MID · LOW · ROLL',
+O.addMg({id:'shieldwall',dun:10,name:'Shield Wall',hearts:true,ctl:'Phone: HIGH · MID · LOW · ROLL',motion:1,mo:'Hold your shield with the phone: tip the top UP toward you for High, keep it level for Mid, tip it DOWN away for Low. Jerk the phone sideways to ROLL.',
  brief:'The keep’s archers draw high, middle or low: raise your shield to that height before they loose. When the great ballista winds up, no shield will stop it: ROLL aside. Faster volleys as it goes.',
  setup(g){const r=H.rng(g.seed);g.d.v=[];let t=1.3;for(let i=0;i<26;i++){const f=i/25,warn=+(1.15-.55*f).toFixed(2),ty=i>5&&r()<.18?3:Math.floor(r()*3);g.d.v.push([+t.toFixed(2),+(t+warn).toFixed(2),ty]);t+=warn+.75-.35*f}g.dur=t+.5;g.d.sh={};g.d.roll={};g.n={};for(const p of here())g.d.sh[p.slot]=1;g.res=0},
  input(g,p,v,at){const[n,k]=String(v).split(':').map(Number);if(n<=(g.n[p.slot]||0))return;g.n[p.slot]=n;if(k===3)g.d.roll[p.slot]=+at.toFixed(2);else if(k>=0&&k<3)g.d.sh[p.slot]=k},
@@ -16,12 +16,13 @@ O.addMg({id:'shieldwall',dun:10,name:'Shield Wall',hearts:true,ctl:'Phone: HIGH 
    return{g:G2,cam:[[0,1.8,5.4],[0,1,-1.4]],spot:(p,i,n)=>{const rl=g.d.roll[p.slot],r=g.st==='play'&&rl!=null&&g.t-rl>=0&&g.t-rl<.7;return[slotX(i,n,.8)+(r?.6:0),r?-.3:0,1,Math.PI]},
    update(m){const t=m.st==='play'?m.t:-9,v=m.d.v[m.res],on=v&&t>=v[0];glow.forEach((q,k)=>q.material.opacity=on&&v[2]===k?.25+.15*Math.sin(K.now()*24):0);bal.rotation.y=on&&v[2]===3?Math.sin(K.now()*30)*.05:0}}},
  hud(x,w,h,g,HK){const v=g.d.v[g.res];if(v&&g.t>=v[0])HK.txt(x,v[2]===3?'BALLISTA: ROLL!':'Shield '+HTS[v[2]].toUpperCase(),w/2,h*.1,Math.max(24,h*.055),v[2]===3?'#ff7a6a':'#ffd27a')},
- pad(K){if(K.first){const s=K.s,go=k=>()=>{K.buzz(k===3?30:10);s.n=(s.n||0)+1;K.send(s.n+':'+k)};const col=K.el('div','shCol');HTS.forEach((n,k)=>col.appendChild(K.btn(n,'ht',go(k))));K.x.append(col,K.btn('ROLL','go',go(3)))}
+ pad(K){if(K.first){const s=K.s,go=k=>()=>{K.buzz(k===3?30:10);s.n=(s.n||0)+1;K.send(s.n+':'+k)};s.go=go;K.jolt(dr=>{if(dr==='left'||dr==='right')go(3)()});const col=K.el('div','shCol');HTS.forEach((n,k)=>col.appendChild(K.btn(n,'ht',go(k))));K.x.append(col,K.btn('ROLL','go',go(3)))}
+   if(K.mo){const y=K.tilt().y,k=y>.35?0:y<-.35?2:1,now=performance.now();if(k!==K.d.sh[K.sl]&&!(K.s.hk===k&&now-K.s.hkT<400)){K.s.hk=k;K.s.hkT=now;K.s.go(k)()}}
    K.x.querySelectorAll('.ht').forEach((b,k)=>b.classList.toggle('on',k===K.d.sh[K.sl]))},
  hint:()=>'Raise your shield to the glowing height. ROLL from the ballista.'});
 
 /* ===== 22 · The Iron Keep · Portcullis Run: commit to a dash under each slamming gate ===== */
-O.addMg({id:'portcullis',dun:10,name:'Portcullis Run',ctl:'Phone: DASH',live:true,
+O.addMg({id:'portcullis',dun:10,name:'Portcullis Run',ctl:'Phone: DASH',motion:1,mo:'Flick your phone to DASH. Watch your gate on the big screen and go when it is up.',live:true,
  brief:'Eight portcullises, each slamming on its own rhythm, and some fake a drop. DASH under the next one when you judge the gap: a dash cannot be stopped. Get caught and you are knocked back a moment. Through all eight in time.',
  setup(g){const r=H.rng(g.seed);g.d.gt=[];for(let i=0;i<8;i++)g.d.gt.push([+(1.6+r()*.8-i*.05).toFixed(2),+(.5+r()*.12-i*.015).toFixed(2),+(r()).toFixed(2),i>2&&r()<.5?1:0]);g.dur=32;g.d.at={};g.d.dash={};g.d.stun={};for(const p of here())g.d.at[p.slot]=0;g.n={}},
  open(g,i,t){if(i>=8)return true;const[pr,op,ph,fk]=g.d.gt[i],u=((t/pr+ph)%1+1)%1;if(fk&&u>op&&u<op+.12)return true;return u<op},
@@ -29,12 +30,16 @@ O.addMg({id:'portcullis',dun:10,name:'Portcullis Run',ctl:'Phone: DASH',live:tru
  input(g,p,v,at){const n=num(+v);if(n<=(g.n[p.slot]||0))return;g.n[p.slot]=n;const k=p.slot;if(g.d.at[k]>=8||(g.d.dash[k]&&at-g.d.dash[k]<.55)||(g.d.stun[k]&&at-g.d.stun[k]<.9))return;g.d.dash[k]=+at.toFixed(2);
    const i=g.d.at[k];if(this.open(g,i,at+.32)){g.d.at[k]=i+1;H.ev(g.d.at[k]>=8?'boon':'mgTap')}else{g.d.stun[k]=+at.toFixed(2);H.ev('mgHit',{slot:k})}if(here().every(q=>g.d.at[q.slot]>=8))g.end=1},
  pass:(g,p)=>g.d.at[p.slot]>=8,prog:(g,p)=>g.d.at[p.slot]>=8?'through!':`gate ${g.d.at[p.slot]+1}/8`,
+ /* each fighter's next gate on the big screen: how far up it is right now */
+ hud(x,w,h,g,HK){HK.split(x,w,h,(x,X,Y,W,H,p)=>{const a=g.d.at[p.slot];if(a>=8){HK.txt(x,'Through!',X+W/2,Y+H/2,Math.max(18,H*.2),'#9dffb0');return}const l=O.MG.portcullis.lift(g,a,g.t),gw=W*.5,gh=H*.7,gx=X+W/2-gw/2,gy=Y+H*.08;
+   x.fillStyle='#10100c';x.fillRect(gx,gy,gw,gh);x.fillStyle=l>.9?'#2a4a2a':'#2a2016';x.fillRect(gx,gy+gh*(1-l),gw,gh*l);x.fillStyle='#8a7a5a';for(let k=0;k<5;k++)x.fillRect(gx+gw*(k+.5)/5-2,gy,4,gh*(1-l));x.fillRect(gx,gy+gh*(1-l)-4,gw,6);
+   HK.txt(x,`Gate ${a+1} of 8`,X+W/2,Y+H-8,Math.max(12,H*.11),g.d.stun[p.slot]&&g.t-g.d.stun[p.slot]<.9?'#ff7a6a':'#e8d8c0')},{top:.04,maxH:h*.26,maxW:w*.22})},
  tv(K,g){const G2=K.room({w:4,d:11,sides:true,back:false}),gates=[];for(let i=0;i<8;i++){const gt=K.vb(P2=>{for(let x=-9;x<9;x++)for(let y=0;y<18;y++)if(x%3===0||y%4===0)P2.set(x,y,0,'i');for(let y=-1;y<20;y++)for(const x of[-10,9])P2.set(x,y,0,'w')},.11,K.pal());gt.position.set(0,0,2.6-i*1.05);G2.add(gt);gates.push(gt)}
    return{g:G2,cam:[[1,3,6.4],[0,.5,-1.6]],walk:1,spot:(p,i,n)=>{const a=g.d.at[p.slot];return[slotX(i,n,.4),0,3.1-a*1.05,Math.PI]},
    update(m){const t=m.st==='play'?m.t:0;gates.forEach((q,i)=>q.position.y=O.MG.portcullis.lift(m,i,t)*1.8)}}},
- pad(K){const d=K.d,s=K.s;if(K.first){s.bar=K.el('div','gateBar');s.bar.appendChild(K.el('i'));K.x.append(s.bar,K.btn('DASH','go big',()=>{K.buzz(25);s.n=(s.n||0)+1;K.send(String(s.n))}))}
+ pad(K){const d=K.d,s=K.s;if(K.first){s.bar=K.el('div','gateBar');s.bar.appendChild(K.el('i'));const dash=()=>{K.buzz(25);s.n=(s.n||0)+1;K.send(String(s.n))};K.x.append(s.bar,K.btn('DASH','go big',dash));K.shake(dash)}
    const a=d.at[K.sl],l=O.MG.portcullis.lift(K.live(),a,K.now());s.bar.firstChild.style.height=Math.round(l*100)+'%';s.bar.classList.toggle('open',l>.9)},
- hint:(g,d,sl)=>d.at[sl]>=8?'Through! Wait for the others.':`Gate ${d.at[sl]+1} of 8: DASH when it is up.`});
+ hint:(g,d,sl)=>d.at[sl]>=8?'Through! Wait for the others.':`Gate ${d.at[sl]+1} of 8: ${O.motionOn&&O.motionOn()?'flick to DASH when it is up on the big screen':'DASH when it is up'}.`});
 
 /* ===== 23 · Fungal Hollow · Spore Bloom: one shared patch; pop caps when ripe, never early ===== */
 O.addMg({id:'spores',dun:11,name:'Spore Bloom',ctl:'Phone: the shared mushroom patch',live:true,
@@ -53,40 +58,53 @@ O.addMg({id:'spores',dun:11,name:'Spore Bloom',ctl:'Phone: the shared mushroom p
  hint:()=>'Tap only the caps that glow PINK.'});
 
 /* ===== 24 · Fungal Hollow · Mycelium Maze: find the exit before the fungus creeping behind you catches up ===== */
-const MZ=9;
-function maze(seed){const r=H.rng(seed),W=Array(MZ*MZ).fill(15),seen=new Set([0]),st=[0];while(st.length){const c=st[st.length-1],x=c%MZ,y=Math.floor(c/MZ),nb=[[x,y-1,0,2],[x+1,y,1,3],[x,y+1,2,0],[x-1,y,3,1]].filter(([a,b])=>a>=0&&b>=0&&a<MZ&&b<MZ&&!seen.has(b*MZ+a));
-  if(!nb.length){st.pop();continue}const[a,b,w1,w2]=nb[Math.floor(r()*nb.length)],n=b*MZ+a;W[c]&=~(1<<w1);W[n]&=~(1<<w2);seen.add(n);st.push(n)}return W}
+const MZ=11,LAMP=1.8;
+/* a growing-tree maze: mostly the newest cell (long winding runs), sometimes an older one (extra branches and dead ends) */
+function maze(seed){const r=H.rng(seed),W=Array(MZ*MZ).fill(15),seen=new Set([0]),st=[0];while(st.length){const k=r()<.92?st.length-1:Math.floor(r()*st.length),c=st[k],x=c%MZ,y=Math.floor(c/MZ),nb=[[x,y-1,0,2],[x+1,y,1,3],[x,y+1,2,0],[x-1,y,3,1]].filter(([a,b])=>a>=0&&b>=0&&a<MZ&&b<MZ&&!seen.has(b*MZ+a));
+  if(!nb.length){st.splice(k,1);continue}const[a,b,w1,w2]=nb[Math.floor(r()*nb.length)],n=b*MZ+a;W[c]&=~(1<<w1);W[n]&=~(1<<w2);seen.add(n);st.push(n)}return W}
+/* how many steps from the entrance the fungus has reached: it waits a moment, then creeps, then quickens */
+const CREEP=t=>t<3.5?-1:(t-3.5)*1.1+.015*(t-3.5)**2;
+/* the host's view of each fighter's maze: what their lantern has shown them so far */
+const mzOf=g=>{if(!g.mz){const W=maze(g.d.seed);g.mz={W,F:bfs(W,0),seen:{},at:{}}}return g.mz};
+const light=(m,sl,c)=>{const S=m.seen[sl]=m.seen[sl]||new Set(),x=c%MZ,y=Math.floor(c/MZ),R=Math.ceil(LAMP);for(let b=y-R;b<=y+R;b++)for(let a=x-R;a<=x+R;a++)if(a>=0&&b>=0&&a<MZ&&b<MZ&&(a-x)**2+(b-y)**2<=LAMP*LAMP)S.add(b*MZ+a)};
 function bfs(W,from){const D=Array(MZ*MZ).fill(1e9);D[from]=0;const q=[from];while(q.length){const c=q.shift(),x=c%MZ,y=Math.floor(c/MZ);[[0,x,y-1],[1,x+1,y],[2,x,y+1],[3,x-1,y]].forEach(([w,a,b])=>{if(W[c]&(1<<w))return;const n=b*MZ+a;if(D[n]>D[c]+1){D[n]=D[c]+1;q.push(n)}})}return D}
 O.addMg({id:'maze',dun:11,name:'Mycelium Maze',ctl:'Phone: arrows, or tilt the phone',live:true,motion:1,mo:'Tilt your phone to roll through the maze, one step at a time. Hold it comfortably when the game starts: that is level.',
- brief:'Each of you has a maze of glowing threads on the big screen, and the fungus is growing after you from the entrance. Find the exit in the far corner before it catches you.',
- setup(g){g.dur=40;g.d.pos={};g.d.res={};g.d.seed=(g.seed%100000)+7},
- input(g,p,v){const[pos,res,cell]=String(v).split(':').map(Number);g.d.pos[p.slot]=pos;if(isFinite(cell))(g.d.cell=g.d.cell||{})[p.slot]=clamp(Math.floor(cell),0,MZ*MZ-1);if(res)g.d.res[p.slot]=res;if(here().every(q=>g.d.res[q.slot]))g.end=1},
+ brief:'Each of you has a maze of glowing threads on the big screen, but your lantern only lights the few threads around you: the ones you have passed stay faint. The fungus grows after you from the entrance and quickens as it goes. Find the exit in the far corner before it catches you, and beware dead ends.',
+ setup(g){g.dur=55;g.d.pos={};g.d.res={};let sd=(g.seed%100000)+7;for(let k=0;k<40;k++){const L=bfs(maze(sd),0)[MZ*MZ-1];if(L>=28&&L<=60)break;sd+=101}g.d.seed=sd;g.mz=null;const m=mzOf(g);for(const p of here()){m.at[p.slot]=0;light(m,p.slot,0)}},
+ input(g,p,v){const[pos,res,cell]=String(v).split(':').map(Number);g.d.pos[p.slot]=pos;if(isFinite(cell)){const c=clamp(Math.floor(cell),0,MZ*MZ-1),m=mzOf(g),from=m.at[p.slot]||0;(g.d.cell=g.d.cell||{})[p.slot]=c;
+     /* light every cell along the way, in case a step or two arrived together */
+     if(c!==from){const D=bfs(m.W,c);let k=from,n=0;while(k!==c&&n++<MZ*MZ){light(m,p.slot,k);const x=k%MZ,y=Math.floor(k/MZ);k=[[k-MZ,y>0],[k+1,x<MZ-1],[k+MZ,y<MZ-1],[k-1,x>0]].filter(([q,ok],w)=>ok&&!(m.W[k]&(1<<w))).map(q=>q[0]).find(q=>D[q]<D[k])??c}}light(m,p.slot,c);m.at[p.slot]=c}if(res)g.d.res[p.slot]=res;if(here().every(q=>g.d.res[q.slot]))g.end=1},
  pass:(g,p)=>g.d.res[p.slot]===1,prog:(g,p)=>g.d.res[p.slot]===1?'out!':g.d.res[p.slot]===2?'caught':`${g.d.pos[p.slot]||0}% of the way`,
  tv(K,g){const G2=K.room({w:7,d:5}),T=K.T;const vine=[];for(let k=0;k<20;k++){const v=K.vb(P2=>{for(let y=0;y<10+(k*7)%8;y++)P2.set((y*3+k)%3-1,y,0,'a')},.1,K.pal());v.position.set(-3.2+k*.34,0,-2.2);G2.add(v);vine.push(v)}
    return{g:G2,cam:[[0,1.8,5],[0,1,-1]],walk:1,spot:(p,i,n)=>[slotX(i,n,1),0,.6-(g.d.pos[p.slot]||0)/100*2.2,Math.PI],update(m){vine.forEach((v,k)=>v.scale.y=.5+Math.min(1,m.t/30)*.8+Math.sin(K.now()*2+k)*.05)}}},
  /* every fighter's maze in their own view: the threads, the fungus creeping from the entrance, the exit, and where they are */
- hud(x,w,h,g,HK){if(!g.mz)g.mz={W:maze(g.d.seed),F:null};if(!g.mz.F)g.mz.F=bfs(g.mz.W,0);const W=g.mz.W,F=g.mz.F,creep=(g.t-4);
-   HK.split(x,w,h,(x,X,Y,PW,PH,p)=>{const c=Math.min(PW,PH)/MZ,ox=X+(PW-c*MZ)/2,oy=Y+(PH-c*MZ)/2;x.fillStyle='#140c14';x.fillRect(ox,oy,c*MZ,c*MZ);
-     for(let i=0;i<MZ*MZ;i++){const a=i%MZ,b=Math.floor(i/MZ),Xa=ox+a*c,Yb=oy+b*c;if(F[i]<creep){x.fillStyle='rgba(224,128,255,.45)';x.fillRect(Xa,Yb,c,c)}x.strokeStyle='#e080ff';x.lineWidth=Math.max(1.5,c*.08);x.beginPath();if(W[i]&1){x.moveTo(Xa,Yb);x.lineTo(Xa+c,Yb)}if(W[i]&2){x.moveTo(Xa+c,Yb);x.lineTo(Xa+c,Yb+c)}if(W[i]&4){x.moveTo(Xa,Yb+c);x.lineTo(Xa+c,Yb+c)}if(W[i]&8){x.moveTo(Xa,Yb);x.lineTo(Xa,Yb+c)}x.stroke()}
-     x.fillStyle='#9dffb0';x.fillRect(ox+(MZ-1)*c+c*.2,oy+(MZ-1)*c+c*.2,c*.6,c*.6);const at=(g.d.cell||{})[p.slot]||0,r=g.d.res[p.slot];x.fillStyle=HK.LANES[p.slot];x.beginPath();x.arc(ox+(at%MZ+.5)*c,oy+(Math.floor(at/MZ)+.5)*c,c*.34,0,7);x.fill();
-     if(r)HK.txt(x,r===1?'Out!':'Caught!',X+PW/2,Y+PH/2,Math.max(22,PH*.12),r===1?'#9dffb0':'#ff7a6a')},{maxW:w*.36,top:.14,maxH:h*.7})},
+ /* every fighter's maze in their own view, lit only around them: the threads they have seen stay faint, the rest is dark.
+    The fungus shows where they have seen it; the exit always glows. */
+ hud(x,w,h,g,HK){const m=mzOf(g),W=m.W,F=m.F,creep=CREEP(g.t);
+   HK.split(x,w,h,(x,X,Y,PW,PH,p)=>{const c=Math.min(PW,PH)/MZ,ox=X+(PW-c*MZ)/2,oy=Y+(PH-c*MZ)/2,at=(g.d.cell||{})[p.slot]||0,r=g.d.res[p.slot],S=m.seen[p.slot]||new Set(),ax=at%MZ,ay=Math.floor(at/MZ);
+     x.fillStyle='#07040a';x.fillRect(ox,oy,c*MZ,c*MZ);const gl=x.createRadialGradient(ox+(ax+.5)*c,oy+(ay+.5)*c,0,ox+(ax+.5)*c,oy+(ay+.5)*c,c*(LAMP+.6));gl.addColorStop(0,'rgba(255,210,140,.22)');gl.addColorStop(1,'rgba(255,210,140,0)');x.fillStyle=gl;x.fillRect(ox,oy,c*MZ,c*MZ);
+     for(let i=0;i<MZ*MZ;i++){const a=i%MZ,b=Math.floor(i/MZ),lit=r||(a-ax)**2+(b-ay)**2<=LAMP*LAMP;if(!lit&&!S.has(i))continue;const Xa=ox+a*c,Yb=oy+b*c;x.fillStyle=lit?'rgba(120,80,140,.28)':'rgba(120,80,140,.1)';x.fillRect(Xa,Yb,c,c);
+       if(F[i]<creep){x.fillStyle=lit?'rgba(224,128,255,.5)':'rgba(224,128,255,.22)';x.fillRect(Xa,Yb,c,c)}
+       x.strokeStyle=lit?'#e080ff':'rgba(224,128,255,.3)';x.lineWidth=Math.max(1.5,c*.08);x.beginPath();if(W[i]&1){x.moveTo(Xa,Yb);x.lineTo(Xa+c,Yb)}if(W[i]&2){x.moveTo(Xa+c,Yb);x.lineTo(Xa+c,Yb+c)}if(W[i]&4){x.moveTo(Xa,Yb+c);x.lineTo(Xa+c,Yb+c)}if(W[i]&8){x.moveTo(Xa,Yb);x.lineTo(Xa,Yb+c)}x.stroke()}
+     x.strokeStyle='rgba(224,128,255,.25)';x.lineWidth=2;x.strokeRect(ox,oy,c*MZ,c*MZ);
+     x.fillStyle='#9dffb0';x.shadowColor='#9dffb0';x.shadowBlur=12;x.fillRect(ox+(MZ-1)*c+c*.2,oy+(MZ-1)*c+c*.2,c*.6,c*.6);x.shadowBlur=0;
+     x.fillStyle=HK.LANES[p.slot];x.beginPath();x.arc(ox+(ax+.5)*c,oy+(ay+.5)*c,c*.34,0,7);x.fill();
+     if(r)HK.txt(x,r===1?'Out!':'Caught!',X+PW/2,Y+PH/2,Math.max(22,PH*.12),r===1?'#9dffb0':'#ff7a6a');
+     else if(creep>=0&&F[at]-creep<4)HK.txt(x,'The fungus is close!',X+PW/2,oy-6,Math.max(13,PH*.05),'#ff9ae0')},{maxW:w*.36,top:.14,maxH:h*.7})},
  pad(K){const s=K.s;if(K.first){s.W=maze(K.d.seed);s.D=bfs(s.W,MZ*MZ-1);s.F=bfs(s.W,0);s.at=0;s.res=0;s.cv=K.canvas(110);
      const mv=w=>()=>{if(s.res)return;const c=s.at,x=c%MZ,y=Math.floor(c/MZ);if(s.W[c]&(1<<w)){K.buzz(40);return}s.at=[c-MZ,c+1,c+MZ,c-1][w];K.buzz(6);if(s.at===MZ*MZ-1){s.res=1;O.sfx('mgGood')}send()};
      const send=()=>K.send(Math.round((1-s.D[s.at]/s.D[0])*100)+':'+s.res+':'+s.at);const pad=K.el('div','dirPad small');['▲','▶','▼','◀'].forEach((a,k)=>pad.appendChild(K.btn(a,'dir d'+k,mv(k))));K.x.append(s.cv,pad);s.send=send;s.mv=mv;s.mo=O.motionOn&&O.motionOn();if(s.mo){O.motion.calibrate();s.mt=0}}
    /* tilt: lean past a threshold and the dot steps that way, again every fifth of a second while you hold the lean */
    if(s.mo&&!s.res){const tl=O.motion.tilt(),ax=Math.abs(tl.x)>=Math.abs(tl.y),v=ax?tl.x:tl.y,now=performance.now();if(Math.abs(v)>.4){if(now-s.mt>(s.held?210:120)){s.mt=now;s.held=1;s.mv(ax?(v>0?1:3):(v>0?2:0))()}}else s.held=0}
-   const t=K.now(),creep=(t-4)/1;if(!s.res&&creep>=1&&s.F[s.at]<creep){s.res=2;O.sfx('mgBad');s.send()}
+   const t=K.now(),creep=CREEP(t);if(!s.res&&s.F[s.at]<creep){s.res=2;O.sfx('mgBad');s.send()}
+   if(!s.res&&creep>=0&&s.F[s.at]-creep<3&&!(performance.now()-(s.bz||0)<700)){s.bz=performance.now();K.buzz([30,40,30])}   // a shiver when the fungus is close
    {const[x,w,h]=K.fit(s.cv),tl=s.mo?O.motion.tilt():{x:0,y:0},R=Math.min(44,h*.38),cx=s.mo?w*.25:-999,cy=h/2;x.fillStyle='#140c14';x.fillRect(0,0,w,h);if(s.mo){x.strokeStyle='rgba(255,255,255,.4)';x.lineWidth=2;x.beginPath();x.arc(cx,cy,R,0,7);x.stroke();x.beginPath();x.arc(cx,cy,R*.4,0,7);x.stroke();x.fillStyle='#ffd27a';x.beginPath();x.arc(cx+clamp(tl.x,-1,1)*R*.8,cy+clamp(tl.y,-1,1)*R*.8,8,0,7);x.fill()}
      const tx=s.mo?w*.66:w/2;x.fillStyle='#e8c05a';x.font='800 18px system-ui';x.textAlign='center';x.fillText(s.res===1?'Out!':s.res===2?'Caught!':'Watch your maze',tx,h/2-6);x.fillStyle='#bfb29a';x.font='600 13px system-ui';x.fillText(s.res?'':'on the big screen',tx,h/2+16);return}
-   const[x,w,h]=K.fit(s.cv),c=Math.min(w,h)/MZ,ox=(w-c*MZ)/2;x.fillStyle='#140c14';x.fillRect(0,0,w,h);for(let i=0;i<MZ*MZ;i++){const a=i%MZ,b=Math.floor(i/MZ),X=ox+a*c,Y=b*c;if(s.F[i]<creep){x.fillStyle='rgba(224,128,255,.45)';x.fillRect(X,Y,c,c)}
-     x.strokeStyle='#e080ff';x.lineWidth=2;x.beginPath();if(s.W[i]&1){x.moveTo(X,Y);x.lineTo(X+c,Y)}if(s.W[i]&2){x.moveTo(X+c,Y);x.lineTo(X+c,Y+c)}if(s.W[i]&4){x.moveTo(X,Y+c);x.lineTo(X+c,Y+c)}if(s.W[i]&8){x.moveTo(X,Y);x.lineTo(X,Y+c)}x.stroke()}
-   x.fillStyle='#9dffb0';x.fillRect(ox+(MZ-1)*c+c*.2,(MZ-1)*c+c*.2,c*.6,c*.6);x.fillStyle=K.LANES[K.sl];x.beginPath();x.arc(ox+(s.at%MZ+.5)*c,(Math.floor(s.at/MZ)+.5)*c,c*.32,0,7);x.fill();
-   if(s.mo){const tl=O.motion.tilt(),R=Math.min(26,c*1.4),cx=w-R-6,cy=R+6;x.strokeStyle='rgba(255,255,255,.4)';x.lineWidth=2;x.beginPath();x.arc(cx,cy,R,0,7);x.stroke();x.beginPath();x.arc(cx,cy,R*.4,0,7);x.stroke();x.fillStyle='#ffd27a';x.beginPath();x.arc(cx+clamp(tl.x,-1,1)*R*.8,cy+clamp(tl.y,-1,1)*R*.8,5,0,7);x.fill()}
-   if(s.res){x.fillStyle=s.res===1?'#9dffb0':'#ff7a6a';x.font='800 28px system-ui';x.textAlign='center';x.fillText(s.res===1?'Out!':'Caught!',w/2,h/2)}},
+   },
  hint:()=>O.motionOn&&O.motionOn()?'Watch your maze on the big screen and tilt to roll to the green corner. The pink fungus is chasing you.':'Watch your maze on the big screen and steer with the arrows to the green corner. The pink fungus is chasing you.'});
 
 /* ===== 25 · Stormspire · Lightning Rods: read the charge; lightning takes the most charged rod ===== */
-O.addMg({id:'rods',dun:12,name:'Lightning Rods',hearts:true,ctl:'Phone: five rods',live:true,
+O.addMg({id:'rods',dun:12,name:'Lightning Rods',hearts:true,ctl:'Phone: five rods',motion:1,mo:'Tilt your phone left and right to walk between the five rods: level is the middle rod.',live:true,
  brief:'Five rods on the tower top crackle as they charge, and lightning takes the most charged ones. Read the sparks and stand by a rod that will NOT be struck. Later, two rods are struck at once.',
  setup(g){const r=H.rng(g.seed);g.d.s=[];let t=1.4;for(let i=0;i<18;i++){const f=i/17,warn=+(1.1-.55*f).toFixed(2),n=i>7&&r()<.5?2:1,a=[];while(a.length<n){const k=Math.floor(r()*5);if(!a.includes(k))a.push(k)}const base=[0,1,2,3,4].map(k=>a.includes(k)?1:+(.3+r()*.58).toFixed(2));g.d.s.push([+t.toFixed(2),+(t+warn).toFixed(2),a,base]);t+=warn+.9-.35*f}
    g.dur=t+.4;g.d.at={};here().forEach((p,i)=>g.d.at[p.slot]=[2,1,3,0][i%4]);g.res=0},
@@ -100,14 +118,15 @@ O.addMg({id:'rods',dun:12,name:'Lightning Rods',hearts:true,ctl:'Phone: five rod
    update(m){const t=m.st==='play'?m.t:-9,last=m.d.s[m.res-1];rods.forEach(([sp,b],k)=>{const c=O.MG.rods.charge(m,k,t);sp.scale.setScalar(.5+c*1.6+(c>.5?Math.sin(K.now()*40+k)*.2*c:0));b.visible=!!last&&t-last[1]<.25&&t>=last[1]&&last[2].includes(k)})}}},
  hud(x,w,h,g,HK){for(let k=0;k<5;k++){const c=O.MG.rods.charge(g,k,g.t);HK.bar(x,w/2+(k-2)*w*.09-w*.035,h*.1,w*.07,10,c,c>.8?'#ffffff':'#a0c0ff')}},
  pad(K){const d=K.d,s=K.s;if(K.first){s.row=K.el('div','rodRow');for(let k=0;k<5;k++)s.row.appendChild(K.btn('','rod',()=>{K.buzz(10);K.send(String(k))}));K.x.appendChild(s.row)}
+   K.slide(5,d.at[K.sl]!=null?d.at[K.sl]:2,k=>{K.buzz(10);K.send(String(k))});
    const t=K.now();[...s.row.children].forEach((b,k)=>{const c=O.MG.rods.charge(K.live(),k,t);b.style.background=`linear-gradient(to top,rgba(160,192,255,.9) ${Math.round(c*100)}%,#1a1c2a ${Math.round(c*100)}%)`;b.classList.toggle('on',d.at[K.sl]===k)})},
  hint:()=>'Stand by a rod with LITTLE charge. The brightest gets struck.'});
 
 /* ===== 26 · Stormspire · Gale: lean against the gusts to keep your balance ===== */
-O.addMg({id:'gale',dun:12,name:'Gale',ctl:'Phone: hold LEAN ◀ or ▶',live:true,
+O.addMg({id:'gale',dun:12,name:'Gale',ctl:'Phone: hold LEAN ◀ or ▶',motion:1,mo:'Tilt your phone against the wind to lean: the further you tilt, the harder you lean. Watch your needle on the big screen.',live:true,
  brief:'The storm leans on you from one side, then the other, in gusts: the flags show which way a moment before. Hold LEAN against the wind to keep your balance needle in the middle. Three stumbles and you are blown off the tower.',
  setup(g){const r=H.rng(g.seed);g.d.gu=[];let t=1,dir=1;while(t<27){const f=t/28,len=+(1.4+r()*1.6).toFixed(2);dir=r()<.6?-dir:dir;g.d.gu.push([+t.toFixed(2),+(t+len).toFixed(2),dir,+(.55+r()*.4+.35*f).toFixed(2)]);t+=len+.25+r()*.6}g.dur=28;g.d.n={};g.d.ln={};g.d.st={};g.vel={};g.inv={};for(const p of here()){g.d.n[p.slot]=0;g.d.st[p.slot]=0;g.vel[p.slot]=0}},
- input(g,p,v){const k=Math.floor(num(+v));g.d.ln[p.slot]=clamp(k,-1,1)},
+ input(g,p,v){g.d.ln[p.slot]=+clamp(num(+v),-1,1).toFixed(2)},
  wind(g,t){const q=g.d.gu.find(e=>t>=e[0]&&t<e[1]);return q?q[2]*q[3]:0},
  tick(g,dt){const w=this.wind(g,g.t);for(const p of here()){const k=p.slot;if(g.d.st[k]>=3)continue;const v=(g.vel[k]+(w*1.15-(g.d.ln[k]||0)*1.4-g.d.n[k]*.6)*dt*2.4)*.96;g.vel[k]=v;g.d.n[k]=+(g.d.n[k]+v*dt*2).toFixed(3);
      if(Math.abs(g.d.n[k])>=1){if(!(g.inv[k]>g.t)){g.d.st[k]++;g.inv[k]=g.t+1;H.ev('mgHit',{slot:k})}g.d.n[k]=0;g.vel[k]=0}}g.d.fl=g.d.gu.filter(e=>g.t>=e[0]-.7&&g.t<e[1]).map(e=>e[2])[0]||0},
@@ -117,7 +136,7 @@ O.addMg({id:'gale',dun:12,name:'Gale',ctl:'Phone: hold LEAN ◀ or ▶',live:tru
  hud(x,w,h,g,HK){const fl=g.d.fl||0;if(fl)HK.txt(x,fl>0?'WIND → lean ◀':'lean ▶ ← WIND',w/2,h*.1,Math.max(22,h*.05),'#a0c0ff');const ps=HK.players(),bw=Math.min(w*.2,260),bh=Math.max(14,h*.025);ps.forEach((p,i)=>{const X=w/2+(i-(ps.length-1)/2)*(bw+30),Y=h*.18;HK.panel(x,X-bw/2-10,Y-30,bw+20,bh+46,.8);HK.txt(x,O.CLASSES[p.cls].animal,X,Y-14,Math.max(13,h*.024),HK.LANES[p.slot]);
    x.fillStyle='rgba(0,0,0,.6)';x.fillRect(X-bw/2,Y,bw,bh);x.fillStyle='#2a6a3a';x.fillRect(X-bw*.12,Y,bw*.24,bh);x.fillStyle='#fff';x.fillRect(X+(g.d.n[p.slot]||0)*bw/2-4,Y-6,8,bh+12);for(let k=0;k<3;k++)HK.txt(x,k<(g.d.st[p.slot]||0)?'✗':'·',X+(k-1)*18,Y+bh+12,14,k<(g.d.st[p.slot]||0)?'#ff7a6a':'#6a5a4a')})},
  pad(K){const d=K.d,s=K.s;if(K.first){const hold=k=>v=>{K.buzz(v?8:0);K.send(String(v?k:0))};K.x.append(K.el('p','mgNote watchTv','👀 Watch your balance needle on the big screen'),K.row(2,K.btn('◀ LEAN','go big',hold(-1),true),K.btn('LEAN ▶','go big',hold(1),true)))}
-   },
+   if(K.mo){const v=Math.round(clamp(K.tilt().x/.55,-1,1)*10)/10,now=performance.now();if(v!==s.lv&&!(now-(s.lt||0)<70)){s.lv=v;s.lt=now;K.send(String(v))}}},
  hint:()=>'Watch the big screen. Hold LEAN against the wind (away from the side it blows from).'});
 
 /* ===== 27 · The Clockwork Depths · Gear Teeth: slip through each turning ring's gap ===== */
@@ -139,41 +158,50 @@ O.addMg({id:'gears',dun:13,name:'Gear Teeth',ctl:'Phone: SLIP',live:true,
  hint:()=>'Watch the big screen. SLIP when the gap in your ring reaches your dot.'});
 
 /* ===== 28 · The Clockwork Depths · Pendulum Bridge: race across under the clock pendulums ===== */
-O.addMg({id:'pendulum',dun:13,name:'Pendulum Bridge',ctl:'Phone: hold to run',live:true,
+O.addMg({id:'pendulum',dun:13,name:'Pendulum Bridge',ctl:'Phone: hold to run',motion:1,mo:'Tip the top of your phone away from you to run; bring it back level to stop. Watch the blades on the big screen.',live:true,
  brief:'Cross a bridge under six great clock pendulums. Hold the button to run and let go as a blade sweeps across. A hit throws you back to the last post. Get across in time.',
  setup(g){const r=H.rng(g.seed);g.d.bl=[14,28,42,56,70,84].map((x,i)=>[x,+(1.9-i*.12+r()*.12).toFixed(2),+(r()*6.28).toFixed(2)]);g.dur=26;g.d.pos={};g.d.fin={};g.stun={}},
  tick(g,dt){let done=true;for(const p of here()){const k=p.slot,x=g.d.pos[k]||0;if(x>=100)continue;done=false;if((g.stun[k]||0)>0){g.stun[k]-=dt;continue}
      if(String(g.v[p.id]||'').endsWith('1')){let nx=x+16*dt;for(const b of g.d.bl){if(Math.abs(nx-b[0])<2.4&&O.bladeDown(b,g.t)){const back=g.d.bl.filter(q=>q[0]<b[0]).pop();nx=back?back[0]+4:0;g.stun[k]=.9;H.ev('mgHit',{slot:k});break}}
        g.d.pos[k]=+Math.min(100,nx).toFixed(1);if(nx>=100){g.d.fin[k]=+g.t.toFixed(2);H.ev('boon')}}}if(done&&here().length)g.end=1},
  pass:(g,p)=>g.d.fin[p.slot]!=null,prog:(g,p)=>g.d.fin[p.slot]!=null?'across!':`${Math.round(g.d.pos[p.slot]||0)}%`,
+ /* each fighter's run on the big screen: how far, and whether the next blade is down */
+ hud(x,w,h,g,HK){HK.split(x,w,h,(x,X,Y,W,H,p)=>{const pos=g.d.pos[p.slot]||0,nx=g.d.bl.find(b=>b[0]>pos-2),bad=nx&&O.bladeDown(nx,g.t),done=g.d.fin[p.slot]!=null;
+   HK.bar(x,X+8,Y+H*.62,W-16,Math.max(8,H*.1),pos/100,'#e8c05a');for(const b of g.d.bl){x.fillStyle=O.bladeDown(b,g.t)?'#ff5a4a':'#6a5a4a';x.fillRect(X+8+(W-16)*b[0]/100-2,Y+H*.55,4,H*.24)}
+   HK.txt(x,done?'Across!':bad?'BLADE!':'Clear',X+W/2,Y+H*.32,Math.max(16,H*.2),done?'#9dffb0':bad?'#ff7a6a':'#9dffb0')},{top:.04,maxH:h*.26,maxW:w*.22})},
  tv(K,g){const G2=new K.T.Group(),P=K.pal();K.addv(G2,K.vb(P2=>{for(let x=-26;x<26;x++)for(let z=-3;z<3;z++)P2.set(x,0,z,(x%3)?'w':'wd')},.2,P)).position.y=-.1;
    for(const s0 of[-1,1])K.addv(G2,K.vb(P2=>{for(let x=-6;x<6;x++)for(let z=-8;z<8;z++)for(let y=0;y<6;y++)P2.set(x,y,z,'s')},.2,P)).position.set(s0*6.4,-1.2,0);
    const bl=g.d.bl.map(b=>{const piv=new K.T.Group();piv.position.set(-4+b[0]*.08,3.2,0);const rod=new K.T.Mesh(new K.T.BoxGeometry(.06,2.4,.06),new K.T.MeshBasicMaterial({color:K.lin('#5a4a2a')}));rod.position.y=-1.2;
      const blade=K.vb(P2=>{for(let x=-5;x<5;x++)for(let y=0;y<3;y++)if(Math.abs(x)<5-y)P2.set(x,-y,0,'il')},.08,P);blade.position.y=-2.5;piv.add(rod,blade);G2.add(piv);return[piv,b]});
    const beam=new K.T.Mesh(new K.T.BoxGeometry(10,.2,.2),new K.T.MeshBasicMaterial({color:K.lin('#6a5a3a')}));beam.position.y=3.25;G2.add(beam);K.light(G2,0,2,2.5,'#ffd060',2.4);
    return{g:G2,cam:[[0,3,8.6],[0,.9,0]],walk:1,spot:(p,i,n)=>[-4.3+((g.d.pos[p.slot]||0)*.086),0,-.4+i*.3,-Math.PI/2],update(m){const t=m.st==='play'?m.t:0;for(const[piv,b]of bl)piv.rotation.z=Math.sin(t*Math.PI*2/b[1]+b[2])*1.15}}},
- pad(K){const d=K.d,s=K.s;if(K.first){const m=K.meter();s.m=m;s.w=K.el('div','mgWarn');K.x.append(m,s.w,K.btn('Hold to run','go big',v=>{K.buzz(v?10:0);s.v=((s.v||'')+(v?'1':'0')).slice(-12);K.send(s.v)},true))}
+ pad(K){const d=K.d,s=K.s;if(K.first){const m=K.meter();s.m=m;s.w=K.el('div','mgWarn');s.run=v=>{K.buzz(v?10:0);s.v=((s.v||'')+(v?'1':'0')).slice(-12);K.send(s.v)};K.x.append(m,s.w,K.btn('Hold to run','go big',s.run,true))}
+   if(K.mo){const y=K.tilt().y,on=s.mr?y<-.22:y<-.32;if(on!==!!s.mr){s.mr=on;s.run(on)}}
    const pos=d.pos[K.sl]||0;s.m.set(pos/100);const nx=(d.bl||[]).find(b=>b[0]>pos-2),bad=nx&&O.bladeDown(nx,K.now());s.w.textContent=pos>=100?'Across!':bad?'Blade!':'Clear';s.w.className='mgWarn '+(pos>=100||!bad?'ok':'bad')},
- hint:()=>'Hold to run. Let go when a blade swings across.'});
+ hint:()=>O.motionOn&&O.motionOn()?'Tip forward to run, level to stop. Watch your blades on the big screen.':'Hold to run. Let go when a blade swings across.'});
 
 /* ===== 29 · The Ashen Catacombs · Buried in Ash: dig out whichever side is higher ===== */
-O.addMg({id:'ash',dun:14,name:'Buried in Ash',hearts:1,ctl:'Phone: DIG ◀ · DIG ▶',live:true,
+O.addMg({id:'ash',dun:14,name:'Buried in Ash',hearts:1,ctl:'Phone: DIG ◀ · DIG ▶',motion:1,mo:'Rock your phone left and right to dig: each tip to the left digs the left pile, each tip to the right digs the right one. Come back to level between digs.',live:true,
  brief:'Ash pours down on both sides of you, faster on one side, then the other. Tap DIG on a side to clear it. If either pile reaches the top, you are buried. Watch the streams: the thicker one is pouring faster.',
  setup(g){const r=H.rng(g.seed);g.d.ps=[];let t=0;while(t<30){const len=+(1.5+r()*2).toFixed(2),f=t/30;g.d.ps.push([+t.toFixed(2),+(1.2+r()*3+f*1.6).toFixed(2),+(1.2+r()*3+f*1.6).toFixed(2)]);t+=len}g.dur=26;g.d.L={};g.d.R={};g.cnt={};for(const p of here()){g.d.L[p.slot]=20;g.d.R[p.slot]=20;g.cnt[p.slot]=[0,0]}},
  input(g,p,v){const[a,b]=String(v).split(',').map(Number),c=g.cnt[p.slot],k=p.slot;const da=Math.max(0,Math.min(6,a-c[0])),db=Math.max(0,Math.min(6,b-c[1]));c[0]=Math.max(c[0],a);c[1]=Math.max(c[1],b);g.d.L[k]=Math.max(0,g.d.L[k]-da*7);g.d.R[k]=Math.max(0,g.d.R[k]-db*7)},
  rate(g,t){const q=g.d.ps.filter(e=>e[0]<=t).pop()||g.d.ps[0];return q},
  tick(g,dt){const q=this.rate(g,g.t);for(const p of alive(g)){const k=p.slot;g.d.L[k]=Math.min(100,g.d.L[k]+q[1]*dt*4.3);g.d.R[k]=Math.min(100,g.d.R[k]+q[2]*dt*4.3);if(g.d.L[k]>=100||g.d.R[k]>=100){H.hit(g,p);g.d.L[k]=40;g.d.R[k]=40}}},
  prog:(g,p)=>`◀ ${Math.round(g.d.L[p.slot])} · ${Math.round(g.d.R[p.slot])} ▶`,
+ /* each fighter's two piles on the big screen, with the line they must not reach */
+ hud(x,w,h,g,HK){HK.split(x,w,h,(x,X,Y,W,H,p)=>{[g.d.L[p.slot]||0,g.d.R[p.slot]||0].forEach((v,j)=>{const bw=W*.26,bx=X+W/2+(j?W*.06:-W*.06-bw),by=Y+H*.06,bh=H*.82,hi=v>75;x.fillStyle='#120e0c';x.fillRect(bx,by,bw,bh);x.fillStyle=hi?'#ff8a5a':'#8a8078';x.fillRect(bx,by+bh*(1-v/100),bw,bh*v/100);x.fillStyle='#ff5a4a';x.fillRect(bx-3,by,bw+6,3)});
+   HK.txt(x,'◀',X+W*.12,Y+H/2,Math.max(14,H*.16));HK.txt(x,'▶',X+W*.88,Y+H/2,Math.max(14,H*.16))},{top:.04,maxH:h*.26,maxW:w*.22})},
  tv(K,g){const G2=K.room({w:7,d:4}),T=K.T,piles={},str=[-1,1].map(s0=>{const m=new T.Mesh(new T.BoxGeometry(.1,3,.1),new T.MeshBasicMaterial({color:K.lin('#8a8a8a'),transparent:true,opacity:.6}));m.position.set(s0*.7,1.6,0);G2.add(m);return m});
    return{g:G2,cam:[[0,1.8,5],[0,.9,0]],spot:(p,i,n)=>[slotX(i,n,1.8),0,0,0],
    update(m){const q=O.MG.ash.rate(m,m.t),ps=here();str.forEach((s,i)=>{s.scale.x=s.scale.z=.5+q[i+1]*.35});ps.forEach((p,i)=>{let pl=piles[p.slot];if(!pl){pl=[-1,1].map(()=>{const c=new T.Mesh(new T.ConeGeometry(.5,1,8),new T.MeshBasicMaterial({color:K.lin('#7a7a7a')}));G2.add(c);return c});piles[p.slot]=pl}
        [m.d.L[p.slot],m.d.R[p.slot]].forEach((v,j)=>{const c=pl[j];c.scale.y=Math.max(.05,v/100*1.6);c.position.set(slotX(i,ps.length,1.8)+(j?.55:-.55),c.scale.y/2,0)})})}}},
- pad(K){const d=K.d,s=K.s;if(K.first){s.c=[0,0];s.L=K.meter('ashm');s.R=K.meter('ashm');const dig=j=>()=>{K.buzz(6);s.c[j]++;K.send(s.c.join(','))};K.x.append(K.row(2,s.L,s.R),K.row(2,K.btn('DIG ◀','go big',dig(0)),K.btn('DIG ▶','go big',dig(1))))}
+ pad(K){const d=K.d,s=K.s;if(K.first){s.c=[0,0];s.L=K.meter('ashm');s.R=K.meter('ashm');const dig=j=>()=>{K.buzz(6);s.c[j]++;K.send(s.c.join(','))};s.dig=dig;K.x.append(K.row(2,s.L,s.R),K.row(2,K.btn('DIG ◀','go big',dig(0)),K.btn('DIG ▶','go big',dig(1))))}
+   K.lean(k=>{if(k===1||k===3){const j=k===3?0:1;s.c[j]+=2;K.buzz(10);K.send(s.c.join(','))}},{on:.38});
    s.L.set((d.L[K.sl]||0)/100);s.R.set((d.R[K.sl]||0)/100)},
- hint:()=>'Dig whichever pile is higher. Neither may reach the top.'});
+ hint:()=>O.motionOn&&O.motionOn()?'Rock toward the higher pile on the big screen. Neither may reach the red line.':'Dig whichever pile is higher. Neither may reach the top.'});
 
 /* ===== 30 · The Ashen Catacombs · Urn Catch: run under the falling urns; the party covers the shelf together ===== */
-O.addMg({id:'urns',dun:14,name:'Urn Catch',ctl:'Phone: five spots under the shelf',
+O.addMg({id:'urns',dun:14,name:'Urn Catch',ctl:'Phone: five spots under the shelf',motion:1,mo:'Tilt your phone left and right to run along the shelf: level is the middle spot.',
  brief:'Funeral urns wobble on the high shelf, then fall. Run under one to catch it before it shatters and lets out what is inside. Five spots, and the whole party covers them together: if the party breaks four urns, everyone is caught.',
  setup(g){const r=H.rng(g.seed),n=Math.max(1,here().length);g.d.u=[];let t=1.4;while(t<28){const f=t/30,warn=+(1-.5*f).toFixed(2);g.d.u.push([+t.toFixed(2),+(t+warn).toFixed(2),Math.floor(r()*5)]);if(f>.2&&r()<.35+.2*(n>1?1:0))g.d.u.push([+(t+.2).toFixed(2),+(t+.2+warn).toFixed(2),Math.floor(r()*5)]);t+=(warn+.6-.3*f)*(n>1?.85:1)}
    g.dur=t+1;g.d.at={};here().forEach((p,i)=>g.d.at[p.slot]=[2,0,4,1][i%4]);g.d.br=0;g.d.ok=0;g.res=0},
@@ -185,6 +213,6 @@ O.addMg({id:'urns',dun:14,name:'Urn Catch',ctl:'Phone: five spots under the shel
    update(m){const t=m.st==='play'?m.t:-9;let i=0;for(const q of m.d.u){if(t<q[0]-.3||t>q[1]+.1)continue;let u=pool[i];if(!u){u=K.vb(P2=>{for(let y=0;y<7;y++){const r=y<2?1:y<5?2:1;for(let x=-r;x<=r;x++)for(let z=-r;z<=r;z++)P2.set(x,y,z,y===6?'ad':'l')}},.06,K.pal());G2.add(u);pool.push(u)}
        u.visible=true;const f=clamp((t-q[0])/(q[1]-q[0]),0,1),fall=f>.55?(f-.55)/.45:0;u.position.set((q[2]-2)*1.2+(fall?0:Math.sin(K.now()*30)*.04*f),2.75-fall*fall*2.3,-1.4);u.rotation.z=fall?fall*2:Math.sin(K.now()*25)*.12*f;i++}for(;i<pool.length;i++)pool[i].visible=false}}},
  hud(x,w,h,g,HK){HK.txt(x,`Broken: ${g.d.br} of 4`,w*.06,h*.12,18,g.d.br>=3?'#ff7a6a':'#e8d8c0','left')},
- pad(K){if(K.first){K.x.append(K.row(5,...[0,1,2,3,4].map(k=>K.btn(String(k+1),'spot',()=>{K.buzz(10);K.send(String(k))}))))}K.x.querySelectorAll('.spot').forEach((b,k)=>b.classList.toggle('on',k===K.d.at[K.sl]))},
+ pad(K){if(K.first){K.x.append(K.row(5,...[0,1,2,3,4].map(k=>K.btn(String(k+1),'spot',()=>{K.buzz(10);K.send(String(k))}))))}K.slide(5,K.d.at[K.sl]!=null?K.d.at[K.sl]:2,k=>{K.buzz(10);K.send(String(k))});K.x.querySelectorAll('.spot').forEach((b,k)=>b.classList.toggle('on',k===K.d.at[K.sl]))},
  hint:()=>'Run under the urn that wobbles. Split the shelf with your party.'});
 })();

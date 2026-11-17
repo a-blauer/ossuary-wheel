@@ -81,7 +81,7 @@ O.addMg({id:'signal',dun:16,name:'The Deep Signal',ctl:'Phone: tap short · hold
  hint:(g,d)=>d.ph==='show'?'Watch the flashes: short and long.':'Tap = short pulse, hold = long pulse.'});
 
 /* ===== 35 · The Blood Cathedral · The Procession: step on every drum beat, kneel when the bell tolls ===== */
-O.addMg({id:'procession',dun:17,name:'The Procession',ctl:'Phone: STEP · KNEEL, on the beat',live:true,
+O.addMg({id:'procession',dun:17,name:'The Procession',ctl:'Phone: STEP · KNEEL, on the beat',motion:1,mo:'Flick your phone UP to STEP on each drum beat; dip it DOWN to KNEEL when the bell tolls. Watch the ring on the big screen.',live:true,
  brief:'Walk with the faithful. Press STEP on every drum beat, and KNEEL instead when the bell tolls. The tempo shifts. Steps off the beat, missed beats and the wrong move all draw eyes: four missteps and they see you for what you are.',
  setup(g){const r=H.rng(g.seed);g.d.bt=[];let t=1.6,iv=.82;for(let i=0;i<26;i++){g.d.bt.push([+t.toFixed(2),i>3&&r()<.22?1:0]);if(i===9||i===18)iv=r()<.5?iv*.82:iv*1.12;t+=iv;iv=Math.max(.48,iv-.008)}g.dur=t+.8;g.d.ms={}},
  input(g,p,v){g.d.ms[p.slot]=num(+v)},
@@ -91,9 +91,9 @@ O.addMg({id:'procession',dun:17,name:'The Procession',ctl:'Phone: STEP · KNEEL,
  hud(x,w,h,g,HK){const b=g.d.bt.find(q=>q[0]>g.t-.1);if(!b)return;const u=clamp(1-(b[0]-g.t)/.8,0,1);x.strokeStyle=b[1]?'#ffc060':'#ff5a2a';x.lineWidth=6;x.beginPath();x.arc(w/2,h*.16,20+(1-u)*60,0,7);x.stroke();x.fillStyle=b[1]?'#ffc060':'#ff5a2a';x.beginPath();x.arc(w/2,h*.16,18,0,7);x.fill();HK.txt(x,b[1]?'KNEEL':'STEP',w/2,h*.16+40,20)},
  pad(K){const d=K.d,s=K.s;if(K.first){s.done={};s.ms=0;s.ring=K.el('div','mgRing');s.ring.id='procRing';s.ring.appendChild(K.el('i'));
      const press=k=>()=>{const t=K.now(),i=d.bt.findIndex((q,j)=>!s.done[j]&&Math.abs(q[0]-t)<.2);if(i<0){s.ms++;K.buzz(80);O.sfx('mgBad')}else{s.done[i]=1;if(d.bt[i][1]!==k){s.ms++;K.buzz(80);O.sfx('mgBad')}else{K.buzz(12);O.sfx('mgTap')}}K.send(String(s.ms))};
-     K.x.append(s.ring,K.row(2,K.btn('STEP','go big',press(0)),K.btn('KNEEL','go big duck',press(1))))}
+     K.x.append(s.ring,K.row(2,K.btn('STEP','go big',press(0)),K.btn('KNEEL','go big duck',press(1))));K.jolt(dr=>{if(dr==='up')press(0)();else if(dr==='down')press(1)()})}
    const t=K.now();d.bt.forEach((q,j)=>{if(!s.done[j]&&t>q[0]+.22){s.done[j]=1;s.ms++;K.send(String(s.ms))}});if(!s.ping||t-s.ping>1){s.ping=t;K.send(String(s.ms))}const b=d.bt.find(q=>q[0]>t-.15),u=b?clamp((b[0]-t)/.8,0,1):1;s.ring.firstChild.style.transform='scale('+(.35+u*1.4)+')';s.ring.classList.toggle('hot',u<.15);s.ring.classList.toggle('bell',!!b&&!!b[1])},
- hint:()=>'STEP as the ring closes. KNEEL instead when it is gold (the bell).'});
+ hint:()=>O.motionOn&&O.motionOn()?'Watch the ring on the big screen: flick up to STEP as it closes, dip down to KNEEL when it is gold.':'STEP as the ring closes. KNEEL instead when it is gold (the bell).'});
 
 /* ===== 36 · The Blood Cathedral · The Pews: sneak to the altar; pray when the lantern swings your way ===== */
 O.addMg({id:'pews',dun:17,name:'The Pews',ctl:'Phone: hold SNEAK · hold PRAY',live:true,
@@ -113,7 +113,7 @@ O.addMg({id:'pews',dun:17,name:'The Pews',ctl:'Phone: hold SNEAK · hold PRAY',l
  hint:(g,d)=>d.L===2?'PRAY! Hold it till the light passes.':d.L===1?'The lantern is turning: get ready to PRAY.':'Hold SNEAK to creep toward the altar.'});
 
 /* ===== 37 · The Dragon's Roost · Gold Grab: grab coins while the dragon sleeps; never while its eye is open ===== */
-O.addMg({id:'grab',dun:18,name:'Gold Grab',hearts:true,ctl:'Phone: GRAB',
+O.addMg({id:'grab',dun:18,name:'Gold Grab',hearts:true,ctl:'Phone: GRAB',motion:1,mo:'Shake your phone to grab gold, two coins a shake. Freeze the moment the eye opens on the big screen.',
  brief:'The dragon sleeps on its hoard. Tap GRAB as fast as you can to scoop coins. Its eye flickers before it opens: stop at once. Any grab while the eye is open and you are burned. Forty coins and a heart left.',
  setup(g){const r=H.rng(g.seed);g.d.ey=[];let t=2;while(t<26){const f=t/26,warn=+(.75-.3*f).toFixed(2),open=+(1+r()*1.2).toFixed(2);g.d.ey.push([+t.toFixed(2),+(t+warn).toFixed(2),+(t+warn+open).toFixed(2)]);t+=warn+open+1.2+r()*2.4-1*f}g.dur=26;g.d.co={};g.cn={};g.burn={}},
  eye(g,t){const q=g.d.ey.find(e=>t>=e[0]&&t<e[2]);return q?(t>=q[1]?2:1):0},
@@ -124,11 +124,11 @@ O.addMg({id:'grab',dun:18,name:'Gold Grab',hearts:true,ctl:'Phone: GRAB',
    let dr=null;try{dr=K.V.build(K.V.monster('dragon'));const bb=new K.T.Box3().setFromObject(dr),s2=1.6/Math.max(.1,bb.max.y-bb.min.y);dr.scale.setScalar(s2*1.5);dr.position.set(0,-bb.min.y*s2*1.5,-2.5);S.g.add(dr)}catch(e){}S.spot=(p,i,n)=>K.sides(i,n,.6);S.cam=[[0,2.2,5.4],[0,1.3,-1.4]];
    const eye=K.glow(.3,.12,.05,'#ffc040');eye.position.set(0,1.9,-1.6);S.g.add(eye);S.update=m=>{const e=m.d.E||0;eye.visible=e>0;eye.material.color.set(e===2?'#ff3a1a':'#ffc040');eye.scale.y=e===1?(Math.sin(K.now()*30)>0?1:.2):1.6};return S},
  hud(x,w,h,g,HK){const e=g.d.E||0;HK.txt(x,e===2?'EYE OPEN: STOP!':e===1?'It stirs…':'GRAB!',w/2,h*.1,Math.max(26,h*.06),e===2?'#ff3a1a':e===1?'#ffc040':'#9dffb0')},
- pad(K){const s=K.s;if(K.first){s.n=0;s.b=K.btn('GRAB','go big',()=>{K.buzz(5);s.n++;K.send(String(s.n))});K.x.append(s.b)}s.b.classList.toggle('dim',K.d.E===2);s.b.textContent=K.d.E===2?'STOP!':'GRAB'},
+ pad(K){const s=K.s;if(K.first){s.n=0;s.b=K.btn('GRAB','go big',()=>{K.buzz(5);s.n++;K.send(String(s.n))});K.x.append(s.b);K.shake(()=>{K.buzz(5);s.n+=2;K.send(String(s.n))})}s.b.classList.toggle('dim',K.d.E===2);s.b.textContent=K.d.E===2?'STOP!':'GRAB'},
  hint:(g,d)=>d.E===2?'STOP! The eye is open.':d.E===1?'It stirs… stop!':'Grab as fast as you can!'});
 
 /* ===== 38 · The Dragon's Roost · Dragonfire: shelter behind a pillar; two to a pillar; they melt ===== */
-O.addMg({id:'dragonfire',dun:18,name:'Dragonfire',hearts:true,ctl:'Phone: five pillars',
+O.addMg({id:'dragonfire',dun:18,name:'Dragonfire',hearts:true,ctl:'Phone: five pillars',motion:1,mo:'Tilt your phone left and right to run between the five pillars: level is the middle one.',
  brief:'The dragon draws breath, then sweeps fire across the hall. Get behind one of five pillars, but each pillar shelters only two, and a pillar you hide behind may melt down. Spread out, and move to fresh cover as the pillars fall.',
  setup(g){const r=H.rng(g.seed);g.d.br=[];let t=1.8;for(let i=0;i<10;i++){const f=i/9,warn=+(1.4-.5*f).toFixed(2);g.d.br.push([+t.toFixed(2),+(t+warn).toFixed(2)]);t+=warn+1.3-.4*f+r()*.5}g.dur=t+.5;g.d.ph=[3,3,3,3,3].map(v=>v-(r()<.25?1:0));g.d.at={};g.arr={};here().forEach((p,i)=>g.d.at[p.slot]=-1);g.res=0},
  input(g,p,v,at){const k=Math.floor(num(+v,-1));if(k>=-1&&k<5&&g.d.at[p.slot]!==k){g.d.at[p.slot]=k;g.arr[p.slot]=at}},
@@ -141,12 +141,13 @@ O.addMg({id:'dragonfire',dun:18,name:'Dragonfire',hearts:true,ctl:'Phone: five p
    S.update=m=>{pl.forEach((p,k)=>{const h=m.d.ph[k];p.scale.y=Math.max(.02,h/3);p.visible=h>0});const b=m.d.br[m.res],t=m.t;fire.material.opacity=b&&t>=b[0]?.15+.2*Math.sin(K.now()*20):0;const last=m.d.br[m.res-1];if(last&&t-last[1]<.4&&t>=last[1])fire.material.opacity=.8};return S},
  hud(x,w,h,g,HK){const b=g.d.br[g.res];if(b&&g.t>=b[0])HK.txt(x,'It draws breath… TAKE COVER!',w/2,h*.1,Math.max(22,h*.05),'#ff7a3a')},
  pad(K){const d=K.d;if(K.first){K.x.appendChild(K.row(5,...[0,1,2,3,4].map(k=>K.btn('','pillar',()=>{K.buzz(10);K.send(String(k))}))))}
+   K.slide(5,d.at[K.sl]!=null&&d.at[K.sl]>=0?d.at[K.sl]:null,k=>{if(d.ph[k]>0){K.buzz(10);K.send(String(k))}});
    K.x.querySelectorAll('.pillar').forEach((b,k)=>{const h=d.ph[k],n=Object.values(d.at).filter(v=>v===k).length;b.textContent=h>0?'▮'.repeat(h)+(n?`\n${n}/2`:''):'melted';b.classList.toggle('on',d.at[K.sl]===k);b.disabled=h<=0})},
  hint:()=>'Get behind a standing pillar. Two to a pillar.'});
 
 /* ===== 39 · The Hollow Throne · The Mirror Court: perform the shadow's dance, mirrored ===== */
 const MARW=['▲','▶','▼','◀'];
-O.addMg({id:'mirror',dun:19,name:'The Mirror Court',ctl:'Phone: four directions, mirrored',
+O.addMg({id:'mirror',dun:19,name:'The Mirror Court',ctl:'Phone: four directions, mirrored',motion:1,mo:'Tip your phone in each direction of your answer (remember: mirrored), coming back to level between moves. Away from you is up, toward you is down.',
  brief:'Your shadow on the throne dances a sequence of moves. Perform it back as its mirror image: its LEFT is your RIGHT, its right your left; up and down stay as they are. One longer each round. One wrong move and the court turns on you. Clear four rounds.',
  setup(g){const r=H.rng(g.seed);g.d.seq=[];for(let i=0;i<10;i++)g.d.seq.push(Math.floor(r()*4));g.dur=200;g.d.cl={};this.round(g,1)},
  round(g,rd){const d=g.d;d.rd=rd;d.len=2+rd;d.on=+(.62-.03*rd).toFixed(2);d.gp=.25;d.ph='show';d.pt=+g.t.toFixed(2);d.done={};d.lim=+(2+.7*d.len).toFixed(1)},
@@ -162,8 +163,9 @@ O.addMg({id:'mirror',dun:19,name:'The Mirror Court',ctl:'Phone: four directions,
    S.update=m=>{const d=m.d,el=m.t-d.pt,st=d.on+d.gp,i=Math.floor((el-.4)/st),on=m.st==='play'&&d.ph==='show'&&i>=0&&i<d.len&&(el-.4)-i*st<d.on,k=on?d.seq[i]:-1;sh.position.x=k===1?.5:k===3?-.5:0;sh.position.y=.4+(k===0?.3:k===2?-.25:0)};return S},
  hud(x,w,h,g,HK){const d=g.d,el=g.t-d.pt,st=d.on+d.gp,i=Math.floor((el-.4)/st),on=d.ph==='show'&&i>=0&&i<d.len&&(el-.4)-i*st<d.on;HK.txt(x,d.ph==='show'?`Round ${d.rd}: the shadow dances`:d.ph==='input'?'Now mirror it!':'…',w/2,h*.1,Math.max(22,h*.05),'#c070ff');
    if(on)HK.txt(x,MARW[d.seq[i]],w/2,h*.3,Math.max(60,h*.14),'#e0d0ff')},
- pad(K){const d=K.d,s=K.s;if(s.rd!==d.rd){s.rd=d.rd;s.v=''}K.x.textContent='';const dots=K.el('div','mgDots');for(let i=0;i<d.len;i++)dots.appendChild(K.el('span',null,s.v[i]!=null?MARW[+s.v[i]]:'·'));K.x.appendChild(dots);
-   if(d.ph==='show'){K.x.appendChild(K.el('div','mgBig','Watch…'));return}if(d.ph!=='input'||d.done[K.sl])return;const pad=K.el('div','dirPad');for(let k=0;k<4;k++)pad.appendChild(K.btn(MARW[k],'dir d'+k,()=>{K.buzz(10);s.v+=k;K.send(d.rd+':'+s.v)}));K.x.appendChild(pad)},
+ pad(K){const d=K.d,s=K.s;if(s.rd!==d.rd){s.rd=d.rd;s.v=''}
+   const rk=d.ph+':'+d.rd+':'+s.v+':'+(d.done[K.sl]?1:0);if(rk===s.rk&&K.x.firstChild){if(d.ph==='input'&&!d.done[K.sl])K.lean(k=>{K.buzz(10);s.v+=k;K.send(d.rd+':'+s.v)},{on:.5});return}s.rk=rk;K.x.textContent='';const dots=K.el('div','mgDots');for(let i=0;i<d.len;i++)dots.appendChild(K.el('span',null,s.v[i]!=null?MARW[+s.v[i]]:'·'));K.x.appendChild(dots);
+   if(d.ph==='show'){K.x.appendChild(K.el('div','mgBig','Watch…'));return}if(d.ph!=='input'||d.done[K.sl])return;K.lean(k=>{K.buzz(10);s.v+=k;K.send(d.rd+':'+s.v)},{on:.5});const pad=K.el('div','dirPad');for(let k=0;k<4;k++)pad.appendChild(K.btn(MARW[k],'dir d'+k,()=>{K.buzz(10);s.v+=k;K.send(d.rd+':'+s.v)}));K.x.appendChild(pad)},
  hint:(g,d)=>d.ph==='show'?'Watch the shadow.':'Mirror it: swap left and right.'});
 
 /* ===== 40 · The Hollow Throne · The Last Gauntlet: three-second trials, one after another, ever faster ===== */
