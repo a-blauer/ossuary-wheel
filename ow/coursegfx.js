@@ -22,7 +22,7 @@ G.lookFor=function(di){const k=di in TURF?di:0,base=G.LOOKS.ossuary,t=TURF[k],r=
     rail:{c:r,n:.08,alt:mix(r,'#000',.1),p:.25},rail_t:{c:mix(r,'#fff',.15),n:.05},rail_d:{c:mix(r,'#000',.3),n:.08}})};
 function turfModel(C,look){
   const P=new V.Part('turf',[0,0,0]),IND=O.COURSE.IND;
-  const x0=Math.floor(-330/CS),x1=Math.ceil(330/CS),j0=Math.floor(-70/CS),j1=Math.ceil((C.len+30)/CS);
+  const XR=Math.max(330,(C.ext||330)+2*CS),x0=Math.floor(-XR/CS),x1=Math.ceil(XR/CS),j0=Math.floor(-70/CS),j1=Math.ceil((C.len+30)/CS);
   for(let j=j0;j<=j1;j++)for(let i=x0;i<=x1;i++){
     const xc=(i+.5)*CS,yc=(j+.5)*CS,c=C.cx(Math.max(0,Math.min(C.len,yc))),hw=C.half(Math.max(0,Math.min(C.len,yc))),dx=Math.abs(xc-c)-hw;
     const inY=yc>=-40&&yc<=C.len,z=-j-1;

@@ -635,6 +635,8 @@ html[data-mode=host] .card{max-width:30rem}
 .mgCv{height:min(48dvh,400px)}
 .mgLane{width:100%;height:min(46dvh,340px);display:block;border:1px solid var(--seam);margin-bottom:8px;touch-action:none}
 .mgX .wide,#mgX .wide{width:100%;min-height:110px}
+#lookHint{position:absolute;left:2.5%;bottom:3%;padding:8px 16px;background:rgba(14,10,12,.82);border:1px solid var(--seam);border-radius:8px;color:var(--bone);font-size:clamp(.8rem,1.7cqw,1rem);pointer-events:none;white-space:nowrap}
+.scopeWrap,.scopeWrap canvas,.mgCv{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 </style>
 
 <section id="landing">
@@ -671,7 +673,7 @@ html[data-mode=host] .card{max-width:30rem}
         <div id="mgBox" hidden></div>
         
         <div id="toasts"></div>
-        <button id="insBtn" hidden>Look over the course</button>
+        <button id="insBtn" hidden>Look over the course</button><div id="lookHint" hidden>Drag to turn · scroll or pinch to zoom · right-drag to slide · double-click to reset</div>
         <button id="btnMenu" hidden>Menu</button><button id="btnParty" hidden>Party</button>
         <div id="loadPlate" hidden></div>
         <div id="combo"></div><div id="bigNum"></div><div id="mgCall" hidden></div><div id="floats"></div><div id="labels"></div><div id="flash"></div>

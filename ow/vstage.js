@@ -230,10 +230,21 @@ function fitStraight(C,asp,wide,aimX){const pts=[];for(const y of[-40,O.COURSE.T
   if(aimX!=null)c.z+=(wz(C.len)-wz(0))*.08;           // lean the view a little up the course when aiming
   let lo=2,hi=60;for(let i=0;i<22;i++){const d=(lo+hi)/2;cm.position.copy(c).addScaledVector(dir,d);cm.lookAt(c);cm.updateMatrixWorld();let ok=true;for(const p of pts){const q=p.clone().project(cm);if(Math.abs(q.x)>.97||q.y>.8||q.y<-.98){ok=false;break}}if(ok)hi=d;else lo=d}
   strP.copy(c).addScaledVector(dir,hi);strT.copy(c)}
+/* the course preview can be turned and zoomed: from the big screen (drag, wheel, pinch) or from the phone that opened it */
+const LOOK={yaw:0,el:0,zoom:1,px:0,pz:0};O.look=LOOK;
+O.lookReset=()=>{LOOK.yaw=0;LOOK.el=0;LOOK.zoom=1;LOOK.px=0;LOOK.pz=0};
+O.lookSet=v=>{if(!Array.isArray(v))return;const n=(x,d)=>isFinite(+x)?+x:d;LOOK.yaw=clamp(n(v[0],0),-Math.PI,Math.PI);LOOK.el=clamp(n(v[1],0),-1.2,.6);LOOK.zoom=clamp(n(v[2],1),.8,5);LOOK.px=clamp(n(v[3],0),-8,8);LOOK.pz=clamp(n(v[4],0),-14,14)};
+O.lookNudge=(dy,de,zm,dx,dz)=>{const c=Math.cos(LOOK.yaw0+LOOK.yaw||0),sn=Math.sin(LOOK.yaw0+LOOK.yaw||0),k=1/Math.max(.8,LOOK.zoom);
+  O.lookSet([LOOK.yaw+(dy||0),LOOK.el+(de||0),LOOK.zoom*(zm||1),LOOK.px+((dx||0)*c+(dz||0)*sn)*k,LOOK.pz+(-(dx||0)*sn+(dz||0)*c)*k]);if(Math.abs(LOOK.yaw)>=Math.PI)LOOK.yaw=((LOOK.yaw+Math.PI*3)%(Math.PI*2))-Math.PI};
+function orbit(){const off=fitP.clone().sub(fitT),d0=off.length(),yaw0=Math.atan2(off.x,off.z),el0=Math.asin(clamp(off.y/d0,-1,1));LOOK.yaw0=yaw0;
+  const yaw=yaw0+LOOK.yaw,el=clamp(el0+LOOK.el,.2,1.5),d=d0/LOOK.zoom;wantTgt.set(fitT.x+LOOK.px,fitT.y,fitT.z+LOOK.pz);
+  wantPos.set(wantTgt.x+Math.sin(yaw)*Math.cos(el)*d,wantTgt.y+Math.sin(el)*d,wantTgt.z+Math.cos(yaw)*Math.cos(el)*d)}
+let wasIns=false;
 function direct(dt){
   const asp=canvas.clientWidth/Math.max(1,canvas.clientHeight),wide=asp>=1.2,mo=G.mons[0],C=mo&&mo.course;let st=.55;
   if(G.screen==='combat'&&C){const L=C.len*W,k=Math.max(1,1.78/asp)*Math.max(1,L/14),ci=G.cine;
-    const over=()=>{const key=C.id+':'+monFor+':'+asp.toFixed(2)+':'+(G.inspect?1:0);if(fitKey!==key){fitKey=key;fitOver(C,wide,asp)}wantPos.copy(fitP);wantTgt.copy(fitT)};
+    const over=()=>{const key=C.id+':'+monFor+':'+asp.toFixed(2)+':'+(G.inspect?1:0);if(fitKey!==key){fitKey=key;fitOver(C,wide,asp)}wantPos.copy(fitP);wantTgt.copy(fitT);if(G.inspect)orbit()};
+    if(G.inspect!==wasIns){wasIns=G.inspect;if(G.inspect)O.lookReset()}
     if(G.phase==='intro'){const t=G.introT;if(t<1.6){const m=monChest();wantPos.set(m.x+3.2,monH*.7,m.z+5);wantTgt.copy(m);st=.4}else{over();st=.8}}
     else if(ci&&(ci.st==='cast')){const f=heroes.get(ci.atk.pl.id);if(f){wantPos.set(f.position.x+1.9,1.25,f.position.z-2.3);wantTgt.set(f.position.x,.85,f.position.z);st=.35}}
     else if(ci&&(ci.st==='pan'||ci.st==='flight')){const fx=wx(ci.fx),fz=wz(ci.fy),dx=ci.dir[0],dz=-ci.dir[1],multi=ci.multi;
@@ -244,7 +255,7 @@ function direct(dt){
     else if(G.phase==='aim'&&!ci&&!G.inspect&&!G.practice||(G.phase==='aim'&&!ci&&G.practice&&!G.inspect)){const live=G.players.filter(p=>!p.fired&&p.hp>0&&!p.away&&(G.players.length===1||!G.shooter||p.id===G.shooter)),ch=live.filter(p=>p.ch),rd=live.filter(p=>p.rdy||p.ch);
       if(rd.length){const aimX=ch.length===1?wx(O.launchX(ch[0])):null,key=C.id+':'+asp.toFixed(2)+':'+(aimX==null?'s':aimX.toFixed(2));if(key!==strKey){strKey=key;fitStraight(C,asp,wide,aimX)}wantPos.copy(strP);wantTgt.copy(strT);st=aimX==null?.32:.3}
       else{over();st=.7}}
-    else{over();st=.7}}
+    else{over();st=G.inspect?.14:.7}}
   else if(G.screen==='map'&&mapG&&mapG.visible&&MAP[G.node]&&MAP[G.node]._p){const tr=G.travel;let p=MAP[G.node]._p;if(tr&&MAP[tr.to]._p){const A=MAP[tr.from]._p,B2=MAP[tr.to]._p,e=sm(0,1,tr.t);p=[lerp(A[0],B2[0],e),lerp(A[1],B2[1],e)]}
     const k=wide?1:1.5;wantPos.set(MPX+p[0]*.5,6.2*k,p[1]+5.2*k);wantTgt.set(MPX+p[0]*.6,0,p[1]-2.6);st=.9}
   else if(mgS&&podOn()){const k=wide?1:1.5;wantPos.set(MGX,1.5*k,MGZ+PODZ+3.6*k);wantTgt.set(MGX,.75,MGZ+PODZ);st=.5}
@@ -498,8 +509,19 @@ O.shakeOn=()=>shakeOn;O.setShake=v=>{shakeOn=!!v;try{localStorage.setItem('ow_sh
 O.lookOf=()=>'voxel';O.setLook=()=>{};O.loadModel=()=>{};O.glb={};
 O.loadInfo=()=>ready?null:{need:1,done:0};O.hold=()=>!ready;
 O._mgS=()=>mgS;O._dbgCam=()=>({pos:camPos.toArray().map(n=>+n.toFixed(2)),tgt:camTgt.toArray().map(n=>+n.toFixed(2)),node:MAP[G.node]&&MAP[G.node]._p,mapX:mapG&&mapG.position.x,vis:mapG&&mapG.visible});
+function lookInput(cv){const pts=new Map();let last=null,lastHint=0;
+  const on=()=>G.screen==='combat'&&G.inspect;
+  const two=()=>{const a=[...pts.values()];return{d:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2}};
+  cv.addEventListener('pointerdown',e=>{if(!on())return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY,b:e.button,sh:e.shiftKey});last=pts.size===2?two():null;try{cv.setPointerCapture(e.pointerId)}catch(q){}e.preventDefault()});
+  cv.addEventListener('pointermove',e=>{const p=pts.get(e.pointerId);if(!p||!on())return;const dx=e.clientX-p.x,dy=e.clientY-p.y,h=cv.clientHeight||600;
+    if(pts.size===1){if(p.b===2||p.sh)O.lookNudge(0,0,1,-dx/h*6,-dy/h*6);else O.lookNudge(-dx/h*3.2,dy/h*2.2)}
+    p.x=e.clientX;p.y=e.clientY;if(pts.size===2){const t=two();if(last){O.lookNudge(0,0,t.d/Math.max(20,last.d),-(t.x-last.x)/h*6,-(t.y-last.y)/h*6)}last=t}});
+  const up=e=>{pts.delete(e.pointerId);last=pts.size===2?two():null};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  cv.addEventListener('contextmenu',e=>{if(on())e.preventDefault()});
+  cv.addEventListener('wheel',e=>{if(!on())return;O.lookNudge(0,0,Math.exp(-e.deltaY*.0015));e.preventDefault()},{passive:false});
+  cv.addEventListener('dblclick',()=>{if(on())O.lookReset()})}
 O.initStage=function(cv){
-  canvas=cv;renderer=new T.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(pxRatio());if(pixOn)cv.style.imageRendering='pixelated';
+  canvas=cv;lookInput(cv);renderer=new T.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(pxRatio());if(pixOn)cv.style.imageRendering='pixelated';
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputEncoding=T.sRGBEncoding;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=fxOn?1.12:1;
   scene=new T.Scene();cam=new T.PerspectiveCamera(42,1,.05,90);
   hemi=new T.HemisphereLight('#8c9ad0','#3a2a22',.62);scene.add(hemi);
