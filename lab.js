@@ -27,12 +27,13 @@ function build(){
   const L=(t,e)=>{const w=el('label');w.append(t+' ',e);return w};
   o.append(L('Your fighter',sc),L('Extra fighters',sb),L('Event dungeon',sd));pan.appendChild(o);
   pan.appendChild(el('p',null,'Extra fighters stand in the line-up but never act, so they fail the shared games. Use them to see how the screen looks with a bigger party.'));
+  {const mk=Object.keys(O.MG).filter(k=>O.MG[k].motion);if(mk.length){pan.appendChild(el('div','grp','📱 Motion games (open this page on your phone; turn motion on from the game’s rules screen)'));const mr=el('div','row ev');mk.forEach(k=>mr.appendChild(btn(k,O.MG[k].kind)));pan.appendChild(mr)}}
   pan.appendChild(el('div','grp','Event floors (themed by the event dungeon above)'));
   const ev=el('div','row ev');for(const k of Object.keys(O.MG).filter(k=>O.MG[k].kind==='event'))ev.appendChild(btn(k,'event'));pan.appendChild(ev);
   O.DUNGEONS.forEach((d,i)=>{const ks=Object.keys(O.MG).filter(k=>O.MG[k].dun===i);if(!ks.length)return;pan.appendChild(el('div','grp',(i+1)+'. '+d.name));const r=el('div','row');ks.forEach(k=>r.appendChild(btn(k,'trap')));pan.appendChild(r)});
   const bar=el('div','bar'),again=el('button',null,'Play the last one again'),stop=el('button',null,'Stop this game');again.onclick=()=>{if(last)start(last)};stop.onclick=()=>{G.mg=null;G.dec=null;running=false;status('Stopped.')};bar.append(again,stop);pan.appendChild(bar);
   pan.appendChild(el('div','st'));box.append(pan,tab);document.body.appendChild(box)}
-function btn(k,kind){const d=O.MG[k],b=el('button','g');b.dataset.k=k;b.append(d.name,el('small',null,kind==='event'?'event floor':(d.ctl||d.brief||'').toString().slice(0,64)));b.onclick=()=>start(k);return b}
+function btn(k,kind){const d=O.MG[k],b=el('button','g');b.dataset.k=k;b.append((d.motion?'📱 ':'')+d.name,el('small',null,kind==='event'?'event floor':(d.ctl||d.brief||'').toString().slice(0,64)));b.onclick=()=>start(k);return b}
 function status(t){const s=pan&&pan.querySelector('.st');if(s)s.textContent=t}
 function start(k){if(!ready){status('Still setting up…');return}
   const d=O.MG[k];G.dec=null;G.after=null;G.travel=null;G.mg=null;G.dung=d.kind==='event'?evD:d.dun;
