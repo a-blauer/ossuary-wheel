@@ -30,16 +30,25 @@ const SKEY='ow_stash1';
 function loadStash(){let s=null;try{s=JSON.parse(localStorage.getItem(SKEY)||'null')}catch(e){}s=s&&typeof s==='object'?s:{};
   const ints=(o,ok,max)=>{const r={};if(o&&typeof o==='object')for(const k in o){const v=Math.floor(num(o[k]));if(ok(k)&&v>0)r[k]=Math.min(max,v)}return r};
   return{gold:Math.max(0,Math.floor(num(s.gold))),opened:Math.max(0,Math.floor(num(s.opened))),unl:Array.isArray(s.unl)?s.unl.filter(x=>O.LOCKS.includes(x)):[],clear:Array.isArray(s.clear)?s.clear.filter(x=>Number.isInteger(x)&&x>=0&&x<O.DUNGEONS.length):[],
-    tier:ints(s.tier,k=>!!O.DUNGEONS[k],4),kills:ints(s.kills,k=>!!MONSTERS[k],99999),bless:s.bless?1:0,fin:!!s.fin,prac:!!s.prac,last:'',keep:s.keep&&typeof s.keep==='object'&&Number.isInteger(s.keep.set)?s.keep:null,own:(o=>{const r={};if(o&&typeof o==='object')for(const k of['warrior','bard','mage','archer'])if(Array.isArray(o[k]))r[k]=o[k].filter(v=>Number.isInteger(v)&&v>=0&&v<40).slice(0,40);return r})(s.own)}}
-function saveStash(){const s=G.stash;try{localStorage.setItem(SKEY,JSON.stringify({gold:s.gold,opened:s.opened,unl:s.unl,clear:s.clear,tier:s.tier,kills:s.kills,bless:s.bless,fin:s.fin,prac:s.prac,keep:s.keep||null}))}catch(e){}}
+    tier:ints(s.tier,k=>!!O.DUNGEONS[k],4),runs:Array.isArray(s.runs)?s.runs.filter(x=>Number.isInteger(x)&&x>=0&&x<20):[],kills:ints(s.kills,k=>!!MONSTERS[k],99999),bless:s.bless?1:0,fin:!!s.fin,prac:!!s.prac,last:'',keep:s.keep&&typeof s.keep==='object'&&Number.isInteger(s.keep.set)?s.keep:null,own:(o=>{const r={};if(o&&typeof o==='object')for(const k of['warrior','bard','mage','archer'])if(Array.isArray(o[k]))r[k]=o[k].filter(v=>Number.isInteger(v)&&v>=0&&v<40).slice(0,40);return r})(s.own)}}
+function saveStash(){const s=G.stash;try{localStorage.setItem(SKEY,JSON.stringify({gold:s.gold,opened:s.opened,unl:s.unl,clear:s.clear,runs:s.runs||[],tier:s.tier,kills:s.kills,bless:s.bless,fin:s.fin,prac:s.prac,keep:s.keep||null}))}catch(e){}}
 O.saveStash=saveStash;O.resetStash=()=>{try{localStorage.removeItem(SKEY);localStorage.removeItem('ow_run1')}catch(e){}G.stash=loadStash();G.dung=0;G.tier=0};
 G.stash=loadStash();G.dung=0;G.gatePicks=0;G.mapVer=0;G.gain=0;G.newDung=false;G.wins=0;
-for(let i=0;i<O.DUNGEONS.length;i++)if(i===0||G.stash.clear.includes(i-1))G.dung=i;             // start on the furthest dungeon that is open
-O.dungOpen=i=>i===0||G.stash.clear.includes(i-1);
-O.selectDungeon=i=>{i=Math.floor(num(i,-1));if(G.screen==='lobby'&&O.DUNGEONS[i]&&O.dungOpen(i)){if(G.dung!==i)G.tier=0;G.dung=i}};
+/* Every three dungeons make a run. A run is played in order, stage by stage; what the party wins carries from one stage to the next.
+   A run opens when the run before it is complete. Dying sends the party back to the first stage of its run. */
+O.RUNS=[];O.DUNGEONS.forEach((d,i)=>{(O.RUNS[O.setOf(i)]=O.RUNS[O.setOf(i)]||[]).push(i)});
+O.runOf=i=>O.setOf(i);
+O.runDone=r=>!!O.RUNS[r]&&((G.stash.runs||[]).includes(r)||O.RUNS[r].every(d=>G.stash.clear.includes(d)));
+O.runOpen=r=>!!O.RUNS[r]&&(r===0||O.runDone(r-1));
+O.runStage=r=>{const kp=G.stash.keep,R=O.RUNS[r];if(!R)return 0;return kp&&kp.set===r&&R.includes(kp.next)?kp.next:R[0]};
+O.runGold=(r,t)=>O.RUNS[r].reduce((a,d)=>a+O.goldFor(d,t||0),0);
+O.selectRun=r=>{r=Math.floor(num(r,-1));if(G.screen==='lobby'&&O.runOpen(r)){const nd=O.runStage(r);if(O.runOf(G.dung)!==r)G.tier=0;G.dung=nd;const kp=G.stash.keep;if(kp&&kp.set===r&&kp.next===nd)G.tier=clamp(Math.floor(num(kp.tier)),0,3)}};
+O.dungOpen=i=>O.runOpen(O.runOf(i))&&O.runStage(O.runOf(i))===i;
+{let r0=0;for(let r=0;r<O.RUNS.length;r++)if(O.runOpen(r))r0=r;const kp=G.stash.keep;if(kp&&O.runOpen(kp.set))r0=kp.set;G.dung=O.runStage(r0);if(kp&&kp.set===r0&&kp.next===G.dung)G.tier=clamp(Math.floor(num(kp.tier)),0,3)}             // start on the furthest open run, at the stage the party reached
+O.selectDungeon=i=>{i=Math.floor(num(i,-1));if(O.DUNGEONS[i])O.selectRun(O.runOf(i))};
 /* a cleared dungeon can be entered again at a harder depth: tougher monsters, more gold. Each depth opens the next. */
-O.maxTier=d=>Math.min(3,Math.max(G.stash.clear.includes(d)?1:0,G.stash.tier[d]||0));
-O.setTier=t=>{t=Math.floor(num(t));if(G.screen==='lobby'&&t>=0&&t<=O.maxTier(G.dung))G.tier=t};
+O.maxTier=d=>{const r=O.runOf(d),f=O.RUNS[r][0];return Math.min(3,Math.max(O.runDone(r)?1:0,G.stash.tier[f]||0))};                 // depth belongs to the whole run
+O.setTier=t=>{t=Math.floor(num(t));const kp=G.stash.keep,mid=kp&&kp.set===O.runOf(G.dung)&&kp.next===G.dung;if(G.screen==='lobby'&&!mid&&t>=0&&t<=O.maxTier(G.dung))G.tier=t};
 O.goldFor=(d,t)=>Math.round(O.DUNGEONS[d].gold*(1+.5*t));
 O.BLESS=150;O.buyBlessing=()=>{const st=G.stash;if(st.bless||st.gold<O.BLESS)return false;st.gold-=O.BLESS;st.bless=1;saveStash();return true};
 O.openBox=function(){const st=G.stash,cost=O.boxCost(st.opened),left=O.LOCKS.filter(x=>!st.unl.includes(x));if(!left.length||st.gold<cost)return null;st.gold-=cost;st.opened++;const id=pick(left);st.unl.push(id);st.last=id;saveStash();return id};
@@ -139,7 +148,10 @@ function updateDec(){
   if(d.k==='start'){if(o==='prac')startPractice();else beginRun()}
   else if(d.k==='path'){G.travel={from:G.node,to:o,t:0};say(`The party sets out for ${MAP[o].name}.`)}
   else if(d.k==='relic'){G.relics.push(o);say(`The party claims ${RELICS[o].name}.`);ev('boon',{});G.after={t:1.8,fn:offerPath}}
-  else if(d.k==='end'){if(o==='retry'){G.players.forEach(p=>{p.hp=p.mhp});startFight(G.enc)}else{if(G.result==='lose'){G.stash.gold+=O.lossGold();saveStash()}O.clearRun();const nx=G.result==='win'&&G.newDung;toLobby();if(nx){G.dung=Math.min(O.DUNGEONS.length-1,G.dung+1);G.tier=0}}}
+  else if(d.k==='end'){const r=O.runOf(G.dung),R=O.RUNS[r];
+    if(o==='next'){const t=G.tier;G.dung=G.dung+1;G.tier=t;beginRun()}                 // straight on to the run's next stage
+    else if(o==='restart'){const t=G.tier;G.stash.keep=null;G.dung=R[0];G.tier=t;beginRun()}                 // the party fell: the run begins again from its first stage
+    else{O.clearRun();const nx=G.result==='win'&&G.newDung,lost=G.result==='lose';toLobby();if(nx){G.dung=O.RUNS[r+1][0];G.tier=0}else if(lost)G.dung=R[0];else G.dung=O.runStage(r)}}
 }
 function toLobby(){G.screen='lobby';G.phase='idle';G.result=null;G.mons=[];G.cur=-1;G.boss=null;G.holes=[];G.bumps=[];G.divots=[];G.walls=[];G.relics=[];G.items=[];G.mg=null;G.ward=1;G.node=0;G.visited=[0];
   G.practice=false;G.finale=false;G.fervor=0;G.fervorOn=false;G.picks=[];G.marbles=[];G.pending=[];G.queue=[];G.cine=null;G.dec=null;G.after=null;G.travel=null;G.active=-1;G.actor=-1;G.bonus=0;G.players=G.players.filter(p=>!p.away);
@@ -147,13 +159,13 @@ function toLobby(){G.screen='lobby';G.phase='idle';G.result=null;G.mons=[];G.cur
 O.toLobby=toLobby;
 O.lossGold=()=>4*Math.max(0,G.visited.length-1);
 /* leave a run from the pause menu: the same terms as abandoning after a defeat */
-O.abandonRun=function(){if(G.screen==='lobby')return;if(!G.practice&&G.result!=='win'){G.stash.gold+=O.lossGold();saveStash()}if(!G.practice)O.clearRun();toLobby()};
+O.abandonRun=function(){if(G.screen==='lobby')return;if(!G.practice&&G.result!=='win'){const r=O.runOf(G.dung);G.stash.keep=null;saveStash();G.dung=O.RUNS[r][0]}if(!G.practice)O.clearRun();toLobby()};
 function beginRun(){toLobby();O.clearRun();G.seed=1+Math.floor(Math.random()*1e9);O.genMap(G.dung,G.seed);G.mapVer++;G.wins=0;G.gain=0;G.newDung=false;G.screen='map';G.runT=G.clock;G.players.forEach(p=>{p.st={dmg:0,sinks:0,shots:0,hits:0,best:0,trick:0,taken:0,heal:0}});
-  const lv=DG().startLv,kp=G.stash.keep,use=kp&&kp.set===O.setOf(G.dung)&&G.dung%3!==0;if(!use&&G.dung%3===0)G.stash.keep=null;        // the first dungeon of a set starts everyone afresh; the second and third carry on with what was won
+  const R=O.RUNS[O.runOf(G.dung)],lv=O.DUNGEONS[R[0]].startLv,kp=G.stash.keep,use=!!(kp&&kp.set===O.runOf(G.dung)&&kp.next===G.dung&&G.dung!==R[0]);if(!use){G.stash.keep=null;saveStash()}else G.tier=clamp(Math.floor(num(kp.tier)),0,3);        // a run starts everyone afresh; its later stages carry on with what was won
   G.players.forEach(p=>{const k=use&&kp.by&&kp.by[p.cls];p.lv=Math.max(lv,k?Math.floor(num(k.lv,1)):1);if(k){p.ups=(Array.isArray(k.ups)?k.ups:[]).filter(u=>O.UPGRADES[u]);p.owned=(Array.isArray(k.owned)?k.owned:[]).filter(i=>Number.isInteger(i)&&CLASSES[p.cls].ab[i]);for(const i of startOwned())if(!p.owned.includes(i))p.owned.push(i);p.owned.sort((a,b)=>a-b)}p.mhp=maxHp(p);p.hp=p.mhp});
   if(use){G.relics=(Array.isArray(kp.relics)?kp.relics:[]).filter(r=>RELICS[r]);G.items=(Array.isArray(kp.items)?kp.items:[]).filter(r=>ITEMS[r]).slice(0,O.BAG)}
   say(`The gate of ${DG().name.replace(/^The /,'the ')} closes behind the party.`);
-  let picks=use?0:(G.dung>=2?1:0)+Math.floor(G.dung/4);            // deeper dungeons are entered as a seasoned party: higher level and a few drops at the gate
+  let picks=use?0:(R[0]>=2?1:0)+Math.floor(R[0]/4);            // deeper dungeons are entered as a seasoned party: higher level and a few drops at the gate
   if(G.stash.bless){G.stash.bless=0;saveStash();picks++;const r=shuffle(Object.keys(RELICS).filter(r=>has('re:'+r)))[0];if(r){G.relics.push(r);say(`The blessing holds: the party carries ${RELICS[r].name} through the gate.`)}}
   if(picks>0){G.gatePicks=picks-1;offerUpgrades('gate')}else{G.gatePicks=0;offerPath()}}
 /* ----- a run in progress is kept on the host's device, so a reload or a crash does not lose it ----- */
@@ -576,15 +588,19 @@ function tick(dt){
   if(G.slowT>0)G.slowT-=dt;const tense=(G.marbles.length===1&&(G.marbles[0].in||G.marbles[0].near))||G.slowT>0;G.ts+=((tense?.55:1)-G.ts)*Math.min(1,dt*9);
   if(G.phase==='intro'){if(G.introT<.05&&G.holdT<25&&O.hold&&O.hold()){G.holdT+=dt;return}G.introT+=dt;if(G.introT>(G.practice?1.6:3.4))startRound();return}     // the fight waits for its models to arrive
   if(G.phase==='won'){G.deathT+=dt;if(G.deathT>2.8){const rank=O.encRank(G.enc);
-      if(rank==='boss'){const st=G.stash,first=!st.clear.includes(G.dung);G.gain=Math.round(O.goldFor(G.dung,G.tier)*(G.relics.includes('purse')?1.25:1));st.gold+=G.gain;G.newDung=first&&G.dung<O.DUNGEONS.length-1;if(first)st.clear.push(G.dung);st.tier[G.dung]=Math.max(st.tier[G.dung]||0,G.tier+1);
-        st.keep={set:O.setOf(G.dung),by:G.players.reduce((a,p)=>{a[p.cls]={owned:p.owned.slice(),ups:p.ups.slice(),lv:p.lv};return a},{}),relics:G.relics.slice(),items:G.items.slice()};G.finale=G.dung===O.DUNGEONS.length-1&&!st.fin;if(G.finale)st.fin=true;saveStash();O.clearRun();G.screen='result';G.result='win';G.phase='idle';ev('win',{fin:G.finale});setDec('end',['again'])}
+      if(rank==='boss'){const st=G.stash,r=O.runOf(G.dung),R=O.RUNS[r],last=G.dung===R[R.length-1],firstRun=!O.runDone(r);if(!st.clear.includes(G.dung))st.clear.push(G.dung);st.runs=st.runs||[];
+        if(last){G.gain=Math.round(O.runGold(r,G.tier)*(G.relics.includes('purse')?1.25:1));st.gold+=G.gain;if(!st.runs.includes(r))st.runs.push(r);st.tier[R[0]]=Math.max(st.tier[R[0]]||0,G.tier+1);
+          G.runEnd=true;G.newDung=firstRun&&!!O.RUNS[r+1];st.keep=null}
+        else{G.gain=0;G.runEnd=false;G.newDung=false;
+          st.keep={set:r,next:G.dung+1,tier:G.tier,by:G.players.reduce((a,p)=>{a[p.cls]={owned:p.owned.slice(),ups:p.ups.slice(),lv:p.lv};return a},{}),relics:G.relics.slice(),items:G.items.slice()}}
+        G.finale=G.dung===O.DUNGEONS.length-1&&!st.fin;if(G.finale)st.fin=true;saveStash();O.clearRun();G.screen='result';G.result='win';G.phase='idle';ev('win',{fin:G.finale});setDec('end',last?['again']:['next','again'])}
       else{const lvl=rank==='mini'||(++G.wins%2===0);G.players.forEach(p=>{if(lvl)p.lv++;const b=p.mhp;p.mhp=maxHp(p);const hp=Math.max(p.hp,0);p.hp=Math.min(p.mhp,hp+(p.mhp-b))});
         G.phase='idle';let found='';const rw=MAP[G.node]&&MAP[G.node].rw;if(rank==='mini'||rw==='item'||G.relics.includes('satchel')||Math.random()<.4){const it=anyItem();if(addItem(it))found=` Found: ${ITEMS[it].name}.`}
         if(rw==='mend'){G.players.forEach(p=>{if(p.hp>0)p.hp=Math.min(p.mhp,p.hp+Math.round((p.mhp-p.hp)*.4))});found+=' A cache of bandages: wounds are bound.'}
         else if(rw==='coin'){const g=MAP[G.node].gold||20;G.stash.gold+=g;saveStash();found+=` A purse of ${g} gold.`}
         say((lvl?'The party grows stronger. Everyone chooses a drop.':'The way is clear. Everyone chooses a drop.')+found);offerUpgrades('drop')}}
     return}
-  if(G.phase==='lost'){G.deathT+=dt;if(G.deathT>2.2){G.screen='result';G.result='lose';G.phase='idle';ev('lose',{});setDec('end',['retry','again'])}return}
+  if(G.phase==='lost'){G.deathT+=dt;if(G.deathT>2.2){G.screen='result';G.result='lose';G.phase='idle';G.stash.keep=null;saveStash();O.clearRun();ev('lose',{});setDec('end',['restart','again'])}return}
   if(G.stop>0){G.stop-=dt;dt*=.06}                 // a beat of stillness when a ball lands a real blow
   updateCine(dt);updateCombat(dt*G.ts);
 }
@@ -601,7 +617,7 @@ O.awards=function(){
 /* The state every controller needs. Sent over presence to phones, read directly in solo. */
 const mask=a=>a.map(b=>b.on?1:0).join('');
 O.publicState=()=>{const act=G.players[G.active],fight=G.screen==='combat',aim=fight&&G.phase==='aim',left=aim&&!G.cine&&!G.queue.length&&G.players.length>1&&!G.practice?Math.ceil(O.TURN-G.turnT):99;
- return{role:'host',dn:DG().name,tier:G.tier,gd:G.gain,sc:G.screen,nd:G.node,ph:G.phase,rd:G.round,msg:G.msg.slice(0,140),res:G.result||'',tr:G.travel?1:0,pr:G.practice?1:0,pz:O.paused?1:0,fin:G.finale?1:0,
+ return{role:'host',dn:DG().name,rn:O.runOf(G.dung)+1,sg:O.RUNS[O.runOf(G.dung)].indexOf(G.dung)+1,sgn:O.RUNS[O.runOf(G.dung)].length,re:G.runEnd?1:0,nn:O.DUNGEONS[G.dung+1]&&O.runOf(G.dung+1)===O.runOf(G.dung)?O.DUNGEONS[G.dung+1].name:'',tier:G.tier,gd:G.gain,sc:G.screen,nd:G.node,ph:G.phase,rd:G.round,msg:G.msg.slice(0,140),res:G.result||'',tr:G.travel?1:0,pr:G.practice?1:0,pz:O.paused?1:0,fin:G.finale?1:0,
   sk:G.stash.unl.filter(u=>u.startsWith('sk:')).map(u=>u.slice(3)),
   cu:G.cur,ac:act&&fight&&G.cine?act.id:'',sh:aim&&G.players.length>1?G.shooter||'':'',cn:G.cine||G.queue.length?1:0,ins:G.inspect?1:0,tm:left<=20?Math.max(1,left):0,
   mo:G.mons.map(m=>({id:m.id,n:m.name,hp:Math.ceil(m.hp),mx:m.max,d:m.dead?1:0,st:m.stun?1:0,bn:m.burn?m.burn.d:0,it:m.intent&&!m.dead?[m.intent.t,m.intent.dmg,m.intent.x,m.intent.b?1:0,m.intent.mv,m.intent.reels?m.intent.reels.map(f=>f<0?'x':f).join(''):'',m.intent.pw||1,m.intent.t2||'',m.intent.fv||0,m.intent.seq||0,m.intent.n==null?2:m.intent.n]:null})),co:G.combo||0,aw:G.screen==='result'?O.awards():null,

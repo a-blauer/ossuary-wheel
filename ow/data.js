@@ -344,5 +344,5 @@ O.lockInfo=id=>{const p=String(id).split(':');
   if(p[0]==='ab'){const c=O.CLASSES[p[1]],a=c&&c.ab[+p[2]];return a?{kind:c.name+' ability',name:a.name,desc:a.desc}:null}
   if(p[0]==='sk'){const k=O.SKINS[p[1]];return k?{kind:'ball skin',name:k.name,desc:k.desc+' Choose it on your phone, under Character.'}:null}
   const t={up:[O.UPGRADES,'Upgrade'],it:[O.ITEMS,'Item'],re:[O.RELICS,'Relic']}[p[0]],o=t&&t[0][p[1]];return o?{kind:(o.cls?O.CLASSES[o.cls].name+' ':'')+t[1].toLowerCase(),name:o.name,desc:o.desc}:null};
-O.boxCost=opened=>80+6*opened;
+O.boxCost=opened=>40+3*opened;                 // half what it was: loot boxes are how the party grows stronger over many runs
 })();

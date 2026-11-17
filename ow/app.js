@@ -92,7 +92,7 @@ function getView(){
   const tg=m?Math.floor(num(m.tg,-1)):-1,bd=m&&tg>=0&&mo.length===arr(s.mo).length?boardOf(mo,s.bs,tg):null,cu0=Math.floor(num(s.cu,-1)),bdc=cu0===tg?bd:cu0>=0&&mo.length===arr(s.mo).length?boardOf(mo,s.bs,cu0):null,
     lm=arr(s.lm).slice(0,10).filter(Array.isArray).map(q=>[num(q[0]),num(q[1]),num(q[2]),clamp(num(q[3],10),3,40),clamp(Math.floor(num(q[4])),0,3),num(q[5]),Math.floor(num(q[6]))]),aw=arr(s.aw).slice(0,8).map(a=>arr(a).slice(0,3).map(q=>String(q).slice(0,80))).filter(a=>a.length===3);
   return{bd,bdc,lm,ck:num(s.ck),aw,co:Math.floor(num(s.co)),myId,dn:String(s.dn||'the dungeon').slice(0,60),gd:Math.floor(num(s.gd)),sc:String(s.sc||'lobby'),nd:num(s.nd),ph:String(s.ph||''),rd:num(s.rd),cu:Math.floor(num(s.cu,-1)),actCls:act&&CLASSES[act.c]?act.c:'',actMe:!!m&&s.ac===myId,sh:typeof s.sh==='string'?s.sh.slice(0,16):'',cn:s.cn?1:0,ins:s.ins?1:0,
-    sk:arr(s.sk).filter(k=>O.SKINS[k]).slice(0,30),pr:s.pr?1:0,pz:s.pz?1:0,fin:s.fin?1:0,tm:clamp(Math.floor(num(s.tm)),0,99),left:list.filter(x=>x&&!x.f&&num(x.hp)>0&&!x.aw).length,mo,mg,it:arr(s.it).filter(x=>ITEMS[x]).slice(0,8),msg:String(s.msg||''),res:String(s.res||''),tr:!!s.tr,dec,
+    sk:arr(s.sk).filter(k=>O.SKINS[k]).slice(0,30),pr:s.pr?1:0,pz:s.pz?1:0,fin:s.fin?1:0,rn:num(s.rn,1),sg:num(s.sg,1),sgn:num(s.sgn,3),re:s.re?1:0,nn:typeof s.nn==='string'?s.nn.slice(0,40):'',tm:clamp(Math.floor(num(s.tm)),0,99),left:list.filter(x=>x&&!x.f&&num(x.hp)>0&&!x.aw).length,mo,mg,it:arr(s.it).filter(x=>ITEMS[x]).slice(0,8),msg:String(s.msg||''),res:String(s.res||''),tr:!!s.tr,dec,
     rel:arr(s.rel).filter(r=>RELICS[r]),full:!m&&list.length>=4,pa:list.filter(x=>x&&CLASSES[x.c]).slice(0,4).map(x=>({id:String(x.id||'').slice(0,16),c:x.c,sl:clamp(Math.floor(num(x.sl)),0,3),hp:Math.max(0,num(x.hp)),mhp:num(x.mhp,1),f:x.f?1:0,aw:x.aw?1:0,me:x.id===myId})),
     me:m?{c:CLASSES[m.c]?m.c:C.cls,x:num(m.x,500),sl:clamp(Math.floor(num(m.sl)),0,3),hp:num(m.hp),mhp:num(m.mhp,1),f:m.f?1:0,cd:arr(m.cd).map(v=>num(v)),bf:m.bf?1:0,lv:num(m.lv,1),up:arr(m.up).filter(u=>UPGRADES[u]),ow:arr(m.ow).map(v=>Math.floor(num(v))).filter(v=>v>=0&&v<12),fx:Math.floor(num(m.fx)),tg,bg:arr(m.bg).map(q=>Math.floor(num(q,-1))).filter(q=>q>=0&&q<12).slice(0,8),sw:Math.floor(num(m.sw,-1)),bn:Math.floor(num(m.bn)),ls:arr(m.ls).map(q=>Math.floor(num(q))),op:m.op?arr(m.op).filter(u=>O.upInfo(u,C.cls)):null,v:m.v?1:0,sn:Math.floor(num(m.sn)),ex:m.ex?1:0,k:String(m.k||''),g:String(m.g||'').replace(/[^0-9a-z]/g,'').slice(0,12),gn:Math.floor(num(m.gn))}:null};
 }
@@ -122,10 +122,13 @@ function decContent(v){
   const d=v.dec,me=v.me;if(!d||!me)return null;
   if(d.k==='upgrade'){if(!me.op)return{wait:'Taken. Waiting for the others.'};return{title:d.t==='tome'?'Choose what to learn':d.t==='gate'?'Supplies at the gate: choose one':'Choose a drop',opts:me.op.map(u=>{const o=O.upInfo(u,C.cls);return{t:o.name,s:o.desc,ic:u,kd:O.kindName(u,C.cls)}})}}
   if(me.v||C.sentDec===d.id)return{wait:d.k==='start'?'Starting…':'Chosen. Waiting for the rest of the party.'};
-  if(d.k==='start')return{title:'The party is gathered',opts:[{t:'Enter '+v.dn,s:'The host chooses the dungeon on the big screen. Anyone can start the run.',ic:'n:go'},{t:'Practice first',s:'A target that never strikes back. Learn the ramps and the pull before the real thing.',ic:'n:prac'}].slice(0,Math.max(1,d.opts.length))};
+  if(d.k==='start'){const R=['I','II','III','IV','V','VI','VII'][v.rn-1]||v.rn;return{title:'The party is gathered',opts:[{t:v.sg>1?`Continue Run ${R}: stage ${v.sg}`:`Begin Run ${R}`,s:`${v.sg>1?'Next':'Stage 1'}: ${v.dn}. The host chooses the run on the big screen.`,ic:'n:go'},{t:'Practice first',s:'A target that never strikes back. Learn the ramps and the pull before the real thing.',ic:'n:prac'}].slice(0,Math.max(1,d.opts.length))}}
   if(d.k==='path')return{title:d.opts.length>1?'Choose the way':'The way ahead',opts:d.opts.map((i,k)=>{const t=d.tl&&d.tl[k];return{t:t?t[0]:'Onward',s:t?t[1]+(t[2]?' '+t[2]:''):'',ic:'n:'+(t&&t[3]||'battle')}})};
   if(d.k==='relic')return{title:'Choose one relic for the party',opts:d.opts.filter(r=>RELICS[r]).map(r=>({t:RELICS[r].name,s:RELICS[r].desc,ic:'re:'+r,kd:'Relic'}))};
-  if(d.k==='end')return v.res==='win'?{title:v.fin?`The last throne is empty. The party earns ${v.gd} gold.`:`${v.dn} is cleared. The party earns ${v.gd} gold.`,opts:[{t:'Return to the menu',s:'Gold opens loot boxes on the host screen.',ic:'n:again'}]}:{title:'The party has fallen',opts:[{t:'Rally and fight again',s:'Retry this fight at full health.',ic:'n:retry'},{t:'Abandon the run',s:'Return to the menu with a little gold.',ic:'n:again'}]};
+  if(d.k==='end'){const R=['I','II','III','IV','V','VI','VII'][v.rn-1]||v.rn;
+    if(v.res==='win'&&v.re)return{title:v.fin?`The last throne is empty. Run ${R} complete: the party earns ${v.gd} gold.`:`Run ${R} complete! The party earns ${v.gd} gold.`,opts:[{t:'Return to the menu',s:'Spend gold on loot boxes, then begin the next run.',ic:'n:again'}]};
+    if(v.res==='win')return{title:`${v.dn} is cleared. Stage ${v.sg} of ${v.sgn} done.`,opts:[{t:'On to stage '+(v.sg+1),s:`Enter ${v.nn||'the next dungeon'} with everything you have won.`,ic:'n:go'},{t:'Rest at the menu',s:'Your run is saved. Continue it from the menu.',ic:'n:again'}]};
+    return{title:'The party has fallen',opts:[{t:'Begin the run again',s:`Back to stage 1 of Run ${R}, with fresh stats.`,ic:'n:retry'},{t:'Return to the menu',s:'The run is lost.',ic:'n:again'}]}}
   return null}
 function sheetInto(box,cls,me,rel,mine){
   box.textContent='';const cl=CLASSES[cls],m=me?O.mods({cls,lv:me.lv,ups:me.up}):null,row=(key,cls2,...kids)=>{const d=el('div',cls2);d.append(O.ico(key,cls),...kids);return d};
@@ -210,7 +213,7 @@ function renderCtrl(){
   const fxT=(me.fx&8?'Hexed: your balls do less damage this round. ':'')+(me.fx&32?'Shrunk: your next ball is two sizes smaller. ':'')+(me.fx&16?'Bleeding. ':'')+(me.fx&1?'Weapon Oil is on this attack. ':'')+(me.fx&2?'Grinding Chalk is on this attack. ':'')+(me.fx&4?'Lodestone Dust is on this attack. ':'');
   if(!v.it.length)C.bagOpen=false;const bb=$('btnBag');bb.hidden=!v.it.length;bb.textContent=C.bagOpen?'Close':`Bag ${v.it.length}`;bb.setAttribute('aria-pressed',!!C.bagOpen);$('pad').classList.toggle('bagopen',!!C.bagOpen);
   const bg=$('bag');bg.hidden=!C.bagOpen;if(C.bagOpen){bg.textContent='';bg.appendChild(el('h4',null,'Party bag · an item is free and does not use up your attack'));const w=el('div','its');v.it.forEach((id,i)=>{const b=el('button'),I=ITEMS[id],busy=(I.wheel||I.foe)&&v.cn,d=el('div');d.append(el('b',null,I.name),el('span',null,busy?'Wait for the attack on the big screen to finish.':I.desc));b.append(O.ico('it:'+id),d);b.disabled=!!(busy||((I.wheel||I.tgt)&&!mon));b.onclick=()=>{C.bagOpen=false;sendItem(i)};w.appendChild(b)});bg.appendChild(w)}
-  const cdN=0,capT=lookMode()?'Previewing the course on the big screen.':C.ch?(SL.phase()==='aim'?'Steering. Hold still, pull down or let go to lock.':SL.phase()==='locked'?'Aim locked. Drag down for power, or tap to re-aim.':C.pw<.05?'Pull down for power.':'Let go to shoot.'):ab.instant?ab.name+' needs no aiming. Tap Cast.':fxT?fxT.trim():me.bf?'War Anthem: this attack hits 50% harder.':v.pr?'Practice. Shots are free.':v.cn?'An ally is attacking. Line up your shot on the big screen.':'Your ball: '+ab.name+(me.bg.length>1?' (tap another below to switch)':'');
+  const cdN=0,capT=lookMode()?'Previewing the course on the big screen.':C.ch?(SL.phase()==='aim'||SL.phase()==='steer'?'Steering. Tap Lock aim when it lines up.':SL.phase()==='locked'?'Aim locked. Drag down for power.':C.pw<.05?'Pull down for power.':'Let go to shoot.'):ab.instant?ab.name+' needs no aiming. Tap Cast.':fxT?fxT.trim():me.bf?'War Anthem: this attack hits 50% harder.':v.pr?'Practice. Shots are free.':v.cn?'An ally is attacking. Line up your shot on the big screen.':'Your ball: '+ab.name+(me.bg.length>1?' (tap another below to switch)':'');
   {const md0=O.mods({cls:C.cls,lv:me.lv,ups:me.up});cl.ab.forEach((a,i)=>{const b=$('ab'+i),on=me.bg.includes(i),sz=a.m?Math.max(1,O.mSize(a.m.r)-(md0.sizeDown||0)-(me.fx&32?2:me.fx&2?1:0)):0;b.hidden=!on;b.setAttribute('aria-pressed',i===C.ab);{const alt=me.sw>=0&&i===(me.ow[0]||0);b.classList.toggle('alt',alt);b.children[1].textContent=alt?'or '+a.name:a.name}b.classList.remove('cool');b.lastChild.className='bonus';b.lastChild.textContent=sz?'\u25CF'.repeat(sz):'';b.setAttribute('aria-label',(me.sw>=0&&i===(me.ow[0]||0)?`${a.name}, instead of ${cl.ab[me.sw].name}`:a.name)+(sz?`, ${O.SIZE_NAMES[sz].toLowerCase()} ball`:''))})}
   {const so=$('slot'),need=!!me.g&&C.spun<2&&!v.pz&&!lookMode();so.hidden=!need;$('pad').classList.toggle('spinning',need);so.classList.toggle('done',!!C.stopped);$('abil').style.visibility=need?'hidden':'';so.classList.toggle('going',C.spun===1);so.classList.toggle('jack',C.spun===1&&sl.jack>0);
     if(need&&C.slotDom!==C.slotKey+':'+C.spun){C.slotDom=C.slotKey+':'+C.spun;symCss();const rl=$('reels');rl.textContent='';const pool='bbllffeescw',md1=O.mods({cls:C.cls,lv:me.lv,ups:me.up}),nl=md1.lines?7:5,rec=O.recipes(C.cls),LC=['#ffd24a','#7fe0c8','#ff8a6a','#c9a0ff','#9fd0ff','#ffb0d8','#d0ff8a'];
@@ -309,8 +312,9 @@ function mgControl(g,d,sl,t,x0){const send=v=>{sendMg(g.id,v);C.mgK=''},V=C.mgV|
   else if(g.k==='shrine'){if(!x.querySelector('#mgCv')){x.textContent='';const cv=document.createElement('canvas');cv.className='mgCv';cv.id='mgCv';x.appendChild(cv);
       /* the same sling as in a fight: drag back, steer, let go; the aim shows on the big screen. Putt, chip or lob. */
       const rr=el('div','mgRamps');O.RAMPS.forEach((r,i)=>{const b=el('button','btn',r.short);b.setAttribute('aria-pressed',i===C.rp);b.onclick=()=>{C.rp=i;rr.querySelectorAll('button').forEach((q,j)=>q.setAttribute('aria-pressed',j===i));pushCtrl()};rr.appendChild(b)});x.appendChild(rr);
+      {const lw=el('div','mgLockWrap'),lb=el('button','lockBtn','🔒 Lock aim');lb.id='mgLockBtn';lb.type='button';lb.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();const A=C.mgAim;if(!A)return;if(A.lock!=null)A.unlock();else A.lockNow()});lw.appendChild(lb);cv.parentNode.appendChild(lw)}
       const can=()=>{const gv=getView().mg,dd=gv&&gv.d||{};return((dd.sh||{})[sl]||0)<3&&!(dd.b||[]).some(q=>q[2]===sl)&&C.mgShot!==((dd.sh||{})[sl]||0)+1};
-      C.mgAim=mkAim({lo:30,hi:150,aim0:90,max:()=>130,on:()=>{const A=C.mgAim;C.mgPull=A.p||A.lock!=null?A:null;C.aim=A.aim;C.pw=A.pw;C.ch=!!C.mgPull;C.lk=A.lock!=null?1:0;const now=performance.now();if(now-(C.pushT||0)>60||!C.ch){C.pushT=now;pushCtrl()}drawShrine(getView().mg)},
+      C.mgAim=mkAim({lo:30,hi:150,aim0:90,max:()=>130,on:()=>{const A=C.mgAim;C.mgPull=A.p||A.lock!=null||A.steered?A:null;C.aim=A.aim;C.pw=A.pw;C.ch=!!C.mgPull;C.lk=A.lock!=null?1:0;const now=performance.now();if(now-(C.pushT||0)>60||!C.ch){C.pushT=now;pushCtrl()}drawShrine(getView().mg)},
         fire:(a,pw)=>{C.ch=false;C.lk=0;C.pw=0;pushCtrl();const gv=getView().mg,n=(((gv&&gv.d.sh)||{})[sl]||0)+1;C.mgShot=n;O.buzz(25);send(n+':'+a.toFixed(1)+','+pw.toFixed(3)+','+(C.rp||0));drawShrine(getView().mg)}});
       cv.addEventListener('pointerdown',e=>{if(!can())return;C.mgAim.down(e);try{cv.setPointerCapture(e.pointerId)}catch(q){}e.preventDefault()});
       cv.addEventListener('pointermove',e=>{C.mgAim.move(e)});
@@ -363,7 +367,7 @@ function drawLock(cv,g,sl){if(!g||!g.d||!C.lk)return;const w=cv.clientWidth,h=cv
   const left=5-C.mgPicks.length;x.textAlign='left';x.fillStyle='#bfb29a';x.font='600 13px system-ui';x.fillText('Picks',12,h-12);for(let i=0;i<5;i++){x.fillStyle=i<left?'#d8cdb2':'#3a302a';x.fillRect(58+i*14,h-24,5,14);x.fillRect(56+i*14,h-24,9,4)}
   x.textAlign='right';x.fillStyle='#e8c05a';x.font=`800 15px ${fam}`;x.fillText(L.k>=3?'All set':`Tumbler ${L.k+1} of 3`,w-12,h-12)}
 const pinH=()=>{const per=C.pinPer||1.5,u=((performance.now()-C.pinT)/1000/per)%2;return u<1?u:2-u};
-function drawShrine(g){const cv=$('mgCv');if(!cv)return;const d=(g&&g.d)||{},me=C.view&&C.view.me,sl=me?me.sl:0,shots=(d.sh||{})[sl]||0,flying=(d.b||[]).some(q=>q[2]===sl),A=C.mgAim,p=A&&(A.p||A.lock!=null),ready=shots<3&&!flying;
+function drawShrine(g){const cv=$('mgCv');if(!cv)return;const d=(g&&g.d)||{},me=C.view&&C.view.me,sl=me?me.sl:0,shots=(d.sh||{})[sl]||0,flying=(d.b||[]).some(q=>q[2]===sl),A=C.mgAim,p=A&&(A.p||A.lock!=null||A.steered),ready=shots<3&&!flying;{const lb=$('mgLockBtn');if(lb){const lk=!!(A&&A.lock!=null),show=ready&&!(A&&A.p);lb.hidden=!show;const t=lk?'Unlock aim':'🔒 Lock aim';if(lb.textContent!==t)lb.textContent=t;lb.classList.toggle('on',lk)}}
   slingDraw(cv,{ch:!!p,ph:A?A.phase():'idle',pw:p?A.pw:0,aim:A?A.aim:90,lane:LANES[sl]||'#e9dfc6',col:'#e8e0c8',ready,msg:ready?`Shot ${shots+1} of 3 · ${(d.sk||{})[sl]||0} sunk`:shots>=3?`All three shots taken · ${(d.sk||{})[sl]||0} sunk`:'Watch your ball on the big screen',sub:'Press and slide sideways to steer'})}
 /* the phone's own view of the wheel: holes your ball fits are bright, your aim line runs from your launch spot. Drag on it to aim. */
 const SXA={x:130,y:40,w:740,h:1108},SXL={x:136,y:86,w:728,h:728};                    // the part of the field the phone shows: the wheel, the ground before it, and every launch spot
@@ -411,15 +415,16 @@ function slingDraw(cv,o){const wrap=cv.parentNode,fill=cv.id==='scope',bw=fill?w
   x.strokeStyle='rgba(236,226,200,.35)';x.lineWidth=1;x.strokeRect(bx+.5,by+.5,bwid-1,bhh-1);for(let k=1;k<10;k++){x.fillStyle='rgba(0,0,0,.45)';x.fillRect(bx+bwid*k/10-1,by,2,bhh)}for(const q of[.25,.5,.75]){x.fillStyle='rgba(239,228,204,.8)';x.fillRect(bx+bwid*q-1.5,by-5*S,3,bhh+10*S)}
   x.textAlign='center';x.fillStyle='#efe4cc';
   if(o.ch){const fam=getComputedStyle(document.body).getPropertyValue('--display')||'serif';
-    if(ph==='aim'){x.font=`800 ${Math.round(34*S)}px ${fam}`;x.fillText('Steer',ax,by-14*S);x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText('Hold still, pull down or let go to lock the aim',ax,bh-48*S)}
-    else if(ph==='locked'){x.font=`800 ${Math.round(34*S)}px ${fam}`;x.fillText('Aim locked',ax,by-14*S);x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText('Drag down for power · tap to re-aim',ax,bh-48*S)}
-    else{x.font=`800 ${Math.round(46*S)}px ${fam}`;x.fillText(pw<.05?'Pull down':Math.round(pw*100)+'%',ax,by-14*S);x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText(pw<.05?'Aim is locked · let go to keep it':'Let go to shoot · slide back up to hold',ax,bh-48*S)}}
+    if(ph==='aim'||ph==='steer'){x.font=`800 ${Math.round(34*S)}px ${fam}`;x.fillText('Steer',ax,by-14*S);x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText('Slide sideways to aim, then tap Lock aim',ax,by-58*S)}
+    else if(ph==='locked'){x.font=`800 ${Math.round(34*S)}px ${fam}`;x.fillText('Aim locked',ax,by-14*S);x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText('Now drag down anywhere for power',ax,by-58*S)}
+    else{x.font=`800 ${Math.round(46*S)}px ${fam}`;x.fillText(pw<.05?'Pull down':Math.round(pw*100)+'%',ax,by-14*S);x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText(pw<.05?'Aim is locked · let go to keep it':'Let go to shoot · slide back up to hold',ax,by-58*S)}}
   else if(o.ready){x.font=`700 ${Math.round(19*S)}px system-ui`;x.fillText(o.msg||'Press and slide sideways to steer',ax,by-16*S);x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText(o.sub||'Then pull down for power',ax,bh-48*S)}
   else if(o.msg){x.font=`700 ${Math.round(18*S)}px system-ui`;x.fillText(o.msg,ax,by-16*S);if(o.sub){x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText(o.sub,ax,bh-48*S)}}}
 function drawSling(){const v=C.view,cv=$('scope');if(!v||!v.me||cv.hidden)return;
   {const on=lookMode();if(on!==C.lvOn){C.lvOn=on;C.lv=[0,0,1,0,0];LP.clear();if(on&&(SL.p||SL.lock!=null)){SL.reset();C.ch=false;C.lk=0;C.pull=null;C.pw=0}pushCtrl()}if(on){lookDraw(cv);return}}const me=v.me,cl=CLASSES[C.cls],ab=cl.ab[C.ab];
   const other=v.sh&&v.sh!==v.myId?(v.pa||[]).find(q=>q.id===v.sh):null;
   const rdy=C.spun===2&&canFire(v)&&!ab.instant;if(!rdy&&(SL.lock!=null||SL.p)&&!(C.pull&&C.pull.key)){SL.reset();C.ch=false;C.lk=0;C.pull=null;C.pw=0;pushCtrl()}
+  {const lb=$('lockBtn'),show=rdy&&!(C.pull&&C.pull.key)&&!SL.p,lk=SL.lock!=null;if(lb){if(lb.hidden===show)lb.hidden=!show;const t=lk?'Unlock aim':'🔒 Lock aim';if(lb.textContent!==t)lb.textContent=t;lb.classList.toggle('on',lk)}}
   slingDraw(cv,{ch:C.ch,ph:C.pull&&C.pull.key?'pow':SL.phase(),pw:C.pw,aim:C.aim,lane:LANES[me.sl]||'#e9dfc6',col:cl.col,ready:rdy,msg:other?`Wait: the ${CLASSES[other.c].animal} is shooting`:'',sub:other?'Your turn comes next. Spin your reels meanwhile.':''})}
 function drawScope(live){if(!live)return drawSling();
   const v=C.view,cv=$(live?'live':'scope');if(!v||!v.me||cv.hidden)return;const bd=live?v.bdc:v.bd;if(!bd)return;const Cc=bd.C,wrap=cv.parentNode,bw=wrap.clientWidth,bh=wrap.clientHeight;if(!bw||!bh)return;
@@ -470,8 +475,8 @@ function drawScope(live){if(!live)return drawSling();
 /* Pull back and release. Touch anywhere on the wheel and drag: the ball is drawn back against the band the opposite way,
    so dragging down and to the left aims up and to the right. The length of the pull is the power. Let go to launch; slide back to where you started to cancel. */
 /* The two-step slingshot. First the finger steers: sliding sideways turns the aim (finely near where you started, faster further out).
-   The aim then locks, when you hold still for a moment, start pulling down, or lift your finger. After that the drag only sets power, so the two never fight.
-   A quick tap while locked frees the aim again. Power eases off over its top fifth so strong shots are as precise as soft ones,
+   as many slides as you like. Nothing locks until the player taps Lock aim. After that the drag only sets power, so the two never fight.
+   Unlock aim frees it again. Power eases off over its top fifth so strong shots are as precise as soft ones,
    and the phone buzzes as power passes each quarter. */
 const LOCK_HOLD=450,TAP_MS=260;
 const powCurve=t=>t<=.7?t*.8/.7:.8+(t-.7)/.3*.2;
@@ -479,27 +484,28 @@ function steerFrom(a0,dx){const a=Math.abs(dx),o=Math.min(a,90)*.32+Math.max(0,a
 function mkAim(o){const s={p:null,lock:null,aim:o.aim0||90,pw:0};
   const at=(h,ms)=>{const t=performance.now()-ms;for(let i=h.length-1;i>=0;i--)if(h[i][0]<=t)return h[i];return h[0]};
   const lockAt=(a,oy)=>{const p=s.p;s.lock=s.aim=clamp(a,o.lo,o.hi);s.pw=0;if(p){p.mode='pow';p.oy=oy;p.q=0;p.hist=[]}O.buzz(30);o.on()};
-  const tick=()=>{const p=s.p;if(!p||p.mode!=='aim')return;if(performance.now()-p.st>=LOCK_HOLD)lockAt(s.aim,p.cy)};
+  const tick=()=>{};
   s.down=e=>{if(s.p)return;const now=performance.now();s.p={x:e.clientX,y:e.clientY,cx:e.clientX,cy:e.clientY,t0:now,st:now,sx:e.clientX,sy:e.clientY,hist:[[now,s.aim,e.clientX,e.clientY]],wasLocked:s.lock!=null,moved:false,mode:s.lock!=null?'pow':'aim',oy:e.clientY,a0:s.aim,q:0};s.pw=0;s.p.tm=setInterval(tick,40);o.on()};
   s.move=e=>{const p=s.p;if(!p)return;const now=performance.now(),x=e.clientX,y=e.clientY;p.cx=x;p.cy=y;if(Math.hypot(x-p.x,y-p.y)>8)p.moved=true;
     if(p.mode==='aim'){s.aim=clamp(steerFrom(p.a0,x-p.x),o.lo,o.hi);p.hist.push([now,s.aim,x,y]);if(p.hist.length>16)p.hist.shift();
       if(Math.hypot(x-p.sx,y-p.sy)>5){p.sx=x;p.sy=y;p.st=now}
-      const h=at(p.hist,120),vy=y-h[3],vx=x-h[2];if(y-p.y>30&&vy>12&&vy>1.6*Math.abs(vx)){lockAt(h[1],p.y);s.move(e);return}}           // a clear pull downward locks the aim it had just before
+      if(Math.abs(x-p.x)>3)s.steered=true}
     else{const raw=clamp((y-p.oy-8)/o.max(),0,1);s.pw=powCurve(raw);p.hist.push([now,s.pw]);if(p.hist.length>16)p.hist.shift();
       const q=s.pw>=1?4:Math.floor(s.pw*4);if(q>p.q)O.buzz(q>=4?28:12);p.q=q}
     o.on()};
   s.up=cancel=>{const p=s.p;if(!p)return;clearInterval(p.tm);s.p=null;const now=performance.now();
-    if(cancel){if(p.mode==='aim')s.lock=s.aim;s.pw=0;o.on();return}                 // the phone took the touch away (a system gesture or a long-press menu): keep the aim, never shoot
-    if(p.mode==='aim'){s.lock=s.aim;s.pw=0;O.buzz(30);o.on();return}                 // lifting the finger while steering locks the aim
+    if(cancel){s.pw=0;o.on();return}                 // the phone took the touch away (a system gesture or a long-press menu): keep the aim, never shoot
+    if(p.mode==='aim'){s.pw=0;o.on();return}                 // lifting the finger while steering keeps the aim; it locks only from the button
     let pw=s.pw;if(p.hist.length){const h=at(p.hist,70);if(pw>=.05)pw=Math.max(.05,h[1])}
-    if(pw>=.05){const a=s.lock;s.lock=null;s.pw=0;o.on();o.fire(a,pw);return}
-    if(p.wasLocked&&!p.moved&&now-p.t0<TAP_MS)s.lock=null;                 // a quick tap frees the aim to steer again
+    if(pw>=.05){const a=s.lock;s.lock=null;s.steered=false;s.pw=0;o.on();o.fire(a,pw);return}
     s.pw=0;o.on()};
-  s.reset=()=>{if(s.p)clearInterval(s.p.tm);s.p=null;s.lock=null;s.pw=0};
-  s.phase=()=>s.p?s.p.mode:s.lock!=null?'locked':'idle';
+  s.reset=()=>{if(s.p)clearInterval(s.p.tm);s.p=null;s.lock=null;s.pw=0;s.steered=false};
+  s.lockNow=()=>{if(s.p||s.lock!=null)return;s.lock=s.aim;s.pw=0;O.buzz(30);o.on()};
+  s.unlock=()=>{if(s.p||s.lock==null)return;s.lock=null;s.steered=true;O.buzz(12);o.on()};
+  s.phase=()=>s.p?s.p.mode:s.lock!=null?'locked':s.steered?'steer':'idle';
   return s}
 const SL=mkAim({lo:8,hi:172,aim0:90,max:()=>{const r=$('scope').getBoundingClientRect(),cl=CLASSES[C.cls];return clamp(r.height*.3,80,150)*1.1*clamp(cl.period/1.6,.82,1.45)*clamp(cl.ab[C.ab].slow||1,.7,1.3)*C.steady},    // each fighter draws differently: the archer's pull is long and fine, the warrior's short
-  on:()=>{C.aim=SL.aim;C.pw=SL.pw;C.ch=!!(SL.p||SL.lock!=null);C.lk=SL.lock!=null?1:0;C.pull=SL.p;pullShow();if(!SL.p&&!C.ch){$('pwFill').style.width='0';pushCtrl()}renderCtrlSoon()},
+  on:()=>{C.aim=SL.aim;C.pw=SL.pw;C.ch=!!(SL.p||SL.lock!=null||SL.steered);C.lk=SL.lock!=null?1:0;C.pull=SL.p;pullShow();if(!SL.p&&!C.ch){$('pwFill').style.width='0';pushCtrl()}renderCtrlSoon()},
   fire:(a,pw)=>{C.aim=a;C.pw=pw;C.lastPull={aim:a,pw};C.ch=false;C.lk=0;doFire(pw);C.pw=0;setTimeout(()=>{if(!C.ch)$('pwFill').style.width='0'},400);renderCtrl()}});
 O.SL=SL;let rcT=0;function renderCtrlSoon(){if(rcT)return;rcT=setTimeout(()=>{rcT=0;renderCtrl()},60)}
 /* while the course preview is open the pad turns the big screen's camera instead: drag to turn, pinch to zoom, two fingers to slide, double-tap to reset */
@@ -549,7 +555,8 @@ function initCtrl(){
   $('swap').onclick=()=>{C.cls=null;C.key='';renderCtrl()};
   $('tabPlay').onclick=()=>{C.tab='play';C.key='';renderCtrl()};$('tabHero').onclick=()=>{C.tab='hero';C.key='';renderCtrl()};
   $('mgBtn').addEventListener('pointerdown',e=>{mgTap();e.preventDefault()});$('mgBtn').addEventListener('keydown',e=>{if((e.key===' '||e.key==='Enter')&&!e.repeat){mgTap();e.preventDefault()}});
-  {const sc=$('scope').parentNode;sc.addEventListener('pointerdown',e=>{if($('scope').hidden)return;if(lookMode()&&!C.pull){lookDown(e);try{sc.setPointerCapture(e.pointerId)}catch(x){}e.preventDefault();return}if(pullStart(e)){try{sc.setPointerCapture(e.pointerId)}catch(x){}}e.preventDefault()});
+  {const sc=$('scope').parentNode;{const lb=document.createElement('button');lb.id='lockBtn';lb.className='lockBtn';lb.type='button';lb.hidden=true;sc.appendChild(lb);lb.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();if(SL.lock!=null)SL.unlock();else SL.lockNow();drawScope()});lb.addEventListener('click',e=>e.stopPropagation())}
+    sc.addEventListener('pointerdown',e=>{if($('scope').hidden)return;if(lookMode()&&!C.pull){lookDown(e);try{sc.setPointerCapture(e.pointerId)}catch(x){}e.preventDefault();return}if(pullStart(e)){try{sc.setPointerCapture(e.pointerId)}catch(x){}}e.preventDefault()});
     if(window.ResizeObserver)new ResizeObserver(()=>{if(!$('scope').hidden)drawScope()}).observe(sc);sc.addEventListener('pointermove',e=>{if(LP.size){lookMove(e);e.preventDefault();return}if(C.pull){pullMove(e);e.preventDefault()}});sc.addEventListener('pointerup',e=>{if(LP.size){lookUp(e);return}pullEnd(false)});sc.addEventListener('pointercancel',e=>{if(LP.size){lookUp(e);return}pullEnd(true)});sc.addEventListener('contextmenu',e=>e.preventDefault());
     // without a pointer: left and right turn the aim, holding Space draws the band back, letting go launches
     sc.tabIndex=0;sc.setAttribute('role','application');sc.setAttribute('aria-label','Launcher. Left and right arrows aim. Hold Space to pull back, release to launch.');let kt=0;
@@ -585,33 +592,46 @@ function joinCard(big){
   if(!joined){w.append(el('p',null,joinErr||'Opening the game to phones…'));return w}
   if(code){const cv=document.createElement('canvas');cv.setAttribute('role','img');cv.setAttribute('aria-label','A code to scan that opens this game on a phone');if(qrInto(cv,O.LINK+'#join-'+code))w.appendChild(cv)}
   const t=el('div');t.append(el('small',null,code?'Join code':'Phones'));if(code)t.append(el('b',null,code));t.append(el('span',null,code?'Open this page on a phone, choose Join and enter the code. Up to four can play.':'Players open this page on their phones and choose Join. Up to four can play.'));w.appendChild(t);return w}
+/* the main screen: the runs as a track down the left, the chosen run in detail on the right */
 function buildDung(body){
-  body.className='mBody dung';const left=el('div'),ww=el('div','wheelWrap'),wh=el('div','wheel');wh.id='wheel';
-  O.DUNGEONS.forEach((d,i)=>{const b=el('button','sock');b.style.setProperty('--a',(i*18)+'deg');b.style.setProperty('--mc',O.SETS&&O.SETS[i]?O.SETS[i].fire:'#d6ab52');b.appendChild(el('span',null,String(i+1)));b.onclick=()=>O.selectDungeon(i);wh.appendChild(b)});
-  const hub=el('div','hub');hub.id='hub';hub.append(el('b'),el('small'));ww.append(wh,hub,el('div','claw'));
-  left.append(ww);const info=el('div','dInfo');info.id='dInfo';const jc=el('div');jc.id='joinSlot';body.append(left,info,jc)}
+  body.className='mBody runs';const left=el('div','runCol'),head=el('div','runHead');head.id='runHead';const list=el('div','runList');list.id='runList';
+  O.RUNS.forEach((R,r)=>{const b=el('button','runCard');b.style.setProperty('--mc',O.SETS&&O.SETS[R[0]]?O.SETS[R[0]].fire:'#d6ab52');b.onclick=()=>O.selectRun(r);list.appendChild(b)});
+  const jc=el('div');jc.id='joinSlot';left.append(head,list,jc);const info=el('div','runInfo');info.id='dInfo';body.append(left,info)}
 function updDung(){
-  const st=G.stash,i=G.dung,D=O.DUNGEONS[i],wh=$('wheel'),n=G.players.length,done=st.clear.includes(i),mt=O.maxTier(i),sv=O.savedRun(mode==='solo');
-  wheelRot+=((-i*18-wheelRot)%360+540)%360-180;wh.style.setProperty('--rot',wheelRot+'deg');
-  [...wh.children].forEach((b,k)=>{const open=O.dungOpen(k),dn=st.clear.includes(k);b.className='sock '+(dn?'done':open?'open':'lock')+(k===i?' sel':'');b.disabled=!open;b.setAttribute('aria-pressed',k===i);b.setAttribute('aria-label',O.DUNGEONS[k].name+(dn?', cleared':open?'':', locked'));b.title=open?O.DUNGEONS[k].name:'Clear '+O.DUNGEONS[k-1].name+' to open this'});
-  const hub=$('hub');hub.firstChild.textContent=i+1;hub.lastChild.textContent=`${st.clear.length} of ${O.DUNGEONS.length} cleared`;
-  const info=$('dInfo');info.textContent='';const facts=el('ul','dFacts'),F2=(a,b,c)=>{const li=el('li');if(a)li.append(a);li.append(el('b',null,b));if(c)li.append(c);facts.appendChild(li)};
-  facts.appendChild(el('li','sk','☠'.repeat(D.skulls+G.tier)));F2('',O.setLabel(i));if(i%3===0)F2('','a fresh start');else F2('','keeps what you won in this set');F2('',String(D.rows+1),' floors');F2('pays ',String(O.goldFor(i,G.tier)),' gold');F2('Boss: ',O.MONSTERS[D.boss].name);if(D.startLv>1)F2('enter at level ',String(D.startLv));
-  const head=el('div','dHead'),nav=el('div','nav'),pv=el('button',null,'‹'),nx=el('button',null,'›'),step=d=>{for(let k=i+d;k>=0&&k<O.DUNGEONS.length;k+=d)if(O.dungOpen(k)){O.selectDungeon(k);return}};
-  pv.setAttribute('aria-label','Previous dungeon');nx.setAttribute('aria-label','Next dungeon');pv.onclick=()=>step(-1);nx.onclick=()=>step(1);pv.disabled=i===0;nx.disabled=i+1>=O.DUNGEONS.length||!O.dungOpen(i+1);nav.append(pv,nx);head.append(el('div','dNo',`Dungeon ${i+1}`+(done?' · cleared':'')),nav);
-  info.append(head,el('h2',null,D.name),el('p','dBlurb',D.blurb),facts);
-  if(mt>0){const tr=el('div','tiers');tr.setAttribute('role','group');tr.setAttribute('aria-label','Depth');tr.appendChild(el('span',null,'Depth'));DEPTH.forEach((t,k)=>{const b=el('button',null,t);b.disabled=k>mt;b.setAttribute('aria-pressed',k===G.tier);b.title=k>mt?`Clear ${DEPTH[k-1]} to open this`:k?'Tougher monsters, more gold':'';b.onclick=()=>O.setTier(k);tr.appendChild(b)});info.appendChild(tr)}
+  const st=G.stash,i=G.dung,r=O.runOf(i),R=O.RUNS[r],n=G.players.length,sv=O.savedRun(mode==='solo'),kp=st.keep,mid=!!(kp&&kp.set===r&&kp.next===i&&i!==R[0]),done=O.runDone(r),mt=O.maxTier(i),runsDone=O.RUNS.filter((x,k)=>O.runDone(k)).length;
+  /* progress across all the runs */
+  const head=$('runHead');head.textContent='';const bar=el('div','runBar');O.RUNS.forEach((x,k)=>bar.appendChild(el('i',O.runDone(k)?'on':O.runOpen(k)?'open':'')));
+  head.append(el('h2',null,'The runs'),el('p',null,`${runsDone} of ${O.RUNS.length} complete`),bar);
+  /* one card per run */
+  [...$('runList').children].forEach((b,k)=>{const RR=O.RUNS[k],open=O.runOpen(k),dn=O.runDone(k),sel=k===r,kk=st.keep&&st.keep.set===k?RR.indexOf(st.keep.next):-1;b.textContent='';
+    b.className='runCard '+(dn?'done':open?'open':'lock')+(sel?' sel':'');b.disabled=!open;b.setAttribute('aria-pressed',sel);
+    const md=el('div','runMed',ROMAN[k]),mid2=el('div','runMid'),stg=el('div','runStages');mid2.append(el('b',null,'Run '+ROMAN[k]),stg);
+    RR.forEach((d,j)=>{const sp=el('span',(dn||(kk>j))?'on':kk===j?'cur':'');sp.append(el('i',null,String(j+1)),O.DUNGEONS[d].name.replace(/^The /,''));stg.appendChild(sp)});
+    const tag=el('div','runTag');if(!open)tag.append(el('span','lk','🔒'),el('small',null,`Finish Run ${ROMAN[k-1]}`));else if(kk>0)tag.append(el('span','go','▶'),el('small',null,`Stage ${kk+1} of ${RR.length}`));else if(dn)tag.append(el('span','ok','★'.repeat(Math.max(1,Math.min(3,O.maxTier(RR[0]))))),el('small',null,'Complete'));else tag.append(el('span','go','◆'),el('small',null,'Open'));
+    tag.appendChild(el('em',null,O.runGold(k,0)+' gold'));b.append(md,mid2,tag);b.setAttribute('aria-label',`Run ${ROMAN[k]}: ${RR.map(d=>O.DUNGEONS[d].name).join(', ')}. ${!open?'Locked':dn?'Complete':kk>0?'In progress':'Open'}.`)});
+  /* the chosen run */
+  const info=$('dInfo');info.textContent='';const D0=O.DUNGEONS[R[0]],sg=R.indexOf(i);info.style.setProperty('--dn',O.SETS&&O.SETS[R[0]]?O.SETS[R[0]].fire:'#d6ab52');
+  info.append(el('div','dNo',`Run ${ROMAN[r]} · ${R.length} stages`+(done?' · complete':mid?` · stage ${sg+1} of ${R.length}`:'')),el('h2',null,R.map(d=>O.DUNGEONS[d].name.replace(/^The /,'')).join(' · ')));
+  const sc=el('div','stageRow');R.forEach((d,j)=>{const D=O.DUNGEONS[d],state=mid?(j<sg?'won':j===sg?'cur':'ahead'):(j===0?'cur':'ahead'),c=el('div','stageCard '+state);
+    c.append(el('div','sNo',state==='won'?'✓':String(j+1)),el('b',null,D.name),el('small',null,`${D.rows+1} floors · Boss: ${O.MONSTERS[D.boss].name}`),el('span','sSt',state==='won'?'Cleared this run':state==='cur'?(mid?'Next':'Start here'):'Ahead'));sc.appendChild(c)});info.appendChild(sc);
+  const facts=el('ul','dFacts'),F2=(a,b,c)=>{const li=el('li');if(a)li.append(a);li.append(el('b',null,b));if(c)li.append(c);facts.appendChild(li)};
+  facts.appendChild(el('li','sk','☠'.repeat(D0.skulls+G.tier)));F2('pays ',String(O.runGold(r,G.tier)),' gold when all '+R.length+' stages are cleared');F2('begins at level ',String(D0.startLv),', fresh stats');F2('','fall',' and the run starts over');info.appendChild(facts);
+  if(mt>0&&!mid){const tr=el('div','tiers');tr.setAttribute('role','group');tr.setAttribute('aria-label','Depth');tr.appendChild(el('span',null,'Depth'));DEPTH.forEach((t,k)=>{const b=el('button',null,t);b.disabled=k>mt;b.setAttribute('aria-pressed',k===G.tier);b.title=k>mt?`Complete ${DEPTH[k-1]} to open this`:k?'Tougher monsters, more gold':'';b.onclick=()=>O.setTier(k);tr.appendChild(b)});info.appendChild(tr)}
   info.appendChild(el('p','dParty',n?`${n} in the party: ${G.players.map(p=>CLASSES[p.cls].animal).join(', ')}.`:mode==='solo'?'Choose a fighter to begin.':'No one has joined yet.'));
-  const row=el('div','goRow'),go=btn2((sv?'Start anew: ':'')+'Enter '+D.name,sv?'btn':'btn prime',()=>{if(G.dec)O.pickOpt('host',G.dec.id,0)});go.id='goRun';go.disabled=!n;
-  if(sv){const SD=O.DUNGEONS[sv.dung],cb=btn2(`Continue: ${SD.name}, floor ${sv.floor} of ${SD.rows}`,'btn prime',()=>{O.continueRun();menuKey=''});cb.id='goCont';cb.disabled=mode==='solo'&&!n;info.appendChild(cb)}
+  if(sv&&O.runOf(sv.dung)===r){const SD=O.DUNGEONS[sv.dung],cb=btn2(`Continue: ${SD.name}, floor ${sv.floor} of ${SD.rows}`,'btn prime',()=>{O.continueRun();menuKey=''});cb.id='goCont';cb.disabled=mode==='solo'&&!n;info.appendChild(cb)}
+  const row=el('div','goRow'),go=btn2(mid?`Continue Run ${ROMAN[r]}: stage ${sg+1}, ${O.DUNGEONS[i].name}`:(done?`Play Run ${ROMAN[r]} again`:`Begin Run ${ROMAN[r]}`),sv&&O.runOf(sv.dung)===r?'btn':'btn prime',()=>{if(G.dec)O.pickOpt('host',G.dec.id,0)});go.id='goRun';go.disabled=!n;
   const pb=btn2('Practice course','btn',()=>{if(G.dec)O.pickOpt('host',G.dec.id,1)});pb.id='goPrac';pb.disabled=!n;row.append(go,pb);info.appendChild(row);
+  if(mid){const ab=sure('Abandon this run','Press again to abandon',()=>{st.keep=null;O.saveStash();G.dung=R[0];menuKey=''},'btn ghost');info.appendChild(ab)}
+  const left=O.LOCKS.length-st.unl.length,cost=O.boxCost(st.opened),lb=el('button','lootLink');lb.append(el('span','box'),el('b',null,left?`Loot box · ${cost} gold`:'Every unlock found'),el('small',null,left?(st.gold>=cost?'You can open one now':`${cost-st.gold} more gold needed`):'You have unlocked everything'));lb.onclick=()=>{menuTab='stash';menuKey=''};info.appendChild(lb);
   if(!st.prac&&!st.clear.length)info.appendChild(el('p','dTip','New here? The practice course teaches putts, chips, lobs and power with nothing striking back.'));
-  const js=$('joinSlot');js.textContent='';const jc=joinCard(true);if(jc)js.appendChild(jc)}
+  const js=$('joinSlot');js.textContent='';const jc=joinCard(false);if(jc)js.appendChild(jc)}
+const ROMAN=['I','II','III','IV','V','VI','VII','VIII'];
+function runTrail(r,done){const w=el('div','runTrail');O.RUNS[r].forEach((d,k)=>{const s=el('span',k<done?'on':'');s.append(el('b',null,String(k+1)),el('small',null,O.DUNGEONS[d].name.replace(/^The /,'')));w.appendChild(s)});return w}
 function fillStash(body){
   body.className='mBody stashV';body.textContent='';const st=G.stash,left=O.LOCKS.length-st.unl.length,cost=O.boxCost(st.opened),lc=el('div','lootCol'),ob=el('button','btn prime');ob.id='boxBtn';
   ob.appendChild(el('b',null,left?`Open for ${cost} gold`:'Everything is unlocked'));ob.disabled=!left||st.gold<cost;ob.onclick=()=>{const id=O.openBox();if(id)showBox(id)};
   lc.append(el('div','box'),el('h3',null,'Loot box'),el('p',null,'Each box unlocks one new ability, upgrade, item or relic. From then on it can turn up in every run.'),ob);
-  if(left&&st.gold<cost)lc.append(el('p',null,`${cost-st.gold} more gold needed. Clearing a dungeon pays gold.`));
+  if(left&&st.gold<cost)lc.append(el('p',null,`${cost-st.gold} more gold needed. Completing a run pays gold.`));
   const li=st.last&&O.lockInfo(st.last);if(li){const w=el('div','won');w.append(el('p',null,'Last opened'),el('b',null,li.name),el('span',null,li.desc));lc.append(w)}
   const bl=el('div','bless'),bb=btn2(st.bless?'A blessing waits at the gate':`Buy a blessing · ${O.BLESS} gold`,'btn',()=>{if(O.buyBlessing())menuKey=''});bb.id='blessBtn';bb.disabled=!!st.bless||st.gold<O.BLESS;
   bl.append(el('h3',null,'Blessing'),el('p',null,'The next run starts with a relic in hand and one more pick of supplies at the gate.'),bb);lc.append(bl);
@@ -641,9 +661,9 @@ function fillOpt(body){
 /* the main menu on the host screen: turn the wheel to choose a dungeon, open loot boxes, read the bestiary, set options */
 function hostMenu(){
   const show=G.screen==='lobby'&&!O.inspect,box=$('menu');if(box.hidden===show)box.hidden=!show;if(!show){menuKey='';return}
-  const st=G.stash,sv=O.savedRun(mode==='solo'),mk=[menuTab,G.dung,G.tier,st.gold,st.opened,st.clear.length,st.last,st.bless,st.prac,G.players.map(p=>p.cls).join(','),mode,O.soundOn(),O.fxOn(),O.shakeOn(),O.detailOn(),code,joined,joinErr,!!lobby,roomTried,O.lookOf?O.lookOf():'',sv?sv.dung+':'+sv.floor:'',!!window.qrcode].join('|');if(mk===menuKey)return;menuKey=mk;
+  const st=G.stash,sv=O.savedRun(mode==='solo'),mk=[menuTab,G.dung,G.tier,st.gold,st.opened,st.clear.length,JSON.stringify(st.runs||[]),st.keep?st.keep.set+':'+st.keep.next:'',st.last,st.bless,st.prac,G.players.map(p=>p.cls).join(','),mode,O.soundOn(),O.fxOn(),O.shakeOn(),O.detailOn(),code,joined,joinErr,!!lobby,roomTried,O.lookOf?O.lookOf():'',sv?sv.dung+':'+sv.floor:'',!!window.qrcode].join('|');if(mk===menuKey)return;menuKey=mk;
   if(menuBuilt!==menuTab||!$('mBody')){menuBuilt=menuTab;box.textContent='';box.classList.toggle('solid',menuTab!=='dung');const top=el('div','mTop'),tabs=el('div','mTabs');
-    for(const[k,t]of[['dung','Dungeons'],['stash','Stash'],['best','Bestiary'],['opt','Options']]){const b=el('button',null,t);b.setAttribute('aria-pressed',k===menuTab);b.onclick=()=>{menuTab=k;menuKey=''};tabs.appendChild(b)}
+    for(const[k,t]of[['dung','Runs'],['stash','Stash'],['best','Bestiary'],['opt','Options']]){const b=el('button',null,t);b.setAttribute('aria-pressed',k===menuTab);b.onclick=()=>{menuTab=k;menuKey=''};tabs.appendChild(b)}
     const purse=el('div','purse ic coin');purse.id='purse';const body=el('div','mBody');body.id='mBody';top.append(tabs,purse);box.append(top,body);if(menuTab==='dung')buildDung(body)}
   $('purse').textContent=st.gold+' gold';
   if(menuTab==='dung')updDung();else if(menuTab==='stash')fillStash($('mBody'));else if(menuTab==='best')fillBest($('mBody'));else fillOpt($('mBody'))}
@@ -682,8 +702,10 @@ function hostPanels(){
         card.append(el('small',null,'The twentieth dungeon'),el('h2',null,'The Hollow Throne stands empty'),el('p',null,'The last wheel has stopped turning. What sat the throne is balls and dust, and the dark under the world is only dark again.'),
           el('p',null,`${st.clear.length} dungeons cleared, ${tot} monsters destroyed, ${st.opened} loot box${st.opened===1?'':'es'} opened. The party earns ${G.gain} gold.`),awardBox(),
           el('p','after','Every dungeon can now be entered again at a deeper setting: Grim, Dire and Doomed, each harder and richer than the last.'),btn('Return to the menu',0))}
-      else if(G.result==='win'){const D=O.DUNGEONS[G.dung],nx=G.newDung&&O.DUNGEONS[G.dung+1],mt=O.maxTier(G.dung);ov.className='overlay low';card.append(el('h2',null,D.name.replace(/^The /,'')+' is cleared'),el('p',null,`${O.MONSTERS[D.boss].name} is destroyed. The party earns ${G.gain} gold.`+(nx?` ${nx.name} is now open.`:'')+(G.tier<3&&mt===G.tier+1?` ${D.name} can now be entered at ${DEPTH[mt]} depth.`:'')),awardBox(),btn('Return to the menu',0))}
-      else{const left=G.mons.filter(m=>!m.dead);card.append(el('h2',null,'The party has fallen'),el('p',null,left.length?left.map(m=>`${m.name} had ${Math.ceil(m.hp)} of ${m.max} health left.`).join(' '):''),awardBox(),btn('Rally and fight again',0));const a=btn(`Abandon the run · keep ${O.lossGold()} gold`,1);a.className='btn';card.appendChild(a)}}
+      else if(G.result==='win'){const D=O.DUNGEONS[G.dung],r=O.runOf(G.dung),RR=O.RUNS[r],sg=RR.indexOf(G.dung)+1,mt=O.maxTier(G.dung);ov.className='overlay low';
+        if(G.runEnd){card.append(el('small',null,`Run ${ROMAN[r]} · complete`),el('h2',null,`Run ${ROMAN[r]} is complete!`),el('p',null,`${O.MONSTERS[D.boss].name} is destroyed. The party earns ${G.gain} gold for the run.`+(G.newDung?` Run ${ROMAN[r+1]} is now open.`:'')+(G.tier<3&&mt===G.tier+1?` Run ${ROMAN[r]} can now be played at ${DEPTH[mt]} depth.`:'')),runTrail(r,RR.length),awardBox(),btn('Return to the menu',0))}
+        else{const nx=O.DUNGEONS[G.dung+1];card.append(el('small',null,`Run ${ROMAN[r]} · stage ${sg} of ${RR.length}`),el('h2',null,D.name.replace(/^The /,'')+' is cleared'),el('p',null,`${O.MONSTERS[D.boss].name} is destroyed. Everything the party won carries on into ${nx.name}. The run's gold is paid when all ${RR.length} stages are cleared.`),runTrail(r,sg),awardBox(),btn(`On to stage ${sg+1}: ${nx.name}`,0));const b2=btn('Rest at the menu',1);b2.className='btn';card.appendChild(b2)}}
+      else{const left=G.mons.filter(m=>!m.dead),r=O.runOf(G.dung);card.append(el('small',null,`Run ${ROMAN[r]}`),el('h2',null,'The party has fallen'),el('p',null,(left.length?left.map(m=>`${m.name} had ${Math.ceil(m.hp)} of ${m.max} health left.`).join(' ')+' ':'')+`The run begins again from stage 1, with fresh stats.`),awardBox(),btn(`Begin Run ${ROMAN[r]} again`,0));const a=btn('Return to the menu',1);a.className='btn';card.appendChild(a)}}
     else if(d&&G.screen==='map'&&!g){bar.hidden=false;
       if(d.k==='upgrade'){bar.appendChild(el('h3',null,d.t==='tome'?'Learning from the library':d.t==='gate'?'Supplies at the gate':'Choosing drops'));
         if(mode==='host'){const row=el('div','dropRow');for(const p of G.players){if(!p.opts)continue;const c=el('div','dropCol'+(p.picked?' done':'')),hd=el('div','dh');hd.append(headCanvas(p.cls,40,LANES[p.slot]),el('b',null,CLASSES[p.cls].animal),el('small',null,p.away?'away':p.picked?'chosen':'choosing'));c.appendChild(hd);

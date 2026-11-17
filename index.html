@@ -663,6 +663,48 @@ html[data-mode=host] .card{max-width:30rem}
 .mgLock{width:100%;flex:1 1 auto;min-height:260px;max-height:46dvh;display:block;border:1px solid var(--seam);border-radius:8px;touch-action:none}
 .mgArea>.mgBig:only-child,.mgArea>.mgBig:first-child:nth-last-child(2){margin:auto 0;animation:mgPulse 1.6s ease-in-out infinite}
 @keyframes mgPulse{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
+/* ---------- the main screen: runs ---------- */
+.mBody.runs{display:grid;grid-template-columns:minmax(0,41%) minmax(0,1fr);gap:2.2cqw;padding:1.4cqh 2.4cqw 2.4cqh;align-items:stretch;min-height:0}
+.runCol{display:flex;flex-direction:column;gap:1cqh;min-height:0}
+.runHead{display:grid;grid-template-columns:auto 1fr;align-items:end;gap:2px 12px}
+.runHead h2{margin:0;font-family:var(--display);font-size:clamp(1.3rem,3cqw,2rem);color:var(--gilt2);text-shadow:0 2px 0 #000}
+.runHead p{margin:0;color:var(--tallow);font-size:clamp(.8rem,1.6cqw,1rem);justify-self:end}
+.runBar{grid-column:1/-1;display:flex;gap:4px}.runBar i{flex:1;height:7px;border-radius:4px;background:#2a2220;border:1px solid #000}.runBar i.open{background:#5a4a30}.runBar i.on{background:linear-gradient(#ffe08a,#c8962e);box-shadow:0 0 8px rgba(232,192,90,.5)}
+.runList{display:flex;flex-direction:column;gap:.9cqh;overflow:auto;min-height:0;padding:2px 4px 2px 2px}
+.runCard{--mc:#d6ab52;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;text-align:left;padding:8px 12px;border-radius:10px;border:1px solid #3a2e28;background:linear-gradient(90deg,rgba(34,26,24,.94),rgba(18,13,13,.94));color:var(--bone);cursor:pointer;transition:transform .12s,border-color .12s}
+.runCard:hover:not(:disabled){transform:translateX(3px)}
+.runCard.sel{border-color:var(--mc);box-shadow:0 0 0 1px var(--mc),0 0 22px color-mix(in srgb,var(--mc) 35%,transparent);background:linear-gradient(90deg,color-mix(in srgb,var(--mc) 22%,#1a1312),rgba(18,13,13,.96))}
+.runCard.lock{opacity:.5;cursor:default;filter:grayscale(.6)}
+.runMed{width:clamp(38px,6cqw,54px);height:clamp(38px,6cqw,54px);border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:clamp(1rem,2.4cqw,1.5rem);color:#1d1405;background:radial-gradient(circle at 35% 30%,#fff1c0,var(--mc) 55%,color-mix(in srgb,var(--mc) 50%,#000));border:2px solid #000;box-shadow:inset 0 -3px 0 rgba(0,0,0,.35)}
+.runCard.lock .runMed{background:#3a302a;color:#8a7a68}
+.runMid{display:flex;flex-direction:column;gap:3px;min-width:0}.runMid>b{font-family:var(--display);font-size:clamp(.95rem,2cqw,1.25rem);color:var(--gilt2)}
+.runStages{display:flex;flex-wrap:wrap;gap:3px 10px;font-size:clamp(.7rem,1.35cqw,.86rem);color:var(--tallow)}
+.runStages span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}.runStages i{font-style:normal;width:1.35em;height:1.35em;border-radius:50%;display:grid;place-items:center;font-size:.85em;font-weight:800;background:#2a2220;color:#8a7a68;border:1px solid #000}
+.runStages span.on i{background:var(--mc);color:#1d1405}.runStages span.cur i{background:#fff1c0;color:#1d1405;box-shadow:0 0 8px var(--mc)}.runStages span.cur{color:var(--bone)}
+.runTag{display:flex;flex-direction:column;align-items:flex-end;gap:1px;font-size:clamp(.7rem,1.35cqw,.86rem);color:var(--tallow)}
+.runTag span{font-size:1.15em}.runTag .ok{color:var(--gilt2)}.runTag .go{color:var(--mc)}.runTag em{font-style:normal;color:var(--gilt2);font-weight:700}
+.runInfo{--c:14px;--dn:#d6ab52;display:flex;flex-direction:column;gap:clamp(6px,1.3cqh,12px);padding:clamp(12px,2cqw,22px);border-radius:12px;border:1px solid color-mix(in srgb,var(--dn) 55%,#3a2e28);background:linear-gradient(rgba(30,22,26,.93),rgba(14,10,12,.95));box-shadow:0 18px 40px rgba(0,0,0,.6);min-height:0;overflow:auto;align-self:start;max-height:100%}
+.runInfo h2{margin:0;font-family:var(--display);font-size:clamp(1.25rem,3cqw,2.1rem);line-height:1.1;color:var(--dn);text-shadow:0 2px 0 #000}
+.stageRow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stageCard{position:relative;display:flex;flex-direction:column;gap:3px;padding:12px 10px 10px;border-radius:9px;border:1px solid #3a2e28;background:rgba(0,0,0,.35);min-width:0}
+.stageCard b{font-family:var(--display);color:var(--bone);font-size:clamp(.85rem,1.8cqw,1.08rem);line-height:1.15}.stageCard small{color:var(--tallow);font-size:clamp(.68rem,1.3cqw,.82rem)}
+.stageCard .sNo{position:absolute;top:-10px;left:10px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.85rem;background:#2a2220;color:var(--tallow);border:1px solid #000}
+.stageCard .sSt{margin-top:auto;font-size:clamp(.68rem,1.3cqw,.82rem);font-weight:700;color:#8a7a68}
+.stageCard.cur{border-color:var(--dn);box-shadow:0 0 16px color-mix(in srgb,var(--dn) 30%,transparent)}.stageCard.cur .sNo{background:#fff1c0;color:#1d1405}.stageCard.cur .sSt{color:var(--dn)}
+.stageCard.won{opacity:.75}.stageCard.won .sNo{background:var(--dn);color:#1d1405}.stageCard.won .sSt{color:#9be6d3}
+.lootLink{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:12px;align-items:center;text-align:left;padding:8px 12px;border-radius:9px;border:1px dashed color-mix(in srgb,var(--gilt) 60%,#3a2e28);background:rgba(232,192,90,.06);color:var(--bone);cursor:pointer}
+.lootLink .box{grid-row:1/3;width:34px;height:30px;background:linear-gradient(#a8742a,#5a3a14);border:2px solid #1a1008;border-radius:4px;box-shadow:inset 0 6px 0 #c8902e,0 0 12px rgba(232,192,90,.35)}
+.lootLink b{color:var(--gilt2);font-family:var(--display)}.lootLink small{color:var(--tallow)}
+.btn.ghost{background:transparent;border-color:#3a2e28;color:var(--tallow)}
+.runInfo #goCont{width:100%}
+.mBody.runs #joinSlot{position:static}
+.runTrail{display:flex;gap:6px;justify-content:center;margin:4px 0 8px}.runTrail span{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:90px;font-size:.8rem;color:var(--tallow)}
+.runTrail b{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#2a2220;border:1px solid #000;color:#8a7a68}.runTrail span.on b{background:var(--gilt2);color:#1d1405;box-shadow:0 0 10px rgba(232,192,90,.5)}.runTrail span.on{color:var(--bone)}
+@container (max-aspect-ratio:1/1){.mBody.runs{grid-template-columns:1fr;grid-template-rows:auto 1fr}.runList{max-height:34cqh}.stageRow{grid-template-columns:1fr}}
+.lockBtn{position:absolute;left:50%;bottom:clamp(10px,3.5%,22px);transform:translateX(-50%);z-index:3;min-width:min(64%,260px);padding:14px 22px;border-radius:999px;border:2px solid #000;background:linear-gradient(#ffe08a,#c8962e);color:#1d1405;font-family:var(--display);font-weight:800;font-size:1.25rem;box-shadow:0 4px 0 #6a4a14,0 0 18px rgba(232,192,90,.4);touch-action:none}
+.lockBtn:active{transform:translateX(-50%) translateY(2px);box-shadow:0 2px 0 #6a4a14}
+.lockBtn.on{background:rgba(20,14,12,.85);color:var(--bone);border-color:#5a4a3a;box-shadow:none;font-size:1rem;padding:9px 18px;min-width:0}
+.mgLockWrap{display:flex;justify-content:center}.mgLockWrap .lockBtn{position:static;transform:none;width:100%}.mgLockWrap .lockBtn:active{transform:translateY(2px)}
 </style>
 
 <section id="landing">
