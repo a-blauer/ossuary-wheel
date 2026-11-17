@@ -274,11 +274,12 @@ function renderMg(g){
   const out=d.out&&d.out[sl]!=null,live=D.live||g.k==='lock'||g.k==='forge'||g.k==='pendulum';
   const key=g.k+':'+g.st+':'+(g.st==='brief'?(g.go?Math.ceil((O.MG_BRIEF||7)-t):'w')+'r'+Object.keys(d.rdy||{}).join(''):g.st==='play'?(out?'out'+(d.swn&&d.swn[sl])+(d.sw&&d.sw[sl]):mgKeyOf(g,d,sl,t)):'')+':'+g.ok;if(key===C.mgK&&!(live&&g.st==='play'&&!out))return;C.mgK=key;
   if(C.mgSt!==g.st+(out?'o':'')){C.mgSt=g.st+(out?'o':'');x.textContent=''}
-  if(g.st==='brief'){x.textContent='';const waitR=D.kind==='event'&&!g.go,left=waitR?9:Math.ceil((O.MG_BRIEF||7)-t);x.appendChild(el('div','mgBig',D.kind==='trap'?'A trap!':'Get ready'));if(left<=3&&left>0)x.appendChild(el('div','mgCount',String(left)));
+  if(g.st==='brief'){x.textContent='';const waitR=D.kind==='event'&&!g.go,left=waitR?9:Math.ceil((O.MG_BRIEF||7)-t),bx=el('div','mgBrief');x.appendChild(bx);bx.appendChild(el('div','mgBig',D.kind==='trap'?'A trap!':'Get ready'));if(left<=3&&left>0)bx.appendChild(el('div','mgCount',String(left)));
     if(waitR){const rd=d.rdy||{},n=Math.max(0,G0n()-Object.keys(rd).length);if(!rd[sl])x.appendChild(mgBtn('I have read the rules: READY','go big',()=>{O.buzz(15);sendMg(g.id,'ready')}));else x.appendChild(el('p','mgNote',n?`Ready. Waiting for ${n} more…`:'Everyone is ready!'))}
     if(D.ctl)x.appendChild(el('p','mgGoal',D.ctl));$('mgP').textContent=D.brief;return}
-  if(g.st==='done'){x.textContent='';const ok=!!(d.pass||{})[sl];x.appendChild(el('div','mgBig '+(ok||D.kind!=='trap'?'ok':'bad'),D.kind==='trap'?(ok?'Through!':'Caught!'):'Done'));
-    if(d.pr&&d.pr[sl])x.appendChild(el('p','mgNote',String(d.pr[sl])));$('mgP').textContent=(d.rw&&d.rw[sl])||'';return}
+  if(g.st==='done'){x.textContent='';const ok=!!(d.pass||{})[sl],kind=D.kind==='trap'?(ok?'ok':'bad'):(ok?'ok':'done'),box=el('div','mgDone '+kind);
+    box.append(el('div','mgSeal',D.kind==='trap'?(ok?'✓':'✕'):(ok?'★':'◆')),el('div','mgBig '+(kind==='bad'?'bad':kind==='ok'?'ok':''),D.kind==='trap'?(ok?'Through!':'Caught!'):(ok?'Well done!':'Done')));
+    if(d.pr&&d.pr[sl])box.appendChild(el('p','mgNote',String(d.pr[sl])));if(d.rw&&d.rw[sl])box.appendChild(el('p','mgNote',String(d.rw[sl])));x.appendChild(box);$('mgP').textContent=D.kind==='trap'?(ok?'You made it through.':'The trap got you.'):'The event is over.';return}
   if(out){$('mgP').textContent=!D.hearts||(d.sw&&d.sw[sl])?'You are out. Cheer the others on.':'Knocked out! Mash to climb back in, once.';if(!D.hearts&&!x.firstChild)x.appendChild(el('div','mgBig bad','Out'));if(!x.firstChild&&D.hearts&&!(d.sw&&d.sw[sl])){const n=el('div','mgCount');n.id='swN';x.append(n,mgBtn('CLIMB BACK IN','go big',()=>{O.buzz(8);C.swN=(C.swN||0)+1;sendMg(g.id,'!'+C.swN);$('swN').textContent=Math.min(O.MG_SW,C.swN)+' / '+O.MG_SW}))}
     if($('swN'))$('swN').textContent=Math.min(O.MG_SW,C.swN||0)+' / '+O.MG_SW;if(d.sw&&d.sw[sl]){x.textContent='';x.appendChild(el('div','mgBig bad','Out'))}return}
   if(!x.querySelector('.mgStat'))x.prepend(el('div','mgStat'));x.querySelector('.mgStat').replaceWith(mgStatus(g,d,sl));
@@ -288,7 +289,7 @@ function mgKeyOf(g,d,sl,t){const D=O.MG[g.k],base=JSON.stringify([d.pr&&d.pr[sl]
   if(g.k==='shrine')return base+JSON.stringify(d.sh)+JSON.stringify(d.b);
   if(g.k==='tome')return base+JSON.stringify([d.up,d.peek,d.turn,d.who,C.mgPick,Math.ceil(7-(t-(d.tt||0)))]);if(g.k==='gamble')return base+(t<d.bt?0:t<d.se?1:2)+':'+(C.mgV||'');return base+t}
 function mgHint(g,d,sl,t){switch(g.k){
-  case'lock':return(d.set&&d.set[sl]>=3)?'All three set!':`Tumbler ${Math.min(3,((d.set||{})[sl]||0)+1)} of 3: press STOP in the gold band.`;
+  case'lock':{const k=C.lk?C.lk.k:((d.set||{})[sl]||0);return k>=3?'All three set! Wait for the others.':`Press STOP while the needle is inside the gold band. Each tumbler is faster, with a thinner band.`}
   case'shrine':return`Shot ${Math.min(3,((d.sh||{})[sl]||0)+(((d.b||[]).some(q=>q[2]===sl))?0:1))} of 3. Pick putt, chip or lob, drag back, aim on the big screen.`;
   case'forge':return'Tap STRIKE as each ember touches the gold line. The beat stays steady, then changes after a warning.';
   case'tome':return d.who===sl?`Your turn: ${Math.max(0,Math.ceil(7-(t-(d.tt||0))))}s. Turn over two pages.`:'Watch and remember. Wait for your turn.';
@@ -298,10 +299,13 @@ function mgArea(x){let a=x.querySelector('.mgArea');if(!a){a=el('div','mgArea');
 function mgControl(g,d,sl,t,x0){const send=v=>{sendMg(g.id,v);C.mgK=''},V=C.mgV||'',out=d.out&&d.out[sl]!=null,x=mgArea(x0);
   if(out){x.textContent='';x.appendChild(el('div','mgBig bad','Out!'));return}
   if(false){}
-  else if(g.k==='lock'){const k=Math.min(3,(d.set||{})[sl]||0),left=(d.left||{})[sl]??5,band=(d.band&&d.band[sl]||[.5,.5,.5])[Math.min(2,k)],w=(d.w||[.1,.1,.1])[Math.min(2,k)],per=(d.per||[1.5,1.5,1.5])[Math.min(2,k)];
-    if(!x.querySelector('#mgPin')){x.textContent='';const bar=el('div','mgPin');bar.id='mgPin';bar.append(el('b'),el('i'));x.append(bar,el('p','mgNote'),mgBtn('STOP','go big',()=>{const gv=getView().mg;if(!gv)return;const dd=gv.d,kk=(dd.set||{})[sl]||0,lf=(dd.left||{})[sl]??5;if(kk>=3||lf<=0||C.mgPicks.length>=5)return;O.buzz(20);C.mgPicks.push(+pinH().toFixed(3));send(C.mgPicks.join(','))}))}
-    if(C.lkK!==k){C.lkK=k;C.pinT=performance.now();C.pinPer=per}const bd=x.querySelector('#mgPin b');bd.style.bottom=((band-w/2)*100)+'%';bd.style.height=(w*100)+'%';
-    x.querySelector('#mgPin i').style.bottom=(k>=3?band:pinH())*100+'%';x.querySelector('.mgNote').textContent=k>=3?'All three set! Wait for the others.':`Tumbler ${k+1} of 3 · ${left} pick${left===1?'':'s'} left`}
+  else if(g.k==='lock'){
+    /* the reliquary lock: a needle sweeps a channel, STOP inside the gold band sets the tumbler. The phone judges each pick at once, so the result shows straight away. */
+    if(!x.querySelector('#mgLockCv')){x.textContent='';const cv=document.createElement('canvas');cv.id='mgLockCv';cv.className='mgLock';C.lk={k:0,t0:performance.now(),hits:[],fl:null};
+      const stop=mgBtn('STOP','go big',()=>{const gv=getView().mg;if(!gv)return;const dd=gv.d,L=C.lk;if(L.k>=3||C.mgPicks.length>=5)return;const band=(dd.band&&dd.band[sl]||[.5,.5,.5])[L.k],w=(dd.w||[.1,.1,.1])[L.k],h=lockPin();
+        C.mgPicks.push(+h.toFixed(3));send(C.mgPicks.join(','));const hit=Math.abs(h-band)<=w/2;L.hits.push([L.k,hit,h]);L.fl={t:performance.now(),hit,h};
+        if(hit){L.k++;L.t0=performance.now();O.buzz([25,40,60]);mgFlash(L.k>=3?'Unlocked!':'Click!',true)}else{O.buzz(140);mgFlash('Missed',false)}});
+      x.append(cv,stop);const loop=()=>{if(!cv.isConnected)return;drawLock(cv,getView().mg,sl);requestAnimationFrame(loop)};requestAnimationFrame(loop)}}
   else if(g.k==='shrine'){if(!x.querySelector('#mgCv')){x.textContent='';const cv=document.createElement('canvas');cv.className='mgCv';cv.id='mgCv';x.appendChild(cv);
       /* the same sling as in a fight: drag back, steer, let go; the aim shows on the big screen. Putt, chip or lob. */
       const rr=el('div','mgRamps');O.RAMPS.forEach((r,i)=>{const b=el('button','btn',r.short);b.setAttribute('aria-pressed',i===C.rp);b.onclick=()=>{C.rp=i;rr.querySelectorAll('button').forEach((q,j)=>q.setAttribute('aria-pressed',j===i));pushCtrl()};rr.appendChild(b)});x.appendChild(rr);
@@ -336,6 +340,28 @@ function drawForge(cv,g){if(!g||!g.d)return;const w=cv.clientWidth,h=cv.clientHe
   if(lab){x.fillStyle='#ffd27a';x.font=`800 ${Math.round(Math.min(30,w/11))}px system-ui`;x.fillText(lab,lx,32)}
   const fb=C.mgFb;if(fb&&performance.now()-fb.t<550){x.fillStyle=fb.ok?'#9dffb0':'#ff7a6a';x.font=`800 ${Math.round(Math.min(26,w/13))}px system-ui`;x.fillText(fb.r,lx,hitY+34)}
 }
+if(window.CanvasRenderingContext2D&&!CanvasRenderingContext2D.prototype.roundRect)CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h){this.rect(x,y,w,h)};
+function lockPin(){const L=C.lk,gv=getView().mg,per=((gv&&gv.d.per)||[1.5,1.05,.72])[Math.min(2,L.k)],u=((performance.now()-L.t0)/1000/per)%2;return u<1?u:2-u}
+O.lkDbg=()=>({k:C.lk?C.lk.k:-1,pin:C.lk?lockPin():0});          // for tests
+function mgFlash(t,ok){const f=el('div','mgFlash '+(ok?'ok':'bad'),t);document.body.appendChild(f);setTimeout(()=>f.remove(),760)}
+function drawLock(cv,g,sl){if(!g||!g.d||!C.lk)return;const w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;const dpr=Math.min(2,devicePixelRatio||1);if(cv.width!==Math.round(w*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr)}
+  const x=cv.getContext('2d'),d=g.d,L=C.lk,k=Math.min(2,L.k),bands=(d.band&&d.band[sl])||[.5,.5,.5],bw=(d.w||[.1,.1,.1])[k],fam=getComputedStyle(document.body).getPropertyValue('--display')||'serif',now=performance.now();x.setTransform(dpr,0,0,dpr,0,0);
+  const bg=x.createLinearGradient(0,0,0,h);bg.addColorStop(0,'#211714');bg.addColorStop(1,'#120c0b');x.fillStyle=bg;x.fillRect(0,0,w,h);
+  /* the three tumbler pins along the top: gold once set, the one you are on glows */
+  const py=34,gap=Math.min(70,w/4);for(let i=0;i<3;i++){const cx=w/2+(i-1)*gap,set=i<L.k,cur=i===L.k&&L.k<3;x.fillStyle=set?'#e8c05a':'#2a2220';x.strokeStyle=cur?'#ffe8a0':'#5a4a3a';x.lineWidth=cur?3:2;
+    x.beginPath();x.roundRect(cx-12,py-(set?20:12),24,set?32:24,5);x.fill();x.stroke();if(set){x.fillStyle='#fff4d0';x.fillRect(cx-3,py-16,6,6)}}
+  /* the channel, its gold band and the sweeping needle */
+  const top=74,bot=h-30,cx=w/2,cw=Math.min(120,w*.34),Y=v=>bot-(bot-top)*v;
+  x.fillStyle='#0b0808';x.strokeStyle='#5a4a3a';x.lineWidth=2;x.beginPath();x.roundRect(cx-cw/2,top-6,cw,bot-top+12,10);x.fill();x.stroke();
+  if(L.k<3){const b0=bands[k];const gy0=Y(b0+bw/2),gy1=Y(b0-bw/2);const gr=x.createLinearGradient(0,gy0,0,gy1);gr.addColorStop(0,'rgba(232,192,90,.35)');gr.addColorStop(.5,'rgba(255,214,110,.75)');gr.addColorStop(1,'rgba(232,192,90,.35)');x.fillStyle=gr;x.fillRect(cx-cw/2+3,gy0,cw-6,gy1-gy0);x.strokeStyle='#ffd66e';x.lineWidth=2;x.strokeRect(cx-cw/2+3,gy0,cw-6,gy1-gy0);
+    const v=lockPin(),ny=Y(v),inside=Math.abs(v-b0)<=bw/2;x.fillStyle=inside?'#fff4d0':'#d8cdb2';x.shadowColor=inside?'#ffd66e':'transparent';x.shadowBlur=inside?16:0;x.fillRect(cx-cw/2-8,ny-4,cw+16,8);x.shadowBlur=0;
+    x.fillStyle='#8a7a60';x.beginPath();x.moveTo(cx-cw/2-8,ny);x.lineTo(cx-cw/2-20,ny-9);x.lineTo(cx-cw/2-20,ny+9);x.fill();x.beginPath();x.moveTo(cx+cw/2+8,ny);x.lineTo(cx+cw/2+20,ny-9);x.lineTo(cx+cw/2+20,ny+9);x.fill()}
+  else{x.fillStyle='#9dffb0';x.font=`800 ${Math.round(Math.min(34,w/9))}px ${fam}`;x.textAlign='center';x.fillText('Unlocked!',cx,(top+bot)/2)}
+  /* where your last pick landed, fading */
+  const fl=L.fl;if(fl&&now-fl.t<900){x.globalAlpha=1-(now-fl.t)/900;x.strokeStyle=fl.hit?'#9dffb0':'#ff7a6a';x.lineWidth=3;x.beginPath();x.moveTo(cx-cw/2-24,Y(fl.h));x.lineTo(cx+cw/2+24,Y(fl.h));x.stroke();x.globalAlpha=1}
+  /* picks left, as little picks along the bottom */
+  const left=5-C.mgPicks.length;x.textAlign='left';x.fillStyle='#bfb29a';x.font='600 13px system-ui';x.fillText('Picks',12,h-12);for(let i=0;i<5;i++){x.fillStyle=i<left?'#d8cdb2':'#3a302a';x.fillRect(58+i*14,h-24,5,14);x.fillRect(56+i*14,h-24,9,4)}
+  x.textAlign='right';x.fillStyle='#e8c05a';x.font=`800 15px ${fam}`;x.fillText(L.k>=3?'All set':`Tumbler ${L.k+1} of 3`,w-12,h-12)}
 const pinH=()=>{const per=C.pinPer||1.5,u=((performance.now()-C.pinT)/1000/per)%2;return u<1?u:2-u};
 function drawShrine(g){const cv=$('mgCv');if(!cv)return;const d=(g&&g.d)||{},me=C.view&&C.view.me,sl=me?me.sl:0,shots=(d.sh||{})[sl]||0,flying=(d.b||[]).some(q=>q[2]===sl),A=C.mgAim,p=A&&(A.p||A.lock!=null),ready=shots<3&&!flying;
   slingDraw(cv,{ch:!!p,ph:A?A.phase():'idle',pw:p?A.pw:0,aim:A?A.aim:90,lane:LANES[sl]||'#e9dfc6',col:'#e8e0c8',ready,msg:ready?`Shot ${shots+1} of 3 · ${(d.sk||{})[sl]||0} sunk`:shots>=3?`All three shots taken · ${(d.sk||{})[sl]||0} sunk`:'Watch your ball on the big screen',sub:'Press and slide sideways to steer'})}

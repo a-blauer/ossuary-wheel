@@ -637,6 +637,32 @@ html[data-mode=host] .card{max-width:30rem}
 .mgX .wide,#mgX .wide{width:100%;min-height:110px}
 #lookHint{position:absolute;left:2.5%;bottom:3%;padding:8px 16px;background:rgba(14,10,12,.82);border:1px solid var(--seam);border-radius:8px;color:var(--bone);font-size:clamp(.8rem,1.7cqw,1rem);pointer-events:none;white-space:nowrap}
 .scopeWrap,.scopeWrap canvas,.mgCv{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+/* ---------- mini games and events on the phone: a framed header, chips for status, controls at the bottom under the thumb ---------- */
+#mgPad{min-height:calc(100dvh - 104px);gap:10px;padding-bottom:6px}
+#mgPad h3{position:relative;text-align:center;font-size:1.7rem;line-height:1.1;padding:4px 0 10px;margin:0;text-shadow:0 2px 0 #000}
+#mgPad h3::after{content:'';position:absolute;left:18%;right:18%;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--gilt),transparent)}
+#mgP{margin:0;padding:10px 14px;background:linear-gradient(180deg,rgba(46,36,30,.85),rgba(26,20,18,.85));border:1px solid var(--seam);border-left:3px solid var(--gilt);border-radius:6px;color:var(--bone);font-size:1rem;line-height:1.35}
+#mgX{flex:1 1 auto;display:flex;flex-direction:column;gap:10px;min-height:0}
+.mgArea{flex:1 1 auto;display:flex;flex-direction:column;gap:10px;min-height:0}
+.mgArea>.mgB,.mgArea>button,#mgX>.mgB,#mgX>button{width:100%}
+.mgArea>.mgB:last-child,.mgArea>.mgRow:last-child,.mgArea>.dirPad:last-child,.mgArea>.shCol:last-child,#mgX>.mgB:last-child{margin-top:auto}
+.mgB.big{min-height:max(150px,22dvh)}
+.mgB{transition:transform .06s,filter .06s}.mgB:active{transform:scale(.97);filter:brightness(1.35)}
+.mgStat{gap:10px;flex-wrap:wrap;margin:0}
+.mgStat>b,.mgStat>.mgHearts{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:rgba(10,8,8,.7);border:1px solid var(--seam);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);font-weight:800;color:var(--gilt2)}
+.mgBig{padding:14px 0 6px;text-shadow:0 3px 0 #000,0 0 22px rgba(232,192,90,.25)}
+.mgBig.ok{text-shadow:0 3px 0 #000,0 0 24px rgba(155,230,211,.45)}.mgBig.bad{text-shadow:0 3px 0 #000,0 0 24px rgba(255,138,106,.45)}
+.mgDone{display:flex;flex-direction:column;align-items:center;gap:8px;margin:auto 0;padding:18px 14px;border:1px solid var(--seam);border-radius:10px;background:radial-gradient(ellipse at 50% 0,rgba(232,192,90,.12),transparent 70%),rgba(14,10,10,.6)}
+.mgDone .mgSeal{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;font-size:2.6rem;border:3px solid currentColor;box-shadow:0 0 24px currentColor,inset 0 0 18px rgba(0,0,0,.6)}
+.mgDone.ok{color:#9be6d3}.mgDone.bad{color:#ff8a6a}.mgDone.done{color:var(--gilt2)}
+.mgDone .mgNote{color:var(--bone);font-size:1.05rem}
+.mgBrief{display:flex;flex-direction:column;align-items:center;gap:10px;margin:auto 0}
+.mgFlash{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);font-family:var(--display);font-weight:800;font-size:2.6rem;pointer-events:none;text-shadow:0 3px 0 #000;animation:mgFlash .7s ease-out forwards;z-index:30}
+.mgFlash.ok{color:#9dffb0}.mgFlash.bad{color:#ff7a6a}
+@keyframes mgFlash{0%{opacity:0;transform:translate(-50%,-40%) scale(.7)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}100%{opacity:0;transform:translate(-50%,-70%) scale(1)}}
+.mgLock{width:100%;flex:1 1 auto;min-height:260px;max-height:46dvh;display:block;border:1px solid var(--seam);border-radius:8px;touch-action:none}
+.mgArea>.mgBig:only-child,.mgArea>.mgBig:first-child:nth-last-child(2){margin:auto 0;animation:mgPulse 1.6s ease-in-out infinite}
+@keyframes mgPulse{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
 </style>
 
 <section id="landing">
