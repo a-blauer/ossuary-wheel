@@ -286,7 +286,7 @@ function foes(){
 function aimPow(){const box=$('aimPow');if(!box)return;const show=(G.screen==='combat'&&G.phase==='aim'&&!G.cine)||(G.mg&&G.mg.k==='shrine'&&G.mg.st==='play');
   const ch=show?G.players.filter(p=>p.ch&&!p.fired&&p.hp>0):[];box.hidden=!ch.length;if(!ch.length)return;
   while(box.children.length<ch.length){const r=document.createElement('div');r.className='ap';r.innerHTML='<b></b><div class="apBar"><i></i></div><em></em>';box.appendChild(r)}
-  [...box.children].forEach((r,k)=>{const p=ch[k];r.hidden=!p;if(!p)return;const cl=CLASSES[p.cls];r.style.setProperty('--lc',LANES[p.slot]);r.querySelector('b').textContent=cl.animal+' · '+(O.RAMPS[p.rp||0]||O.RAMPS[0]).short;
+  [...box.children].forEach((r,k)=>{const p=ch[k];r.hidden=!p;if(!p)return;const cl=CLASSES[p.cls];r.style.setProperty('--lc',LANES[p.slot]);r.querySelector('b').textContent=cl.animal+' · '+(O.RAMPS[p.rp||0]||O.RAMPS[0]).short+(p.lk?' · aim locked':' · steering');
     const pw=clamp(p.pw||0,0,1);r.querySelector('i').style.width=(pw*100)+'%';r.querySelector('em').textContent=Math.round(pw*100)+'%'})}
 function hud(){foes();aimPow();
   const C=G.cine,fight=G.screen==='combat',mon=fight?G.mons[0]:null,lead=mon&&MONSTERS[mon.id],aim=fight&&G.phase==='aim',wait=aim?G.players.filter(p=>p.hp>0&&!p.fired).length:0,left=aim&&!C&&!G.queue.length&&G.players.length>1&&!G.practice?Math.ceil(O.TURN-G.turnT):99;

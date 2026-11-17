@@ -53,7 +53,7 @@ function syncRemote(now){
     const fresh=!pl;if(!pl){pl=O.addPlayer(pid,pr.cls,false);if(!pl)continue}
     if(fresh||pl.peer!==p.peer){pl.peer=p.peer;pl.lastN=num(pr.shot&&pr.shot.n);pl.lastPick=num(pr.pick&&pr.pick.n);pl.lastTgt=num(pr.tgt&&pr.tgt.n);pl.lastIns=num(pr.ins);pl.lastItem=num(pr.item&&pr.item.n);pl.lastMg='';pl.lastAct=num(pr.act&&pr.act.n)}     // a phone that reloaded starts its counters again
     pl.seen=now;if(pl.cls!==pr.cls)O.changeClass(pl,pr.cls);if((pl.skin||'')!==String(pr.skin||''))O.setSkin(pl,pr.skin);
-    pl.aim=clamp(num(pr.aim,90),8,172);pl.rp=clamp(Math.floor(num(pr.rp)),0,2);pl.ch=!!pr.ch;pl.rdy=!!pr.rd;pl.pw=clamp(num(pr.pw),0,1);pl.ab=clamp(Math.floor(num(pr.ab)),0,11);
+    pl.aim=clamp(num(pr.aim,90),8,172);pl.rp=clamp(Math.floor(num(pr.rp)),0,2);pl.ch=!!pr.ch;pl.lk=!!pr.lk;pl.rdy=!!pr.rd;pl.pw=clamp(num(pr.pw),0,1);pl.ab=clamp(Math.floor(num(pr.ab)),0,11);
     const it=pr.item;if(it&&num(it.n)>pl.lastItem){pl.lastItem=num(it.n);O.useItem(pl.id,it.i)}
     const mg=pr.mg;if(mg&&G.mg&&num(mg.id)===G.mg.id){const kk=mg.id+':'+mg.v;if(kk!==pl.lastMg){pl.lastMg=kk;O.mgInput(pl.id,G.mg.id,mg.v)}}
     const tg=pr.tgt;if(tg&&num(tg.n)>pl.lastTgt){pl.lastTgt=num(tg.n);O.setTarget(pl.id,tg.i)}
@@ -71,8 +71,8 @@ function pushHost(now){if(!room||now-lastPush<160)return;const s=JSON.stringify(
 const C={armed:false,skin:LS.get('ow_skin')||'',cls:null,ab:0,rp:0,aim:90,ch:false,pw:0,seq:0,pseq:0,shot:null,pick:null,sentRd:'',sentDec:0,t0:0,key:'',tab:'play',tgt:null,tseq:0,ins:0,item:null,iseq:0,act:null,aseq:0,mg:null,mgId:0,mgGo:0,mgV:null,steady:1,spun:0,slotKey:'',pickKey:'',pull:null,lastPull:null,trail:[],trailNew:false,lmA:null,lmB:null,lmSig:'',ck0:0,ckT:0,ckSeen:-1,pushT:0};
 function pushCtrl(){
   if(!C.cls)return;
-  if(isLocal()){let pl=G.players.find(p=>p.id==='local');if(!pl)pl=O.addPlayer('local',C.cls,true);if(!pl)return;if(pl.cls!==C.cls)O.changeClass(pl,C.cls);pl.aim=C.aim;pl.ch=C.ch;pl.rdy=C.spun===2;pl.pw=C.pw;pl.ab=C.ab;pl.rp=C.rp;if((pl.skin||'')!==(C.skin||''))O.setSkin(pl,C.skin)}
-  else if(room&&joined)room.presence({role:'player',pid:PID,cls:C.cls,skin:C.skin||'',rp:C.rp,aim:Math.round(C.aim*2)/2,ch:C.ch?1:0,rd:C.spun===2?1:0,pw:Math.round(C.pw*100)/100,ab:C.ab,shot:C.shot,pick:C.pick,tgt:C.tgt,ins:C.ins,item:C.item,mg:C.mg,act:C.act}).catch(()=>{})}
+  if(isLocal()){let pl=G.players.find(p=>p.id==='local');if(!pl)pl=O.addPlayer('local',C.cls,true);if(!pl)return;if(pl.cls!==C.cls)O.changeClass(pl,C.cls);pl.aim=C.aim;pl.ch=C.ch;pl.lk=!!C.lk;pl.rdy=C.spun===2;pl.pw=C.pw;pl.ab=C.ab;pl.rp=C.rp;if((pl.skin||'')!==(C.skin||''))O.setSkin(pl,C.skin)}
+  else if(room&&joined)room.presence({role:'player',pid:PID,cls:C.cls,skin:C.skin||'',rp:C.rp,aim:Math.round(C.aim*2)/2,ch:C.ch?1:0,lk:C.lk?1:0,rd:C.spun===2?1:0,pw:Math.round(C.pw*100)/100,ab:C.ab,shot:C.shot,pick:C.pick,tgt:C.tgt,ins:C.ins,item:C.item,mg:C.mg,act:C.act}).catch(()=>{})}
 /* a monster's wheel as this phone must draw it: the fixed layout every device knows, with what the host says has changed */
 const LAY={};
 function boardOf(mo,bs,i){const m=mo[i],b=Array.isArray(bs)?bs[i]:null;if(!m||!Array.isArray(b))return null;const Cc=LAY[m.id]||(LAY[m.id]=O.course(m.id)),on=(a,k)=>String(a||'')[k]==='1',lk=Math.floor(num(b[8]));
@@ -183,7 +183,7 @@ function renderCtrl(){
   if(me){if(C.hpSeen!=null&&me.hp<C.hpSeen){O.buzz([70,40,150]);const mb=document.querySelector('.me');mb.classList.remove('hit');void mb.offsetWidth;mb.classList.add('hit')}C.hpSeen=me.hp}
   if(me&&me.ls&&me.ls[0]!==C.lsSeen){if(C.lsSeen!=null&&me.ls[0]>C.lsSeen){C.lsRd=rdKey(v);O.buzz(me.ls[1]>0?[30,40,90]:20)}C.lsSeen=me.ls[0]}
   $('reCode').hidden=!(mode==='join'&&v.err==='nohost'&&!!code&&performance.now()-(C.noHostT||0)>2500);
-  const key=JSON.stringify([st,me,v.pa,v.mo,v.bd,v.actMe,v.cn,v.ins,v.sc,v.dec,v.mg,v.it,v.pr,v.pz,v.sk,C.skin,C.took&&C.took.t,C.tip&&performance.now()<C.tip.until?C.tip.t:0,C.bagOpen,C.mgV,C.mgGo>0,C.ab,C.rp,C.spun,C.stopped,C.ch?(C.pw<.05?1:2):0,C.armed,C.tab,v.rel,sight?Math.round(C.aim):0,C.sentDec]);trackLive(v);
+  const key=JSON.stringify([st,me,v.pa,v.mo,v.bd,v.actMe,v.cn,v.ins,v.sc,v.dec,v.mg,v.it,v.pr,v.pz,v.sk,C.skin,C.took&&C.took.t,C.tip&&performance.now()<C.tip.until?C.tip.t:0,C.bagOpen,C.mgV,C.mgGo>0,C.ab,C.rp,C.spun,C.stopped,C.ch?(C.pw<.05?1:2):0,SL.phase(),C.armed,C.tab,v.rel,sight?Math.round(C.aim):0,C.sentDec]);trackLive(v);
   if(key===C.key){if(C.tab==='play'&&!v.err&&v.me){C.view=v;if(!$('pad').hidden&&!$('scope').hidden)drawScope();if(!$('watch').hidden&&!$('liveWrap').hidden)drawScope(true)}return}C.key=key;         // moving parts and balls in play are redrawn between full renders
   $('tabPlay').setAttribute('aria-pressed',C.tab==='play');$('tabHero').setAttribute('aria-pressed',C.tab==='hero');$('play').hidden=C.tab!=='play';$('sheet').hidden=C.tab!=='hero';
   $('meHp').style.width=me?(100*me.hp/me.mhp)+'%':'100%';$('meHpTxt').textContent=me?`Level ${me.lv} · ${me.hp} / ${me.mhp} health`:`${cl.hp} health`;$('meLane').style.background=me?LANES[me.sl]:'transparent';
@@ -209,7 +209,7 @@ function renderCtrl(){
   const fxT=(me.fx&8?'Hexed: your balls do less damage this round. ':'')+(me.fx&32?'Shrunk: your next ball is two sizes smaller. ':'')+(me.fx&16?'Bleeding. ':'')+(me.fx&1?'Weapon Oil is on this attack. ':'')+(me.fx&2?'Grinding Chalk is on this attack. ':'')+(me.fx&4?'Lodestone Dust is on this attack. ':'');
   if(!v.it.length)C.bagOpen=false;const bb=$('btnBag');bb.hidden=!v.it.length;bb.textContent=C.bagOpen?'Close':`Bag ${v.it.length}`;bb.setAttribute('aria-pressed',!!C.bagOpen);$('pad').classList.toggle('bagopen',!!C.bagOpen);
   const bg=$('bag');bg.hidden=!C.bagOpen;if(C.bagOpen){bg.textContent='';bg.appendChild(el('h4',null,'Party bag · an item is free and does not use up your attack'));const w=el('div','its');v.it.forEach((id,i)=>{const b=el('button'),I=ITEMS[id],busy=(I.wheel||I.foe)&&v.cn,d=el('div');d.append(el('b',null,I.name),el('span',null,busy?'Wait for the attack on the big screen to finish.':I.desc));b.append(O.ico('it:'+id),d);b.disabled=!!(busy||((I.wheel||I.tgt)&&!mon));b.onclick=()=>{C.bagOpen=false;sendItem(i)};w.appendChild(b)});bg.appendChild(w)}
-  const cdN=0,capT=C.ch?(C.pw<.05?'Pull further back, or let go here to cancel.':'Steer sideways. Let go to shoot.'):ab.instant?ab.name+' needs no aiming. Tap Cast.':fxT?fxT.trim():me.bf?'War Anthem: this attack hits 50% harder.':v.pr?'Practice. Shots are free.':v.cn?'An ally is attacking. Line up your shot on the big screen.':'Your ball: '+ab.name+(me.bg.length>1?' (tap another below to switch)':'');
+  const cdN=0,capT=C.ch?(SL.phase()==='aim'?'Steering. Hold still, pull down or let go to lock.':SL.phase()==='locked'?'Aim locked. Drag down for power, or tap to re-aim.':C.pw<.05?'Pull down for power.':'Let go to shoot.'):ab.instant?ab.name+' needs no aiming. Tap Cast.':fxT?fxT.trim():me.bf?'War Anthem: this attack hits 50% harder.':v.pr?'Practice. Shots are free.':v.cn?'An ally is attacking. Line up your shot on the big screen.':'Your ball: '+ab.name+(me.bg.length>1?' (tap another below to switch)':'');
   {const md0=O.mods({cls:C.cls,lv:me.lv,ups:me.up});cl.ab.forEach((a,i)=>{const b=$('ab'+i),on=me.bg.includes(i),sz=a.m?Math.max(1,O.mSize(a.m.r)-(md0.sizeDown||0)-(me.fx&32?2:me.fx&2?1:0)):0;b.hidden=!on;b.setAttribute('aria-pressed',i===C.ab);{const alt=me.sw>=0&&i===(me.ow[0]||0);b.classList.toggle('alt',alt);b.children[1].textContent=alt?'or '+a.name:a.name}b.classList.remove('cool');b.lastChild.className='bonus';b.lastChild.textContent=sz?'\u25CF'.repeat(sz):'';b.setAttribute('aria-label',(me.sw>=0&&i===(me.ow[0]||0)?`${a.name}, instead of ${cl.ab[me.sw].name}`:a.name)+(sz?`, ${O.SIZE_NAMES[sz].toLowerCase()} ball`:''))})}
   {const so=$('slot'),need=!!me.g&&C.spun<2&&!v.pz;so.hidden=!need;$('pad').classList.toggle('spinning',need);so.classList.toggle('done',!!C.stopped);$('abil').style.visibility=need?'hidden':'';so.classList.toggle('going',C.spun===1);so.classList.toggle('jack',C.spun===1&&sl.jack>0);
     if(need&&C.slotDom!==C.slotKey+':'+C.spun){C.slotDom=C.slotKey+':'+C.spun;symCss();const rl=$('reels');rl.textContent='';const pool='bbllffeescw',md1=O.mods({cls:C.cls,lv:me.lv,ups:me.up}),nl=md1.lines?7:5,rec=O.recipes(C.cls),LC=['#ffd24a','#7fe0c8','#ff8a6a','#c9a0ff','#9fd0ff','#ffb0d8','#d0ff8a'];
@@ -305,9 +305,11 @@ function mgControl(g,d,sl,t,x0){const send=v=>{sendMg(g.id,v);C.mgK=''},V=C.mgV|
       /* the same sling as in a fight: drag back, steer, let go; the aim shows on the big screen. Putt, chip or lob. */
       const rr=el('div','mgRamps');O.RAMPS.forEach((r,i)=>{const b=el('button','btn',r.short);b.setAttribute('aria-pressed',i===C.rp);b.onclick=()=>{C.rp=i;rr.querySelectorAll('button').forEach((q,j)=>q.setAttribute('aria-pressed',j===i));pushCtrl()};rr.appendChild(b)});x.appendChild(rr);
       const can=()=>{const gv=getView().mg,dd=gv&&gv.d||{};return((dd.sh||{})[sl]||0)<3&&!(dd.b||[]).some(q=>q[2]===sl)&&C.mgShot!==((dd.sh||{})[sl]||0)+1};
-      cv.addEventListener('pointerdown',e=>{if(!can())return;C.mgPull={x:e.clientX,y:e.clientY,a:90,p:0};C.ch=true;C.pw=0;C.aim=90;pushCtrl();try{cv.setPointerCapture(e.pointerId)}catch(q){}e.preventDefault()});
-      cv.addEventListener('pointermove',e=>{const p=C.mgPull;if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y,L=Math.hypot(dx,dy);p.a=clamp(steer(dx),30,150);p.p=dy>0?clamp((dy-10)/130,0,1):0;C.aim=p.a;C.pw=p.p;const now=performance.now();if(now-(C.pushT||0)>110){C.pushT=now;pushCtrl()}drawShrine(getView().mg)});
-      const up=()=>{const p=C.mgPull;C.mgPull=null;C.ch=false;C.pw=0;pushCtrl();if(p&&p.p>.05){const gv=getView().mg,n=(((gv&&gv.d.sh)||{})[sl]||0)+1;C.mgShot=n;O.buzz(25);send(n+':'+p.a.toFixed(1)+','+p.p.toFixed(3)+','+(C.rp||0))}drawShrine(getView().mg)};
+      C.mgAim=mkAim({lo:30,hi:150,aim0:90,max:()=>130,on:()=>{const A=C.mgAim;C.mgPull=A.p||A.lock!=null?A:null;C.aim=A.aim;C.pw=A.pw;C.ch=!!C.mgPull;C.lk=A.lock!=null?1:0;const now=performance.now();if(now-(C.pushT||0)>60||!C.ch){C.pushT=now;pushCtrl()}drawShrine(getView().mg)},
+        fire:(a,pw)=>{C.ch=false;C.lk=0;C.pw=0;pushCtrl();const gv=getView().mg,n=(((gv&&gv.d.sh)||{})[sl]||0)+1;C.mgShot=n;O.buzz(25);send(n+':'+a.toFixed(1)+','+pw.toFixed(3)+','+(C.rp||0));drawShrine(getView().mg)}});
+      cv.addEventListener('pointerdown',e=>{if(!can())return;C.mgAim.down(e);try{cv.setPointerCapture(e.pointerId)}catch(q){}e.preventDefault()});
+      cv.addEventListener('pointermove',e=>{C.mgAim.move(e)});
+      const up=e=>{C.mgAim.up(e&&e.type==='pointercancel')};
       cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up)}
     drawShrine(g)}
   else if(g.k==='forge'){if(!x.querySelector('#mgLane')){x.textContent='';const cv=document.createElement('canvas');cv.id='mgLane';cv.className='mgLane';
@@ -334,8 +336,8 @@ function drawForge(cv,g){if(!g||!g.d)return;const w=cv.clientWidth,h=cv.clientHe
   const fb=C.mgFb;if(fb&&performance.now()-fb.t<550){x.fillStyle=fb.ok?'#9dffb0':'#ff7a6a';x.font=`800 ${Math.round(Math.min(26,w/13))}px system-ui`;x.fillText(fb.r,lx,hitY+34)}
 }
 const pinH=()=>{const per=C.pinPer||1.5,u=((performance.now()-C.pinT)/1000/per)%2;return u<1?u:2-u};
-function drawShrine(g){const cv=$('mgCv');if(!cv)return;const d=(g&&g.d)||{},me=C.view&&C.view.me,sl=me?me.sl:0,shots=(d.sh||{})[sl]||0,flying=(d.b||[]).some(q=>q[2]===sl),p=C.mgPull,ready=shots<3&&!flying;
-  slingDraw(cv,{ch:!!p,pw:p?p.p:0,aim:p?p.a:90,lane:LANES[sl]||'#e9dfc6',col:'#e8e0c8',ready,msg:ready?`Shot ${shots+1} of 3 · ${(d.sk||{})[sl]||0} sunk`:shots>=3?`All three shots taken · ${(d.sk||{})[sl]||0} sunk`:'Watch your ball on the big screen',sub:'Drag down, aim on the big screen, let go'})}
+function drawShrine(g){const cv=$('mgCv');if(!cv)return;const d=(g&&g.d)||{},me=C.view&&C.view.me,sl=me?me.sl:0,shots=(d.sh||{})[sl]||0,flying=(d.b||[]).some(q=>q[2]===sl),A=C.mgAim,p=A&&(A.p||A.lock!=null),ready=shots<3&&!flying;
+  slingDraw(cv,{ch:!!p,ph:A?A.phase():'idle',pw:p?A.pw:0,aim:A?A.aim:90,lane:LANES[sl]||'#e9dfc6',col:'#e8e0c8',ready,msg:ready?`Shot ${shots+1} of 3 · ${(d.sk||{})[sl]||0} sunk`:shots>=3?`All three shots taken · ${(d.sk||{})[sl]||0} sunk`:'Watch your ball on the big screen',sub:'Press and slide sideways to steer'})}
 /* the phone's own view of the wheel: holes your ball fits are bright, your aim line runs from your launch spot. Drag on it to aim. */
 const SXA={x:130,y:40,w:740,h:1108},SXL={x:136,y:86,w:728,h:728};                    // the part of the field the phone shows: the wheel, the ground before it, and every launch spot
 const SYM={
@@ -369,21 +371,28 @@ function slingDraw(cv,o){const wrap=cv.parentNode,fill=cv.id==='scope',bw=fill?w
   const x=cv.getContext('2d'),pw=o.ch?o.pw:0,a=o.aim*DEG,ux=Math.cos(a),uy=-Math.sin(a);
   x.setTransform(dpr,0,0,dpr,0,0);const bg=x.createRadialGradient(bw/2,bh*.4,10,bw/2,bh*.4,Math.max(bw,bh)*.7);bg.addColorStop(0,'#1d1518');bg.addColorStop(1,'#0b090a');x.fillStyle=bg;x.fillRect(0,0,bw,bh);
   const S=Math.min(bw,bh*1.1)/320,ax=bw/2,ay=bh*.3;
-  if(o.ready){x.save();x.translate(ax,ay);x.rotate(Math.atan2(uy,ux));x.globalAlpha=o.ch?1:.45;x.fillStyle=o.lane;const L=(58+pw*30)*S;x.fillRect(16*S,-4*S,L-14*S,8*S);x.beginPath();x.moveTo(L+18*S,0);x.lineTo(L,-14*S);x.lineTo(L,14*S);x.closePath();x.fill();x.restore()}
+  const ph=o.ph||'idle',locked=ph==='pow'||ph==='locked';
+  if(o.ready){x.save();x.translate(ax,ay);x.rotate(Math.atan2(uy,ux));x.globalAlpha=o.ch?1:.45;x.fillStyle=o.lane;const L=(58+pw*30)*S;x.fillRect(16*S,-4*S,L-14*S,8*S);x.beginPath();x.moveTo(L+18*S,0);x.lineTo(L,-14*S);x.lineTo(L,14*S);x.closePath();x.fill();
+    if(ph==='aim'){x.globalAlpha=.5;x.strokeStyle=o.lane;x.lineWidth=2*S;x.setLineDash([5*S,6*S]);x.beginPath();x.moveTo(L+20*S,0);x.lineTo(L+120*S,0);x.stroke();x.setLineDash([])}x.restore();
+    if(locked){const tx=ax+(ux>.2?-78:78)*S,ty=ay+8*S,k=S*1.1;x.fillStyle='rgba(11,9,10,.8)';x.beginPath();x.arc(tx,ty,15*k,0,7);x.fill();x.strokeStyle='#efe4cc';x.lineWidth=2.4*k;x.beginPath();x.arc(tx,ty-3*k,5*k,Math.PI,0);x.stroke();x.fillStyle='#efe4cc';x.fillRect(tx-7*k,ty-3*k,14*k,10*k)}}
   x.strokeStyle='#7a5a3a';x.lineCap='round';x.lineWidth=11*S;x.beginPath();x.moveTo(ax,ay+80*S);x.lineTo(ax,ay+34*S);x.moveTo(ax,ay+38*S);x.lineTo(ax-46*S,ay-18*S);x.moveTo(ax,ay+38*S);x.lineTo(ax+46*S,ay-18*S);x.stroke();
   const L2=pw*Math.min(bh*.22,100*S)+(o.ch?10*S:0),mx=ax-ux*L2,my=ay-uy*L2+(o.ch?0:6*S),mr=15*S;
   x.strokeStyle=o.ch?`rgb(${Math.round(200+55*pw)},${Math.round(190-90*pw)},${Math.round(160-110*pw)})`:'#a8907a';x.lineWidth=(3+3*pw)*S;x.beginPath();x.moveTo(ax-46*S,ay-18*S);x.lineTo(mx,my);x.lineTo(ax+46*S,ay-18*S);x.stroke();
   x.fillStyle=o.col;x.beginPath();x.arc(mx,my,mr,0,7);x.fill();x.strokeStyle=o.lane;x.lineWidth=3;x.beginPath();x.arc(mx,my,mr+4,0,7);x.stroke();
   /* the power: a big bar and number */
   const bx=bw*.08,bwid=bw*.84,by=bh-96*S,bhh=22*S;x.fillStyle='#0b090a';x.fillRect(bx,by,bwid,bhh);const gr=x.createLinearGradient(bx,0,bx+bwid,0);gr.addColorStop(0,'#5fb3a1');gr.addColorStop(.55,'#e8c05a');gr.addColorStop(1,'#e8603a');x.fillStyle=gr;x.fillRect(bx,by,bwid*pw,bhh);
-  x.strokeStyle='rgba(236,226,200,.35)';x.lineWidth=1;x.strokeRect(bx+.5,by+.5,bwid-1,bhh-1);for(let k=1;k<10;k++){x.fillStyle='rgba(0,0,0,.45)';x.fillRect(bx+bwid*k/10-1,by,2,bhh)}
+  x.strokeStyle='rgba(236,226,200,.35)';x.lineWidth=1;x.strokeRect(bx+.5,by+.5,bwid-1,bhh-1);for(let k=1;k<10;k++){x.fillStyle='rgba(0,0,0,.45)';x.fillRect(bx+bwid*k/10-1,by,2,bhh)}for(const q of[.25,.5,.75]){x.fillStyle='rgba(239,228,204,.8)';x.fillRect(bx+bwid*q-1.5,by-5*S,3,bhh+10*S)}
   x.textAlign='center';x.fillStyle='#efe4cc';
-  if(o.ch){x.font=`800 ${Math.round(46*S)}px ${getComputedStyle(document.body).getPropertyValue('--display')||'serif'}`;x.fillText(pw<.05?'Pull further':Math.round(pw*100)+'%',ax,by-14*S);x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText(pw<.05?'Let go here to cancel':'Let go to shoot · slide back up to cancel',ax,bh-48*S)}
-  else if(o.ready){x.font=`700 ${Math.round(19*S)}px system-ui`;x.fillText(o.msg||'Drag down anywhere to pull back',ax,by-16*S);x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText(o.sub||'Slide sideways to steer, down for power',ax,bh-48*S)}
+  if(o.ch){const fam=getComputedStyle(document.body).getPropertyValue('--display')||'serif';
+    if(ph==='aim'){x.font=`800 ${Math.round(34*S)}px ${fam}`;x.fillText('Steer',ax,by-14*S);x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText('Hold still, pull down or let go to lock the aim',ax,bh-48*S)}
+    else if(ph==='locked'){x.font=`800 ${Math.round(34*S)}px ${fam}`;x.fillText('Aim locked',ax,by-14*S);x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText('Drag down for power · tap to re-aim',ax,bh-48*S)}
+    else{x.font=`800 ${Math.round(46*S)}px ${fam}`;x.fillText(pw<.05?'Pull down':Math.round(pw*100)+'%',ax,by-14*S);x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText(pw<.05?'Aim is locked · let go to keep it':'Let go to shoot · slide back up to hold',ax,bh-48*S)}}
+  else if(o.ready){x.font=`700 ${Math.round(19*S)}px system-ui`;x.fillText(o.msg||'Press and slide sideways to steer',ax,by-16*S);x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText(o.sub||'Then pull down for power',ax,bh-48*S)}
   else if(o.msg){x.font=`700 ${Math.round(18*S)}px system-ui`;x.fillText(o.msg,ax,by-16*S);if(o.sub){x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText(o.sub,ax,bh-48*S)}}}
 function drawSling(){const v=C.view,cv=$('scope');if(!v||!v.me||cv.hidden)return;const me=v.me,cl=CLASSES[C.cls],ab=cl.ab[C.ab];
   const other=v.sh&&v.sh!==v.myId?(v.pa||[]).find(q=>q.id===v.sh):null;
-  slingDraw(cv,{ch:C.ch,pw:C.pw,aim:C.aim,lane:LANES[me.sl]||'#e9dfc6',col:cl.col,ready:C.spun===2&&canFire(v)&&!ab.instant,msg:other?`Wait: the ${CLASSES[other.c].animal} is shooting`:'',sub:other?'Your turn comes next. Spin your reels meanwhile.':''})}
+  const rdy=C.spun===2&&canFire(v)&&!ab.instant;if(!rdy&&(SL.lock!=null||SL.p)&&!(C.pull&&C.pull.key)){SL.reset();C.ch=false;C.lk=0;C.pull=null;C.pw=0;pushCtrl()}
+  slingDraw(cv,{ch:C.ch,ph:C.pull&&C.pull.key?'pow':SL.phase(),pw:C.pw,aim:C.aim,lane:LANES[me.sl]||'#e9dfc6',col:cl.col,ready:rdy,msg:other?`Wait: the ${CLASSES[other.c].animal} is shooting`:'',sub:other?'Your turn comes next. Spin your reels meanwhile.':''})}
 function drawScope(live){if(!live)return drawSling();
   const v=C.view,cv=$(live?'live':'scope');if(!v||!v.me||cv.hidden)return;const bd=live?v.bdc:v.bd;if(!bd)return;const Cc=bd.C,wrap=cv.parentNode,bw=wrap.clientWidth,bh=wrap.clientHeight;if(!bw||!bh)return;
   const dpr=Math.min(2,window.devicePixelRatio||1),X0=-320,X1=320,Y0=-90,Y1=Cc.len+30,k=Math.min(bw/(X1-X0),bh/(Y1-Y0)),ox=bw/2,oy=bh/2+k*(Y0+Y1)/2,S=(px,py)=>[ox+px*k,oy-py*k],R=r=>r*k;
@@ -432,14 +441,47 @@ function drawScope(live){if(!live)return drawSling();
   if((ab.sight||md.eye||v.pr)&&C.ch){const d=O.powD(Cc.len,C.pw),[px,py]=S(me.x+Math.cos(a)*d,O.COURSE.TEE+Math.sin(a)*d);x.strokeStyle='#fff';x.lineWidth=2;x.beginPath();x.arc(px,py,7,0,7);x.stroke()}}
 /* Pull back and release. Touch anywhere on the wheel and drag: the ball is drawn back against the band the opposite way,
    so dragging down and to the left aims up and to the right. The length of the pull is the power. Let go to launch; slide back to where you started to cancel. */
-function pullStart(e){const v=getView();if($('scope').hidden||!C.cls||C.pull)return false;if(CLASSES[C.cls].ab[C.ab].instant||!canFire(v)||C.spun!==2)return false;C.pull={x:e.clientX,y:e.clientY,step:0,key:!e.clientX&&!e.clientY};C.ch=true;C.pw=0;C.tip=null;C.key='';pushCtrl();renderCtrl();return true}
-function pullMove(e){const p=C.pull;if(!p||p.key)return;const r=$('scope').getBoundingClientRect(),dx=e.clientX-p.x,dy=e.clientY-p.y,len=Math.hypot(dx,dy),cl=CLASSES[C.cls],max=clamp(r.height*.3,80,150)*clamp(cl.period/1.6,.82,1.45)*clamp(cl.ab[C.ab].slow||1,.7,1.3)*C.steady;        // each fighter draws differently: the archer's pull is long and fine, the warrior's short
-  C.aim=steer(dx);C.pw=dy>0?clamp((dy-14)/max,0,1):0;(p.hist=p.hist||[]).push([performance.now(),C.aim,C.pw]);if(p.hist.length>12)p.hist.shift();pullShow()}
-/* aim and power apart: sideways steers (finely near the middle, faster further out), downward is power. Release takes the hand's position a moment before the finger lifts. */
-function steer(dx){const a=Math.abs(dx),o=Math.min(a,90)*.32+Math.max(0,a-90)*.65;return clamp(90+Math.sign(dx)*o,8,172)}
-function settled(p){const h=p&&p.hist;if(!h||!h.length)return null;const t=performance.now()-70;for(let i=h.length-1;i>=0;i--)if(h[i][0]<=t)return h[i];return h[0]}
-function pullShow(){const p=C.pull;if(!p)return;const st=Math.floor(C.pw*10);if(st!==p.step){p.step=st;O.buzz(st>=10?16:5)}$('pwFill').style.width=(C.pw*100)+'%';setNeedle();const now=performance.now();if(now-C.pushT>60){C.pushT=now;pushCtrl()}if(!$('scope').hidden)drawScope()}
-function pullEnd(cancel){const p=C.pull;if(!p)return;C.pull=null;{const q=settled(p);if(q&&C.pw>=.05){C.aim=q[1];C.pw=Math.max(.05,q[2])}}const pw=C.pw;C.ch=false;if(!cancel&&pw>=.05){C.lastPull={aim:C.aim,pw};doFire(pw)}else pushCtrl();C.pw=0;setTimeout(()=>{if(!C.ch)$('pwFill').style.width='0'},400);C.key='';renderCtrl()}
+/* The two-step slingshot. First the finger steers: sliding sideways turns the aim (finely near where you started, faster further out).
+   The aim then locks, when you hold still for a moment, start pulling down, or lift your finger. After that the drag only sets power, so the two never fight.
+   A quick tap while locked frees the aim again. Power eases off over its top fifth so strong shots are as precise as soft ones,
+   and the phone buzzes as power passes each quarter. */
+const LOCK_HOLD=450,TAP_MS=260;
+const powCurve=t=>t<=.7?t*.8/.7:.8+(t-.7)/.3*.2;
+function steerFrom(a0,dx){const a=Math.abs(dx),o=Math.min(a,90)*.32+Math.max(0,a-90)*.65;return a0-Math.sign(dx)*o}          // the aim follows the finger: slide right to aim right
+function mkAim(o){const s={p:null,lock:null,aim:o.aim0||90,pw:0};
+  const at=(h,ms)=>{const t=performance.now()-ms;for(let i=h.length-1;i>=0;i--)if(h[i][0]<=t)return h[i];return h[0]};
+  const lockAt=(a,oy)=>{const p=s.p;s.lock=s.aim=clamp(a,o.lo,o.hi);s.pw=0;if(p){p.mode='pow';p.oy=oy;p.q=0;p.hist=[]}O.buzz(30);o.on()};
+  const tick=()=>{const p=s.p;if(!p||p.mode!=='aim')return;if(performance.now()-p.st>=LOCK_HOLD)lockAt(s.aim,p.cy)};
+  s.down=e=>{if(s.p)return;const now=performance.now();s.p={x:e.clientX,y:e.clientY,cx:e.clientX,cy:e.clientY,t0:now,st:now,sx:e.clientX,sy:e.clientY,hist:[[now,s.aim,e.clientX,e.clientY]],wasLocked:s.lock!=null,moved:false,mode:s.lock!=null?'pow':'aim',oy:e.clientY,a0:s.aim,q:0};s.pw=0;s.p.tm=setInterval(tick,40);o.on()};
+  s.move=e=>{const p=s.p;if(!p)return;const now=performance.now(),x=e.clientX,y=e.clientY;p.cx=x;p.cy=y;if(Math.hypot(x-p.x,y-p.y)>8)p.moved=true;
+    if(p.mode==='aim'){s.aim=clamp(steerFrom(p.a0,x-p.x),o.lo,o.hi);p.hist.push([now,s.aim,x,y]);if(p.hist.length>16)p.hist.shift();
+      if(Math.hypot(x-p.sx,y-p.sy)>5){p.sx=x;p.sy=y;p.st=now}
+      const h=at(p.hist,120),vy=y-h[3],vx=x-h[2];if(y-p.y>30&&vy>12&&vy>1.6*Math.abs(vx)){lockAt(h[1],p.y);s.move(e);return}}           // a clear pull downward locks the aim it had just before
+    else{const raw=clamp((y-p.oy-8)/o.max(),0,1);s.pw=powCurve(raw);p.hist.push([now,s.pw]);if(p.hist.length>16)p.hist.shift();
+      const q=s.pw>=1?4:Math.floor(s.pw*4);if(q>p.q)O.buzz(q>=4?28:12);p.q=q}
+    o.on()};
+  s.up=cancel=>{const p=s.p;if(!p)return;clearInterval(p.tm);s.p=null;const now=performance.now();
+    if(cancel){s.lock=null;s.pw=0;o.on();return}
+    if(p.mode==='aim'){s.lock=s.aim;s.pw=0;O.buzz(30);o.on();return}                 // lifting the finger while steering locks the aim
+    let pw=s.pw;if(p.hist.length){const h=at(p.hist,70);if(pw>=.05)pw=Math.max(.05,h[1])}
+    if(pw>=.05){const a=s.lock;s.lock=null;s.pw=0;o.on();o.fire(a,pw);return}
+    if(p.wasLocked&&!p.moved&&now-p.t0<TAP_MS)s.lock=null;                 // a quick tap frees the aim to steer again
+    s.pw=0;o.on()};
+  s.reset=()=>{if(s.p)clearInterval(s.p.tm);s.p=null;s.lock=null;s.pw=0};
+  s.phase=()=>s.p?s.p.mode:s.lock!=null?'locked':'idle';
+  return s}
+const SL=mkAim({lo:8,hi:172,aim0:90,max:()=>{const r=$('scope').getBoundingClientRect(),cl=CLASSES[C.cls];return clamp(r.height*.3,80,150)*1.1*clamp(cl.period/1.6,.82,1.45)*clamp(cl.ab[C.ab].slow||1,.7,1.3)*C.steady},    // each fighter draws differently: the archer's pull is long and fine, the warrior's short
+  on:()=>{C.aim=SL.aim;C.pw=SL.pw;C.ch=!!(SL.p||SL.lock!=null);C.lk=SL.lock!=null?1:0;C.pull=SL.p;pullShow();if(!SL.p&&!C.ch){$('pwFill').style.width='0';pushCtrl()}renderCtrlSoon()},
+  fire:(a,pw)=>{C.aim=a;C.pw=pw;C.lastPull={aim:a,pw};C.ch=false;C.lk=0;doFire(pw);C.pw=0;setTimeout(()=>{if(!C.ch)$('pwFill').style.width='0'},400);renderCtrl()}});
+O.SL=SL;let rcT=0;function renderCtrlSoon(){if(rcT)return;rcT=setTimeout(()=>{rcT=0;renderCtrl()},60)}
+function pullStart(e){const v=getView();if($('scope').hidden||!C.cls||C.pull)return false;if(CLASSES[C.cls].ab[C.ab].instant||!canFire(v)||C.spun!==2)return false;
+  if(!e.clientX&&!e.clientY){C.pull={key:true};C.ch=true;C.pw=0;C.tip=null;C.key='';pushCtrl();renderCtrl();return true}          // keyboard: the arrows aim, Space draws back
+  C.tip=null;C.key='';SL.down(e);return true}
+function pullMove(e){if(C.pull&&!C.pull.key)SL.move(e)}
+function pullShow(){$('pwFill').style.width=(C.pw*100)+'%';setNeedle();const now=performance.now();if(now-C.pushT>60){C.pushT=now;pushCtrl()}else if(!C.pushQ){C.pushQ=setTimeout(()=>{C.pushQ=0;C.pushT=performance.now();pushCtrl()},70)}if(!$('scope').hidden)drawScope()}
+function pullEnd(cancel){const p=C.pull;if(!p)return;
+  if(p.key){C.pull=null;const pw=C.pw;C.ch=false;if(!cancel&&pw>=.05){C.lastPull={aim:C.aim,pw};doFire(pw)}else pushCtrl();C.pw=0;setTimeout(()=>{if(!C.ch)$('pwFill').style.width='0'},400);renderCtrl();return}
+  SL.up(cancel)}
 function showBox(id){const o=O.lockInfo(id),ov=$('boxOv');if(!o)return;O.sfx('box');ov.textContent='';const ch=el('div','chest'),cd=el('div','card');cd.append(O.ico(id,null,'big'),el('small',null,'New '+o.kind),el('b',null,o.name),el('p',null,o.desc),el('i',null,'It can now turn up in every run. Press to close.'));ov.append(ch,cd);ov.hidden=false;ov.onclick=()=>{ov.hidden=true}}
 function doFire(pow){const v=getView();if(!canFire(v))return;C.pendSn=v.me.sn;C.sentAt=performance.now();C.trailNew=true;O.buzz(25);
   if(isLocal()){const pl=G.players.find(p=>p.id==='local');if(pl)O.fire(pl,C.ab,C.aim,pow,C.rp)}else C.shot={n:++C.seq,ab:C.ab,rp:C.rp,ang:Math.round(C.aim*10)/10,pow:Math.round(pow*1000)/1000};C.armed=false;
@@ -464,7 +506,7 @@ function initCtrl(){
     if(window.ResizeObserver)new ResizeObserver(()=>{if(!$('scope').hidden)drawScope()}).observe(sc);sc.addEventListener('pointermove',e=>{if(C.pull){pullMove(e);e.preventDefault()}});sc.addEventListener('pointerup',()=>pullEnd(false));sc.addEventListener('pointercancel',()=>pullEnd(true));sc.addEventListener('contextmenu',e=>e.preventDefault());
     // without a pointer: left and right turn the aim, holding Space draws the band back, letting go launches
     sc.tabIndex=0;sc.setAttribute('role','application');sc.setAttribute('aria-label','Launcher. Left and right arrows aim. Hold Space to pull back, release to launch.');let kt=0;
-    sc.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){C.aim=clamp(C.aim+(e.key==='ArrowLeft'?2:-2),8,172);setNeedle();pushCtrl();if(!$('scope').hidden)drawScope();e.preventDefault()}
+    sc.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){C.aim=clamp(C.aim+(e.key==='ArrowLeft'?2:-2),8,172);SL.aim=C.aim;setNeedle();pushCtrl();if(!$('scope').hidden)drawScope();e.preventDefault()}
       else if(e.key===' '&&!e.repeat){if(pullStart({clientX:0,clientY:0})){const t0=performance.now();clearInterval(kt);kt=setInterval(()=>{if(!C.pull){clearInterval(kt);return}C.pw=clamp((performance.now()-t0)/1500,0,1);pullShow()},30)}e.preventDefault()}else if(e.key==='Escape'){pullEnd(true)}});
     sc.addEventListener('keyup',e=>{if(e.key===' '){clearInterval(kt);pullEnd(false);e.preventDefault()}})}
   const RIC=['M3 23h48v-3H3z','M3 23h48V12Q27 20 3 20z','M3 23h48V2Q31 19 3 20z'];
