@@ -57,7 +57,7 @@ const MZ=9;
 function maze(seed){const r=H.rng(seed),W=Array(MZ*MZ).fill(15),seen=new Set([0]),st=[0];while(st.length){const c=st[st.length-1],x=c%MZ,y=Math.floor(c/MZ),nb=[[x,y-1,0,2],[x+1,y,1,3],[x,y+1,2,0],[x-1,y,3,1]].filter(([a,b])=>a>=0&&b>=0&&a<MZ&&b<MZ&&!seen.has(b*MZ+a));
   if(!nb.length){st.pop();continue}const[a,b,w1,w2]=nb[Math.floor(r()*nb.length)],n=b*MZ+a;W[c]&=~(1<<w1);W[n]&=~(1<<w2);seen.add(n);st.push(n)}return W}
 function bfs(W,from){const D=Array(MZ*MZ).fill(1e9);D[from]=0;const q=[from];while(q.length){const c=q.shift(),x=c%MZ,y=Math.floor(c/MZ);[[0,x,y-1],[1,x+1,y],[2,x,y+1],[3,x-1,y]].forEach(([w,a,b])=>{if(W[c]&(1<<w))return;const n=b*MZ+a;if(D[n]>D[c]+1){D[n]=D[c]+1;q.push(n)}})}return D}
-O.addMg({id:'maze',dun:11,name:'Mycelium Maze',ctl:'Phone: arrows, on a maze',live:true,
+O.addMg({id:'maze',dun:11,name:'Mycelium Maze',ctl:'Phone: arrows, or tilt the phone',live:true,motion:1,mo:'Tilt your phone to roll through the maze, one step at a time. Hold it comfortably when the game starts: that is level.',
  brief:'A maze of glowing threads on your phone, and the fungus is growing after you from the entrance. Find the exit in the far corner before it catches you.',
  setup(g){g.dur=40;g.d.pos={};g.d.res={};g.d.seed=(g.seed%100000)+7},
  input(g,p,v){const[pos,res]=String(v).split(':').map(Number);g.d.pos[p.slot]=pos;if(res)g.d.res[p.slot]=res;if(here().every(q=>g.d.res[q.slot]))g.end=1},
@@ -67,13 +67,16 @@ O.addMg({id:'maze',dun:11,name:'Mycelium Maze',ctl:'Phone: arrows, on a maze',li
  hud(x,w,h,g,HK){HK.txt(x,'Find the way out on your phone!',w/2,h*.1,Math.max(20,h*.045),'#e080ff')},
  pad(K){const s=K.s;if(K.first){s.W=maze(K.d.seed);s.D=bfs(s.W,MZ*MZ-1);s.F=bfs(s.W,0);s.at=0;s.res=0;s.cv=K.canvas(340);
      const mv=w=>()=>{if(s.res)return;const c=s.at,x=c%MZ,y=Math.floor(c/MZ);if(s.W[c]&(1<<w)){K.buzz(40);return}s.at=[c-MZ,c+1,c+MZ,c-1][w];K.buzz(6);if(s.at===MZ*MZ-1){s.res=1;O.sfx('mgGood')}send()};
-     const send=()=>K.send(Math.round((1-s.D[s.at]/s.D[0])*100)+':'+s.res);const pad=K.el('div','dirPad small');['▲','▶','▼','◀'].forEach((a,k)=>pad.appendChild(K.btn(a,'dir d'+k,mv(k))));K.x.append(s.cv,pad);s.send=send}
+     const send=()=>K.send(Math.round((1-s.D[s.at]/s.D[0])*100)+':'+s.res);const pad=K.el('div','dirPad small');['▲','▶','▼','◀'].forEach((a,k)=>pad.appendChild(K.btn(a,'dir d'+k,mv(k))));K.x.append(s.cv,pad);s.send=send;s.mv=mv;s.mo=O.motionOn&&O.motionOn();if(s.mo){O.motion.calibrate();s.mt=0}}
+   /* tilt: lean past a threshold and the dot steps that way, again every fifth of a second while you hold the lean */
+   if(s.mo&&!s.res){const tl=O.motion.tilt(),ax=Math.abs(tl.x)>=Math.abs(tl.y),v=ax?tl.x:tl.y,now=performance.now();if(Math.abs(v)>.4){if(now-s.mt>(s.held?210:120)){s.mt=now;s.held=1;s.mv(ax?(v>0?1:3):(v>0?2:0))()}}else s.held=0}
    const t=K.now(),creep=(t-4)/1;if(!s.res&&creep>=1&&s.F[s.at]<creep){s.res=2;O.sfx('mgBad');s.send()}
    const[x,w,h]=K.fit(s.cv),c=Math.min(w,h)/MZ,ox=(w-c*MZ)/2;x.fillStyle='#140c14';x.fillRect(0,0,w,h);for(let i=0;i<MZ*MZ;i++){const a=i%MZ,b=Math.floor(i/MZ),X=ox+a*c,Y=b*c;if(s.F[i]<creep){x.fillStyle='rgba(224,128,255,.45)';x.fillRect(X,Y,c,c)}
      x.strokeStyle='#e080ff';x.lineWidth=2;x.beginPath();if(s.W[i]&1){x.moveTo(X,Y);x.lineTo(X+c,Y)}if(s.W[i]&2){x.moveTo(X+c,Y);x.lineTo(X+c,Y+c)}if(s.W[i]&4){x.moveTo(X,Y+c);x.lineTo(X+c,Y+c)}if(s.W[i]&8){x.moveTo(X,Y);x.lineTo(X,Y+c)}x.stroke()}
    x.fillStyle='#9dffb0';x.fillRect(ox+(MZ-1)*c+c*.2,(MZ-1)*c+c*.2,c*.6,c*.6);x.fillStyle=K.LANES[K.sl];x.beginPath();x.arc(ox+(s.at%MZ+.5)*c,(Math.floor(s.at/MZ)+.5)*c,c*.32,0,7);x.fill();
+   if(s.mo){const tl=O.motion.tilt(),R=Math.min(26,c*1.4),cx=w-R-6,cy=R+6;x.strokeStyle='rgba(255,255,255,.4)';x.lineWidth=2;x.beginPath();x.arc(cx,cy,R,0,7);x.stroke();x.beginPath();x.arc(cx,cy,R*.4,0,7);x.stroke();x.fillStyle='#ffd27a';x.beginPath();x.arc(cx+clamp(tl.x,-1,1)*R*.8,cy+clamp(tl.y,-1,1)*R*.8,5,0,7);x.fill()}
    if(s.res){x.fillStyle=s.res===1?'#9dffb0':'#ff7a6a';x.font='800 28px system-ui';x.textAlign='center';x.fillText(s.res===1?'Out!':'Caught!',w/2,h/2)}},
- hint:()=>'Reach the green corner. The pink fungus is chasing you.'});
+ hint:()=>O.motionOn&&O.motionOn()?'Tilt to roll to the green corner. The pink fungus is chasing you.':'Reach the green corner. The pink fungus is chasing you.'});
 
 /* ===== 25 · Stormspire · Lightning Rods: read the charge; lightning takes the most charged rod ===== */
 O.addMg({id:'rods',dun:12,name:'Lightning Rods',hearts:true,ctl:'Phone: five rods',live:true,

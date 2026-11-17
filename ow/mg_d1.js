@@ -168,7 +168,7 @@ O.addMg({id:'hotfloor',dun:3,name:'Hot Floor',hearts:true,ctl:'Phone: ◀ ▶',l
  hint:()=>'Keep moving to cooler plates. Flaring plates glow gold first.'});
 
 /* ===== 8 · Emberforge · The Crucible Pour: hold to pour; it keeps flowing a moment after; hit the line ===== */
-O.addMg({id:'pour',dun:3,name:'The Crucible Pour',ctl:'Phone: hold to pour',live:true,
+O.addMg({id:'pour',dun:3,name:'The Crucible Pour',ctl:'Phone: hold to pour, or tip the phone',live:true,motion:1,mo:'Tip your phone sideways like a ladle: the further you tip, the faster it pours. Tip back to stop, and the iron slows rather than stopping dead.',
  brief:'Fill three moulds with molten iron, right to the line. Hold to pour, let go to stop, but the iron keeps flowing a moment after you let go, and each mould fills faster than the last. Overfill and it splashes; underfill and it cracks. Get all three right.',
  setup(g){g.dur=36;g.d.res={};g.d.lv={};g.d.mo={}},
  input(g,p,v){const[r,m,l]=String(v).split(';');g.d.res[p.slot]=String(r||'').split('').map(Number).slice(0,3);g.d.mo[p.slot]=num(+m);g.d.lv[p.slot]=num(+l);if(here().every(q=>(g.d.res[q.slot]||[]).length>=3))g.end=1},
@@ -177,15 +177,18 @@ O.addMg({id:'pour',dun:3,name:'The Crucible Pour',ctl:'Phone: hold to pour',live
    K.light(G2,0,1.6,0,'#ff7a20',3);return{g:G2,cam:[[0,2,5],[0,1,-.5]],spot:(p,i,n)=>[slotX(i,n,.9),0,.8,Math.PI],update(){cr.rotation.z=.4+Math.sin(K.now()*1.3)*.1}}},
  hud(x,w,h,g,HK){const ps=HK.players();ps.forEach((p,i)=>{const X=w/2+(i-(ps.length-1)/2)*Math.min(w*.2,220),r=g.d.res[p.slot]||[];for(let k=0;k<3;k++){const Y=h*.12,cx=X+(k-1)*34;x.fillStyle='#2a2226';x.fillRect(cx-12,Y,24,40);
      const lv=k<r.length?(r[k]?.82:.5):k===r.length?(g.d.lv[p.slot]||0):0;x.fillStyle='#ff8a2a';x.fillRect(cx-12,Y+40*(1-lv),24,40*lv);x.fillStyle='#fff';x.fillRect(cx-14,Y+40*(1-.82),28,2);if(k<r.length)HK.txt(x,r[k]?'✓':'✗',cx,Y+52,16,r[k]?'#9dffb0':'#ff7a6a')}})},
- pad(K){const s=K.s;if(K.first){s.res=[];s.lv=0;s.flow=0;s.hold=0;s.cv=K.canvas(300);s.btn=K.btn('Hold to pour','go big',v=>{s.hold=v;if(v)K.buzz(10)},true);K.x.append(s.cv,s.btn);s.last=performance.now()}
+ pad(K){const s=K.s;if(K.first){s.res=[];s.lv=0;s.flow=0;s.hold=0;s.cv=K.canvas(300);s.btn=K.btn(O.motionOn&&O.motionOn()?'Tip to pour (or hold)':'Hold to pour','go big',v=>{s.hold=v;if(v)K.buzz(10)},true);K.x.append(s.cv,s.btn);s.last=performance.now();s.mo=O.motionOn&&O.motionOn();if(s.mo)O.motion.calibrate();s.tip=0;s.calm=0}
    const now=performance.now(),dt=Math.min(.05,(now-s.last)/1000);s.last=now;const k=s.res.length,rate=[.3,.38,.47][Math.min(2,k)];
-   if(k<3){if(s.hold)s.flow=rate;else s.flow=Math.max(0,s.flow-rate*dt/.28);s.lv+=s.flow*dt;
-     if(s.lv>1.02||(!s.hold&&s.flow<=0&&s.lv>.05)){const ok=Math.abs(s.lv-.82)<=.06;s.res.push(ok?1:0);K.buzz(ok?[20,30,20]:80);O.sfx(ok?'mgGood':'mgBad');s.lv=0;s.flow=0;s.hold=0}
+   /* tipping: the flow follows the tip angle, with the same lag as letting go of the button */
+   if(s.mo){const tl=O.motion.tilt();s.tip=clamp((Math.abs(tl.x)-.14)/.62,0,1.25)}
+   if(k<3){if(s.hold)s.flow=rate;else if(s.mo&&s.tip>0){s.flow+=(rate*s.tip*1.15-s.flow)*Math.min(1,dt/.22)}else s.flow=Math.max(0,s.flow-rate*dt/.28);s.lv+=s.flow*dt;s.calm=(s.tip>0||s.hold)?0:s.calm+dt;
+     if(s.lv>1.02||(!s.hold&&s.flow<=0&&s.lv>.05&&(!s.mo||s.calm>.12))){const ok=Math.abs(s.lv-.82)<=.06;s.res.push(ok?1:0);K.buzz(ok?[20,30,20]:80);O.sfx(ok?'mgGood':'mgBad');s.lv=0;s.flow=0;s.hold=0}
      if(!s.tx||now-s.tx>150){s.tx=now;K.send(s.res.join('')+';'+s.res.length+';'+s.lv.toFixed(2))}}
    const[x,w,h]=K.fit(s.cv);x.fillStyle='#120a08';x.fillRect(0,0,w,h);const mw=w*.4,mx=w/2-mw/2,my=h*.18,mh=h*.72;x.fillStyle='#2a2226';x.fillRect(mx,my,mw,mh);x.fillStyle='#ff8a2a';const lv=Math.min(1,s.lv);x.fillRect(mx,my+mh*(1-lv),mw,mh*lv);
-   x.fillStyle='#fff';x.fillRect(mx-10,my+mh*(1-.82)-1,mw+20,3);x.fillStyle='rgba(157,255,176,.25)';x.fillRect(mx-10,my+mh*(1-.88),mw+20,mh*.12);if(s.flow>0){x.fillStyle='#ffb04a';x.fillRect(w/2-4,0,8,my+mh*(1-lv))}
+   x.fillStyle='#fff';x.fillRect(mx-10,my+mh*(1-.82)-1,mw+20,3);x.fillStyle='rgba(157,255,176,.25)';x.fillRect(mx-10,my+mh*(1-.88),mw+20,mh*.12);if(s.flow>0){x.fillStyle='#ffb04a';x.fillRect(w/2-4,h*.1,8,my+mh*(1-lv)-h*.1)}
+   if(s.mo){x.save();x.translate(w/2+20,h*.1+14);x.rotate(-Math.min(1.2,s.tip)*.9);x.fillStyle='#4a3a30';x.fillRect(-20,-14,46,22);x.fillStyle='#ff8a2a';x.fillRect(-16,-12,38,8);x.fillStyle='#6a5a4a';x.fillRect(26,-4,26,6);x.restore()}
    x.fillStyle='#e8d8c0';x.font='800 16px system-ui';x.textAlign='center';x.fillText(k<3?`Mould ${k+1} of 3`:'Done!',w/2,20);s.res.forEach((r,i)=>{x.fillStyle=r?'#9dffb0':'#ff7a6a';x.fillText(r?'✓':'✗',w/2+(i-1)*26,h-6)})},
- hint:()=>'Hold to pour. Let go early: it keeps flowing. Stop on the white line.'});
+ hint:()=>O.motionOn&&O.motionOn()?'Tip to pour. Tip back early: it keeps flowing. Stop on the white line.':'Hold to pour. Let go early: it keeps flowing. Stop on the white line.'});
 
 /* ===== 9 · The Webbed Deep · Caught in Silk: tear the strand the silk glows on; the buttons shuffle; the spider descends ===== */
 const SILK=['spider','web','egg','fang'];

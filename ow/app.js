@@ -275,9 +275,9 @@ function renderMg(g){
   if(C.mgId!==g.id){C.mgId=g.id;C.mgV='';C.mg=null;C.mgK='';C.mgSt='';C.mgS={};C.mgN=0;C.mgTaps=[];C.mgPicks=[];C.lkK=-1;C.mgPick=null;C.swN=0}
   const D=O.MG[g.k],d=g.d||{},x=mgEl(),t=mgNow(g),dots=$('mgDots');$('mgT').textContent=d.name||D.name;$('mgBtn').hidden=true;dots.hidden=true;
   const out=d.out&&d.out[sl]!=null,live=D.live||g.k==='lock'||g.k==='forge'||g.k==='pendulum';
-  const key=g.k+':'+g.st+':'+(g.st==='brief'?(g.go?Math.ceil((O.MG_BRIEF||7)-t):'w')+'r'+Object.keys(d.rdy||{}).join(''):g.st==='play'?(out?'out'+(d.swn&&d.swn[sl])+(d.sw&&d.sw[sl]):mgKeyOf(g,d,sl,t)):'')+':'+g.ok;if(key===C.mgK&&!(live&&g.st==='play'&&!out))return;C.mgK=key;
+  const key=g.k+':'+g.st+':'+(D.motion?(MO.use()?'M':'m')+(MO.ok===false?'x':''):'')+(g.st==='brief'?(g.go?Math.ceil((O.MG_BRIEF||7)-t):'w')+'r'+Object.keys(d.rdy||{}).join(''):g.st==='play'?(out?'out'+(d.swn&&d.swn[sl])+(d.sw&&d.sw[sl]):mgKeyOf(g,d,sl,t)):'')+':'+g.ok;if(key===C.mgK&&!(live&&g.st==='play'&&!out))return;C.mgK=key;
   if(C.mgSt!==g.st+(out?'o':'')){C.mgSt=g.st+(out?'o':'');x.textContent=''}
-  if(g.st==='brief'){x.textContent='';const waitR=!g.go,left=waitR?9:Math.ceil((O.MG_BRIEF||7)-t),bx=el('div','mgBrief');x.appendChild(bx);bx.appendChild(el('div','mgBig',D.kind==='trap'?'A trap!':'Get ready'));if(left<=3&&left>0)bx.appendChild(el('div','mgCount',String(left)));
+  if(g.st==='brief'){x.textContent='';const waitR=!g.go,mrow=D.motion?motionRow(D):null;if(mrow)x.appendChild(mrow);const _=0,left=waitR?9:Math.ceil((O.MG_BRIEF||7)-t),bx=el('div','mgBrief');x.appendChild(bx);bx.appendChild(el('div','mgBig',D.kind==='trap'?'A trap!':'Get ready'));if(left<=3&&left>0)bx.appendChild(el('div','mgCount',String(left)));
     if(waitR){const rd=d.rdy||{},n=Math.max(0,G0n()-Object.keys(rd).length);if(!rd[sl])x.appendChild(mgBtn('I have read the rules: READY','go big',()=>{O.buzz(15);sendMg(g.id,'ready')}));else x.appendChild(el('p','mgNote',n?`Ready. Waiting for ${n} more…`:'Everyone is ready!'))}
     if(D.ctl)x.appendChild(el('p','mgGoal',D.ctl));$('mgP').textContent=D.brief;return}
   if(g.st==='done'){x.textContent='';const ok=!!(d.pass||{})[sl],kind=D.kind==='trap'?(ok?'ok':'bad'):(ok?'ok':'done'),box=el('div','mgDone '+kind);
@@ -294,7 +294,7 @@ function mgKeyOf(g,d,sl,t){const D=O.MG[g.k],base=JSON.stringify([d.pr&&d.pr[sl]
 function mgHint(g,d,sl,t){switch(g.k){
   case'lock':{const k=C.lk?C.lk.k:((d.set||{})[sl]||0);return k>=3?'All three set! Wait for the others.':`Press STOP while the needle is inside the gold band. Each tumbler is faster, with a thinner band.`}
   case'shrine':return'Tap a candle the moment it flickers blue to shield it. Tapping a steady one keeps your hands busy.';
-  case'forge':return'Tap STRIKE as each ember touches the gold line. The beat stays steady, then changes after a warning.';
+  case'forge':return MO.use()?'Swing your phone (or tap) as each ember touches the gold line. The beat stays steady, then changes after a warning.':'Tap STRIKE as each ember touches the gold line. The beat stays steady, then changes after a warning.';
   case'tome':return d.who===sl?`Your turn: ${Math.max(0,Math.ceil(7-(t-(d.tt||0))))}s. Turn over two pages.`:'Watch and remember. Wait for your turn.';
   case'gamble':return t<d.bt?'Place your bet from the party’s purse.':t<d.se?'Watch the cups on the big screen!':'Which cup hides the ball?';}return''}
 const mgBtn=(label,cls,fn,hold)=>{const b=el('button','btn mgB '+(cls||''),label);if(hold){b.addEventListener('pointerdown',e=>{fn(1);e.preventDefault()});const up=e=>{fn(0);e.preventDefault()};b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('pointerleave',up)}else b.addEventListener('pointerdown',e=>{fn();e.preventDefault()});return b};
@@ -315,7 +315,10 @@ function mgControl(g,d,sl,t,x0){const send=v=>{sendMg(g.id,v);C.mgK=''},V=C.mgV|
         if(c[k]===2)return;if(t<bz){O.buzz(60);return}send(String(k));if(c[k]===1){O.buzz([20,30,40]);mgFlash('Shielded!',true);C.vg.fl={k,t:performance.now(),ok:1}}else{O.buzz(160);mgFlash('Hands full!',false);C.vg.fl={k,t:performance.now(),ok:0}}});
       const loop=()=>{if(!cv.isConnected)return;drawVigil(cv,getView().mg,sl);requestAnimationFrame(loop)};requestAnimationFrame(loop)}}
   else if(g.k==='forge'){if(!x.querySelector('#mgLane')){x.textContent='';const cv=document.createElement('canvas');cv.id='mgLane';cv.className='mgLane';
-      x.append(cv,mgBtn('STRIKE','go big wide',()=>{O.buzz(18);const gv=getView().mg;if(!gv)return;const tt=mgNow(gv);C.mgTaps.push(+tt.toFixed(2));send(C.mgTaps.slice(-8).join(','));let best=9;for(const b of gv.d.beats||[])best=Math.min(best,Math.abs(b-tt));C.mgFb={t:performance.now(),r:best<.1?'Perfect!':best<.2?'Good':'Off the beat',ok:best<.2}}));
+      /* a strike: from the button, or from a swing of the phone (the jolt comes a moment after the swing's peak, so it is taken a touch earlier) */
+      const strike=lag=>{O.buzz(18);const gv=getView().mg;if(!gv||gv.st!=='play')return;const tt=mgNow(gv)-(lag||0);C.mgTaps.push(+tt.toFixed(2));send(C.mgTaps.slice(-8).join(','));let best=9;for(const b of gv.d.beats||[])best=Math.min(best,Math.abs(b-tt));C.mgFb={t:performance.now(),r:best<.1?'Perfect!':best<.2?'Good':'Off the beat',ok:best<.2}};
+      const mo=MO.use();if(mo)MO.onSwing=()=>{if(!cv.isConnected){MO.onSwing=null;return}strike(.03)};
+      x.append(cv,mgBtn(mo?'SWING or tap':'STRIKE','go big wide',()=>strike(0)));
       const loop=()=>{if(!cv.isConnected)return;drawForge(cv,getView().mg);requestAnimationFrame(loop)};requestAnimationFrame(loop)}}
   else if(g.k==='tome'){x.textContent='';const gr=el('div','mgCards'),mine=d.who===sl,pk=d.peek;
     for(let i=0;i<12;i++){const up=d.up[i]>=0?d.up[i]:pk&&(pk[0]===i||pk[1]===i)?(pk[0]===i?pk[2]:pk[3]):-1,own=d.own&&d.own[i]>=0?d.own[i]:-1,b=el('button','btn '+(up>=0?'up':C.mgPick===i?'sel':''));if(up>=0)b.appendChild(glyphEl((d.sym||O.DSYM[0])[up],40));if(own>=0)b.style.borderColor=LANES[own];
@@ -340,6 +343,26 @@ function drawForge(cv,g){if(!g||!g.d)return;const w=cv.clientWidth,h=cv.clientHe
 if(window.CanvasRenderingContext2D&&!CanvasRenderingContext2D.prototype.roundRect)CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h){this.rect(x,y,w,h)};
 function lockPin(){const L=C.lk,gv=getView().mg,per=((gv&&gv.d.per)||[1.5,1.05,.72])[Math.min(2,L.k)],u=((performance.now()-L.t0)/1000/per)%2;return u<1?u:2-u}
 O.lkDbg=()=>({k:C.lk?C.lk.k:-1,pin:C.lk?lockPin():0});          // for tests
+/* ---------- phone motion: tilt, tipping and swings, for the games that can use them. One tap turns it on (an iPhone asks permission); a game takes the way the phone is held when it starts as level. Buttons always still work. ---------- */
+const MO={on:false,ok:null,b:0,g:0,b0:0,g0:0,t:0,swT:0,onSwing:null,pref:(()=>{try{return localStorage.getItem('ow_motion')==='1'}catch(e){return false}})()};O.motion=MO;
+function moOri(e){if(e.beta==null)return;MO.b=e.beta;MO.g=e.gamma;MO.t=performance.now()}
+function moMot(e){const a=e.acceleration,ag=e.accelerationIncludingGravity;let m=0;if(a&&a.x!=null)m=Math.hypot(a.x,a.y,a.z);else if(ag&&ag.x!=null)m=Math.abs(Math.hypot(ag.x,ag.y,ag.z)-9.81)*1.15;MO.t=performance.now();
+  /* a swing: a sharp jolt, then a short rest before the next can count */
+  const now=performance.now();if(m>13&&now-MO.swT>230){MO.swT=now;if(MO.onSwing)try{MO.onSwing()}catch(q){}}}
+MO.supported=()=>typeof window.DeviceOrientationEvent!=='undefined'||typeof window.DeviceMotionEvent!=='undefined';
+MO.enable=async()=>{try{if(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==='function'){const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted'){MO.ok=false;return false}}
+    if(window.DeviceMotionEvent&&typeof DeviceMotionEvent.requestPermission==='function'){try{await DeviceMotionEvent.requestPermission()}catch(q){}}}catch(e){MO.ok=false;return false}
+  if(!MO.on){window.addEventListener('deviceorientation',moOri);window.addEventListener('devicemotion',moMot);MO.on=true}
+  return new Promise(res=>setTimeout(()=>{MO.ok=MO.t>0;if(MO.ok){MO.pref=true;try{localStorage.setItem('ow_motion','1')}catch(q){}}res(MO.ok)},900))};
+MO.off=()=>{MO.pref=false;try{localStorage.setItem('ow_motion','0')}catch(q){}};
+MO.use=()=>MO.on&&MO.ok&&MO.pref;O.motionOn=MO.use;
+MO.calibrate=()=>{MO.b0=MO.b;MO.g0=MO.g};
+MO.tilt=()=>({x:clamp((MO.g-MO.g0)/30,-1.5,1.5),y:clamp((MO.b-MO.b0)/30,-1.5,1.5)});
+/* the switch on a motion game's rules screen */
+function motionRow(D){const w=el('div','moRow');if(!MO.supported()){return null}
+  if(MO.use()){const b=el('button','btn moBtn on','📱 Motion controls: ON');b.onclick=()=>{MO.off();C.mgK=''};w.append(b,el('small',null,D.mo||'Hold your phone comfortably when the game starts: that is taken as level.'))}
+  else{const b=el('button','btn moBtn','📱 Use motion controls');b.onclick=async()=>{b.textContent='Asking…';const ok=await MO.enable();b.textContent=ok?'📱 Motion controls: ON':'Motion is not available here';C.mgK=''};w.append(b,el('small',null,MO.ok===false?'This phone or link cannot share motion. The buttons work as before.':'Optional. The buttons still work.'))}
+  return w}
 function mgFlash(t,ok){const f=el('div','mgFlash '+(ok?'ok':'bad'),t);document.body.appendChild(f);setTimeout(()=>f.remove(),760)}
 /* the vigil on the phone: three tall candles; a flickering one bends, burns blue and shows a shrinking ring of time */
 function drawVigil(cv,g,sl){if(!g||!g.d)return;const w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;const dpr=Math.min(2,devicePixelRatio||1);if(cv.width!==Math.round(w*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr)}
