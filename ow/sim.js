@@ -87,8 +87,8 @@ function spin(p){const md=mods(p),sg=(O.SIG[p.cls]||['b'])[0],sg2=(O.SIG[p.cls]|
 /* the balls a spin wins: one of every special attack whose line came up, or the fighter's basic attack when none did */
 function bagOf(p){const sl=O.slotRead(p.grid,p.owned,mods(p),p.cls),b=p.owned[0]||0,sp=sl.ok.filter(i=>i!==b);return sp.length?sp:[b]}
 O.bagOf=bagOf;
-/* a utility ball (anything with no aiming) can always be traded for the basic one: the bag offers basic beside it, and firing basic uses up that utility */
-const swapOf=p=>{const b=p.owned[0]||0,bag=p.bag||[];if(bag.includes(b))return -1;for(let k=bag.length-1;k>=0;k--)if(CLASSES[p.cls].ab[bag[k]].instant)return bag[k];return -1};
+/* the basic ball is always on offer: when the reels won only special balls, firing basic instead uses up one of them (a utility one first) */
+const swapOf=p=>{const b=p.owned[0]||0,bag=p.bag||[];if(!bag.length||bag.includes(b))return -1;for(let k=bag.length-1;k>=0;k--)if(CLASSES[p.cls].ab[bag[k]].instant)return bag[k];return bag[bag.length-1]};
 O.swapOf=swapOf;O.choicesOf=p=>{const bag=p.bag||[],sw=swapOf(p);return sw>=0?[...bag,p.owned[0]||0]:bag.slice()};
 O.SLOT_N=12;O.spin=spin;O.slotOf=p=>O.slotRead(p.grid,p.owned,mods(p),p.cls);
 const cdOf=(pl,i)=>O.cdBase(CLASSES[pl.cls].ab[i],mods(pl)),noCd=cls=>CLASSES[cls].ab.map(()=>0);
@@ -267,6 +267,7 @@ O.toggleInspect=pid=>{if(G.cine||G.queue.length||G.phase!=='aim')return;const p=
 function fire(pl,abi,ang,pow,rp){
   if(G.screen!=='combat'||G.phase!=='aim'||!G.players.includes(pl)||pl.fired||pl.hp<=0)return false;
   if(G.players.length>1&&G.shooter&&G.shooter!==pl.id)return false;                 // not your turn yet
+  pl.sankNow=false;
   abi=Math.floor(num(abi,-1));const ab=CLASSES[pl.cls].ab[abi];if(!ab||!pl.owned.includes(abi))return false;if(!Array.isArray(pl.bag))return false;let use=abi;if(!pl.bag.includes(abi)){const sw=swapOf(pl);if(abi!==(pl.owned[0]||0)||sw<0)return false;use=sw}const sl=O.slotOf(pl);
   const needs=!ab.instant||ab.foe;if(needs&&(!G.mons[pl.tgt]||G.mons[pl.tgt].dead))return false;
   ang=clamp(num(ang,90),8,172);pow=clamp(num(pow),0,1);rp=clamp(Math.floor(num(rp)),0,2);
@@ -297,13 +298,13 @@ function launch(a){
   if(id==='quick'&&m.twin)one(.4,0,.5);
   if(a.twice){const n=G.pending.length;for(let i=0;i<n;i++){const q=G.pending[i];G.pending.push(Object.assign({},q,{t:q.t+.7}))}}}                 // a Twinning Mirror looses the whole attack again
 function spawn(p){
-  const C=G.C,rmp=O.RAMPS[p.rp||0],m=p.ab.m,md=mods(p.pl),x=launchX(p.pl),sk=O.SKINS[p.pl.skin],col=(sk&&sk.col)||CLASSES[p.pl.cls].col,id=p.ab.id;
+  const C=G.C,rmp=O.RAMPS[p.rp||0],m=p.ab.m,md=mods(p.pl),x=launchX(p.pl),sk=O.SKINS[p.pl.skin],col=(sk&&sk.col)||CLASSES[p.pl.cls].col,id=p.ab.id;const fx=O.ballFx(p.pl.cls,CLASSES[p.pl.cls].ab.indexOf(p.ab),p.pl.owned[0]);
   const sz=Math.max(1,O.mSize(m.r)-(md.sizeDown||0)-(p.small<=.5?2:p.small<1?1:0)),r=Math.min(m.r,[0,11,16,30][sz]),v=O.strokeV(O.powD(C.len,p.pow),rmp),a=p.ang*DEG,ty=O.COURSE.TEE;
   let mult=m.mult*p.mult*md.dmg;if(p.ab.id==='quick')mult*=md.draw;if(m.homing&&md.orb>1)mult*=1.4;if(sz===1)mult*=md.focus;
   G.marbles.push({id:++G.mid,x,y:ty,vx:Math.cos(a)*v,vy:Math.sin(a)*v,r,size:sz,mult,heavy:m.heavy,sunder:m.sunder,hymn:m.hymn,homing:m.homing,ram:m.ram,skim:m.skim,arc:m.arc||0,cleave:m.cleave||0,
     mark:m.mark,sure:m.sure||p.sure,pierce:m.pierce,split:m.split,shatter:m.shatter,chain:0,leech:m.leech||0,vuln:m.vuln,weak:m.weak,pl:p.pl,md,
     ric:m.ric||0,burn:p.fb||m.burn||((id==='note'&&md.kindle)||(id==='stream'&&md.ember)?.4:0),settle:m.settle||0,seek:m.seek||0,splash:m.splash||0,quake:m.quake||0,glow:sk&&sk.glow||'',
-    capK:md.capv*(m.capx||1),z:rmp.fly?.1:0,vz:rmp.fly?v*rmp.tan:0,keep:rmp.k==='high'?.22:.62,fly:rmp.fly?1:0,in:null,still:0,pull:360*md.orb,burst:md.burst,col,lane:LANES[p.pl.slot],age:0,told:null,skips:0});
+    capK:md.capv*(m.capx||1),z:rmp.fly?.1:0,vz:rmp.fly?v*rmp.tan:0,keep:rmp.k==='high'?.22:.62,fly:rmp.fly?1:0,in:null,still:0,pull:360*md.orb,burst:md.burst,col,fx:fx?fx.k:'',fxc:fx?fx.c:'',lane:LANES[p.pl.slot],age:0,told:null,skips:0});
   burst(x,ty,col,16);ev('ring',{x,y:ty,col,R:70});ev('shake',{v:.2});ev('launch',{cls:p.pl.cls,r:m.r})}
 /* a Prism ball breaks into three the first time it strikes something solid */
 function splitM(m){if(!m.split)return;m.split=0;m.r=Math.min(m.r,8);const sp=Math.hypot(m.vx,m.vy)||1;burst(m.x,m.y,m.col,14);
@@ -340,7 +341,7 @@ function sinkInto(m,h,hx,hy){
   const dmg=Math.round(h.dmg*k);if(m.mark)h.mark=md.markx;G.stop=G.marbles.some(q=>q!==m&&!q.dead)?0:dmg>=20?.16:.07;        // no freeze while other balls are still rolling
   
   ev('sink',{x:hx,y:hy,tier:h.tier,dmg,combo:G.combo,trick,col:TIER[h.tier]});const ps=m.pl.st;ps.sinks++;if(trick)ps.trick++;
-  burst(hx,hy,TIER[h.tier],26);ev('ring',{x:hx,y:hy,col:TIER[h.tier],R:90});ev('shake',{v:Math.min(1,dmg/40)});const dealt=damageMon(dmg,hx,hy,TIER[h.tier]);m.dead=true;m.pl.st.dmg+=dealt;m.pl.st.best=Math.max(m.pl.st.best,dealt);if(G.cine)G.cine.sinks=(G.cine.sinks||0)+1;
+  burst(hx,hy,TIER[h.tier],26);ev('ring',{x:hx,y:hy,col:TIER[h.tier],R:90});ev('shake',{v:Math.min(1,dmg/40)});const dealt=damageMon(dmg,hx,hy,TIER[h.tier]);m.dead=true;m.sunk=true;m.pl.st.dmg+=dealt;m.pl.st.best=Math.max(m.pl.st.best,dealt);if(G.cine)G.cine.sinks=(G.cine.sinks||0)+1;
 
   if(mon&&dealt>0&&mon.hp>0){const b=m.burn||(G.relics.includes('ember')?.3:0);if(b){const d=Math.max(2,Math.round(dealt*b*md.pyre/3));if(!mon.burn||mon.burn.d<=d){mon.burn={d,t:3};float(hx,hy+58,'burning','#ff7a2a')}}}
   if(mon&&m.splash&&dealt>0){const others=G.holes.filter(o=>o!==h&&!lidOn(o));for(const o of shuffle(others).slice(0,2)){const[ox,oy]=wpos(o.x,o.y),d2=Math.round(o.dmg*m.mult*m.splash);burst(ox,oy,m.col,12);ev('ring',{x:ox,y:oy,col:m.col,R:50});m.pl.st.dmg+=damageMon(d2,ox,oy,m.col)}}
@@ -503,7 +504,7 @@ function updateCombat(dt){
   G.pending=G.pending.filter(p=>p.t>0);
   {const mo=cm();if(!(mo&&mo.freeze))G.ck+=dt}
   for(let i=0;i<10;i++){for(const m of G.marbles)if(!m.dead)stepMarble(m,dt/10);wakeRest();if(G.marbles.length>1)collideMarbles()}
-  for(const m of G.marbles)if(m.dead&&m.path&&m.path.length>2&&m.pl){m.path.push([Math.round(m.x),Math.round(m.y),Math.round(m.off?m.z:0)]);m.pl.trail=m.path;m.pl.trailN=(m.pl.trailN||0)+1;m.path=null}         // each fighter's last shot, drawn faintly on the big screen
+  for(const m of G.marbles)if(m.dead&&m.path&&m.pl){if(m.sunk)m.pl.trail=null;else if(m.path.length>2&&!m.pl.sankNow){m.path.push([Math.round(m.x),Math.round(m.y),Math.round(m.off?m.z:0)]);m.pl.trail=m.path}m.pl.trailN=(m.pl.trailN||0)+1;if(m.sunk)m.pl.sankNow=true;m.path=null}         // each fighter's last shot, drawn faintly on the big screen; a shot that went in leaves no guide
   G.marbles=G.marbles.filter(m=>!m.dead);
   if(G.phase==='aim'){
     if(!G.cine&&!G.queue.length&&!G.marbles.length&&!G.pending.length){

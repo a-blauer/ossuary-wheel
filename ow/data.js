@@ -344,5 +344,11 @@ O.lockInfo=id=>{const p=String(id).split(':');
   if(p[0]==='ab'){const c=O.CLASSES[p[1]],a=c&&c.ab[+p[2]];return a?{kind:c.name+' ability',name:a.name,desc:a.desc}:null}
   if(p[0]==='sk'){const k=O.SKINS[p[1]];return k?{kind:'ball skin',name:k.name,desc:k.desc+' Choose it on your phone, under Character.'}:null}
   const t={up:[O.UPGRADES,'Upgrade'],it:[O.ITEMS,'Item'],re:[O.RELICS,'Relic']}[p[0]],o=t&&t[0][p[1]];return o?{kind:(o.cls?O.CLASSES[o.cls].name+' ':'')+t[1].toLowerCase(),name:o.name,desc:o.desc}:null};
+/* how each special ball looks: a colour and an effect, chosen from what the ball does. The basic ball keeps the plain gem. */
+const BALLFX={sunder:['#ff7a10','ember'],quake:['#ff5a00','ember'],ram:['#a89070','iron'],shatter:['#3aa8ff','shard'],cleave:['#ff2a1a','blade'],leech:['#d0102a','blood'],ric:['#28a8ff','spark'],
+  hymn:['#ffb81a','note'],vuln:['#9a2aff','dark'],burn:['#ff4a00','flame'],homing:['#8a3aff','arcane'],arc:['#28c8ff','spark'],split:['#ffffff','prism'],capx:['#10b8ff','frost'],settle:['#5a2aff','void'],
+  skim:['#10c8b0','water'],mark:['#ffbe0a','gold'],sure:['#ffbe0a','gold'],pierce:['#ffe040','streak'],weak:['#d0102a','blood'],seek:['#2aff7a','arcane'],splash:['#ff4ad8','shard']};
+const BALLFX_ID={rage:['#ff1a1a','flame'],twin:['#ffc21a','gold'],meteor:['#ff5a00','ember'],stasis:['#10b8ff','frost'],deadeye:['#ffbe0a','gold'],rain:['#28a8ff','spark'],stream:['#8a3aff','arcane'],aimed:['#ffe040','streak'],echo:['#ffb81a','note'],discord:['#9a2aff','dark'],dirge:['#ff4a00','flame']};
+O.ballFx=(cls,i,owned0)=>{const c=O.CLASSES[cls],a=c&&c.ab[i];if(!a||!a.m||i===(owned0||0))return null;const f=BALLFX_ID[a.id]||Object.keys(a.m).map(k=>BALLFX[k]).find(Boolean)||['#ffbe0a','gold'];return{c:f[0],k:f[1]}};
 O.boxCost=opened=>40+3*opened;                 // half what it was: loot boxes are how the party grows stronger over many runs
 })();

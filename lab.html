@@ -705,6 +705,10 @@ html[data-mode=host] .card{max-width:30rem}
 .lockBtn:active{transform:translateX(-50%) translateY(2px);box-shadow:0 2px 0 #6a4a14}
 .lockBtn.on{background:rgba(20,14,12,.85);color:var(--bone);border-color:#5a4a3a;box-shadow:none;font-size:1rem;padding:9px 18px;min-width:0}
 .mgLockWrap{display:flex;justify-content:center}.mgLockWrap .lockBtn{position:static;transform:none;width:100%}.mgLockWrap .lockBtn:active{transform:translateY(2px)}
+/* a special ball's button carries its colour */
+#abil button.spec{--line:var(--fx);box-shadow:0 0 0 1px var(--fx),0 0 14px color-mix(in srgb,var(--fx) 45%,transparent)}
+#abil button.spec small{color:var(--fx)}
+#abil button.spec .i,#abil button.spec svg,#abil button.spec canvas{filter:drop-shadow(0 0 6px var(--fx))}
 </style>
 
 <section id="landing">

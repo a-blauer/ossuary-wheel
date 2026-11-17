@@ -120,9 +120,15 @@ G.build=function(C,opt){
   return api};
 
 /* a ball: a cut-glass gem with a glow */
-G.marble=function(r,col){const g=new T.Group(),R=r*W;
+G.marble=function(r,col,fx,fxc){const g=new T.Group(),R=r*W;if(fx&&fx!=='prism')col=fxc||col;
   const m=new T.Mesh(new T.IcosahedronGeometry(R,1),new T.MeshStandardMaterial({color:col,roughness:.25,metalness:.1,flatShading:true,emissive:col,emissiveIntensity:.25}));m.castShadow=true;g.add(m);
   if(!G._halo){const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d'),gr=x.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.35,'rgba(255,255,255,.35)');gr.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=gr;x.fillRect(0,0,64,64);G._halo=new T.CanvasTexture(c)}
   const halo=new T.Sprite(new T.SpriteMaterial({map:G._halo,color:col,transparent:true,opacity:.35,blending:T.AdditiveBlending,depthWrite:false}));halo.scale.setScalar(R*5);g.add(halo);
-  g.userData.ball=m;return g};
+  g.userData.ball=m;g.userData.halo=halo;
+  /* a special ball: brighter, a stronger pulsing glow and a ring spinning round it, so it reads at once as something more than the basic shot */
+  if(fx){m.material.emissiveIntensity=fx==='iron'?.25:.42;m.material.roughness=.15;m.material.metalness=fx==='iron'||fx==='ember'?.55:.2;halo.material.opacity=.6;halo.scale.setScalar(R*7);
+    const ring=new T.Mesh(new T.TorusGeometry(R*1.6,R*.2,6,28),new T.MeshBasicMaterial({color:fx==='prism'?'#ff3ac8':col,toneMapped:false}));ring.rotation.x=Math.PI/2;g.add(ring);g.userData.ring=ring;
+    if(fx==='ember'||fx==='flame'||fx==='void'||fx==='prism'){const r2=ring.clone();r2.material=ring.material.clone();r2.scale.setScalar(1.25);r2.rotation.set(0,Math.PI/3,0);g.add(r2);g.userData.ring2=r2}
+    g.userData.fx=fx;g.userData.fxc=col}
+  return g};
 })();

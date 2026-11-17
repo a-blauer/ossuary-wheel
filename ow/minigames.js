@@ -122,23 +122,19 @@ const EV={
     const left=S().shuffle(Object.keys(O.RELICS).filter(r=>!G.relics.includes(r)&&S().has('re:'+r))).slice(0,Math.min(4,cnt)),gold=tot*5;if(gold&&!G.practice){G.stash.gold+=gold;S().saveStash()}
     for(const p of ps)g.d.rw[p.slot]=`You set ${plural(g.d.set[p.slot]||0,'tumbler')}; the party set ${tot}${gold?`: ${gold} gold`:''} and a choice of ${left.length} relics.`;
     if(left.length)return()=>{S().say(`${plural(tot,'tumbler')} set${gold?`, and ${gold} gold`:''}. Choose a relic from ${left.length}.`);S().setDec('relic',left);return true}}},
- shrine:{name:'The Shrine Cup',brief:'Three shots each at the shrine’s narrow cup, through a fence of posts. Drag back on your phone and aim on the big screen. Putt along the green, chip a low hop, or lob high over the posts (land off the green and it is lost). Every ball the party sinks heals everyone more; the first one raises the fallen.',
-  setup(g){g.dur=40;g.d.sk={};g.d.sh={};g.balls=[];g.C=O.shrineCourse()},
-  input(g,p,v){const[n,rest]=String(v).split(':'),[a,w,rp0]=String(rest||'').split(',').map(Number);if(+n!==(g.d.sh[p.slot]||0)+1||g.balls.some(b=>b.pl===p&&!b.done)||(g.d.sh[p.slot]||0)>=3)return;if(!isFinite(a)||!isFinite(w))return;
-    /* a putt rolls; a chip hops once; a lob flies high and nearly stops where it lands. In the air it clears the posts, and landing off the green loses it. */
-    g.d.sh[p.slot]=+n;const rp=clamp(Math.floor(rp0)||0,0,2),R=O.RAMPS[rp],ang=clamp(a,30,150)*Math.PI/180,D=60+clamp(w,0,1)*560,sp=R.fly?O.strokeV(D,R):O.putt(D),x=(G.players.indexOf(p)-(G.players.length-1)/2)*40;
-    g.balls.push({pl:p,x,y:40,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,r:12,size:1,t:0,z:R.fly?.1:0,vz:R.fly?sp*R.tan:0,keep:rp===2?.22:.62})},
-  tick(g,dt){for(const b of g.balls){if(b.done)continue;b.t+=dt;
-      if(b.z>0||b.vz>0){b.vz-=1200*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=b.vz*dt;if(b.z>0)continue;b.z=0;b.vz=0;const C2=g.C,h=C2.holes[0];
-        if(b.y>C2.len||b.y<-30||Math.abs(b.x)>C2.half(Math.max(0,Math.min(C2.len,b.y)))){b.done=1;S().ev('miss',{});continue}
-        if(Math.hypot(b.x-h.x,b.y-h.y)<h.rad-b.r*.2){b.done=1;g.d.sk[b.pl.slot]=(g.d.sk[b.pl.slot]||0)+1;S().ev('sink',{x:0,y:0,dmg:10,col:'#f0cc5c',tier:1,mg:1});continue}
-        b.vx*=b.keep;b.vy*=b.keep}
-      let res=null;for(let i=0;i<4&&!res;i++)res=O.courseStep(g.C,b,dt/4,g.t,{fits:()=>true});
-      if(res&&res.sink){b.done=1;g.d.sk[b.pl.slot]=(g.d.sk[b.pl.slot]||0)+1;S().ev('sink',{x:0,y:0,dmg:10,col:'#f0cc5c',tier:1,mg:1})}else if(res==='rest'||res==='water'||b.t>8)b.done=1}
-    g.d.b=g.balls.filter(b=>!b.done).map(b=>[Math.round(b.x),Math.round(b.y),b.pl.slot,Math.round(b.z||0)]);if(here().length&&here().every(p=>(g.d.sh[p.slot]||0)>=3)&&g.balls.every(b=>b.done))g.end=1},
-  prog:(g,p)=>plural(g.d.sk[p.slot]||0,'sink'),pass:(g,p)=>(g.d.sk[p.slot]||0)>0,
-  finish(g){const ps=here(),n=ps.reduce((a,p)=>a+(g.d.sk[p.slot]||0),0);if(n)for(const p of G.players)if(p.hp<=0){p.hp=Math.round(p.mhp*.5);S().ev('heal',{pl:p,col:'#f0cc5c'})}
-    const frac=Math.min(.8,.1+.08*n);for(const p of G.players)heal(p,p.mhp*frac);for(const p of ps)g.d.rw[p.slot]=`The party sank ${n}: everyone heals ${Math.round(frac*100)}%.`;S().ev('boon',{});S().say(`${plural(n,'sink')} at the shrine. The party heals ${Math.round(frac*100)}%.`)}},
+ shrine:{name:'The Vigil',brief:'Each of you tends three candles at the shrine. When a gust makes one of YOUR candles flicker (it bends and turns blue on your phone and the big screen), tap that candle to shield it before it goes out. Tapping a candle that is not flickering keeps your hands busy for a moment. The more candles the party keeps lit, the more everyone heals.',
+  /* a reaction game: gusts come to each fighter's candles on their own schedule, faster as the vigil goes on */
+  setup(g){g.dur=32;g.d.c={};g.d.fe={};g.d.bz={};g.d.sv={};g.nx={};g.rr={};for(const p of here()){const s=p.slot;g.d.c[s]=[0,0,0];g.d.fe[s]=[0,0,0];g.d.bz[s]=0;g.d.sv[s]=0;g.rr[s]=rng(g.seed+s*7);g.nx[s]=1.4+g.rr[s]()*.8}},
+  input(g,p,v){const s=p.slot,k=Math.floor(+v),c=g.d.c[s];if(!c||!(k>=0&&k<3)||g.t<g.d.bz[s])return;
+    if(c[k]===1){c[k]=0;g.d.fe[s][k]=0;g.d.sv[s]++;S().ev('mgTap',{})}else if(c[k]===0){g.d.bz[s]=+(g.t+.7).toFixed(2)}},
+  tick(g,dt){const f=Math.min(1,g.t/g.dur);for(const p of here()){const s=p.slot,c=g.d.c[s],fe=g.d.fe[s],r=g.rr[s];if(!c)continue;
+      for(let k=0;k<3;k++)if(c[k]===1&&g.t>=fe[k]){c[k]=2;fe[k]=0;S().ev('miss',{})}
+      if(g.t>=g.nx[s]){const lit=[0,1,2].filter(k=>c[k]===0);if(lit.length){const k=lit[Math.floor(r()*lit.length)];c[k]=1;fe[k]=+(g.t+1.55-.5*f).toFixed(2)}g.nx[s]=g.t+(2.3-1.2*f)*(.75+r()*.5)}}
+    if(here().length&&here().every(p=>(g.d.c[p.slot]||[]).every(v=>v===2)))g.end=1},
+  prog:(g,p)=>{const c=g.d.c[p.slot]||[];return`${c.filter(v=>v!==2).length} of 3 lit`},pass:(g,p)=>(g.d.c[p.slot]||[]).some(v=>v!==2),
+  finish(g){const ps=here(),tot=ps.length*3,lit=ps.reduce((a,p)=>a+(g.d.c[p.slot]||[]).filter(v=>v!==2).length,0),kept=tot?lit/tot:0;
+    if(kept>=.34)for(const p of G.players)if(p.hp<=0){p.hp=Math.round(p.mhp*.5);S().ev('heal',{pl:p,col:'#f0cc5c'})}
+    const frac=Math.min(.8,.1+.7*kept);for(const p of G.players)heal(p,p.mhp*frac);for(const p of ps)g.d.rw[p.slot]=`The party kept ${lit} of ${tot} candles lit: everyone heals ${Math.round(frac*100)}%.`;S().ev('boon',{});S().say(`${lit} of ${tot} candles still burn. The party heals ${Math.round(frac*100)}%.`)}},
  forge:{name:'The Dead Smithy',brief:'Strike as each glowing ember on your phone reaches the anvil line. The hammer keeps a steady beat in each passage, then changes: faster, then double strikes, then fastest of all. A warning shows before every change. Strikes off the beat cost you. The cleaner your work, the more you choose from.',
   /* four passages, each with a steady beat, so the rhythm can be learned; the pace changes between them */
   setup(g){const r=rng(g.seed),b=[],P=[['Steady',8,.82,0],['Faster!',8,.64,0],['Double strikes!',8,.86,1],['Fastest!',10,.54,0]];g.d.secs=[];g.d.sl=[];let t=2.6;
@@ -173,26 +169,26 @@ const EV={
 for(const k in EV){EV[k].id=k;EV[k].kind='event';O.addMg(EV[k])}
 /* each dungeon's names for its event floors */
 O.EVNAMES=[
- ['The Reliquary Lock','The Shrine Cup','The Dead Smithy','The Drowned Library','The Gambler’s Table'],
- ['The Heartwood Lock','The Mossy Well','The Root Smithy','The Hollow Oak Library','The Toadstool Table'],
- ['The Sunken Strongbox','The Tide-Pool Cup','The Anchor Forge','The Flooded Chart Room','The Drowned Purser'],
- ['The Furnace Vault','The Cinder Cup','The Great Forge','The Ash-Bound Ledgers','The Slag Gambler'],
- ['The Silk-Wrapped Lock','The Dew Cup','The Chitin Smithy','The Cocoon Archive','The Spinner’s Table'],
- ['The Frozen Coffer','The Ice-Rimmed Cup','The Cold Forge','The Frost-Bound Tomes','The Ice-Cup Game'],
- ['The Grate Lock','The Clean Spring','The Scrap Smithy','The Rat-Chewed Ledgers','The Sewer Swindler'],
- ['The Idol’s Lock','The Lily-Pool Cup','The Coral Forge','The Drowned Scriptures','The Temple Diviner'],
- ['The Tomb Seal','The Oasis Cup','The Sun Forge','The Buried Scrolls','The Bone-Dice Table'],
- ['The Bog-Iron Lock','The Still Pool','The Peat Forge','The Witch’s Pages','The Will-o’ Table'],
- ['The Armoury Lock','The Chapel Font','The Garrison Forge','The War Ledgers','The Barracks Dice'],
- ['The Mycel Seal','The Dew Cap Cup','The Rot Forge','The Spore Codex','The Puffball Table'],
- ['The Storm Coffer','The Rain Cup','The Lightning Forge','The Sky Charts','The Wind-Gambler'],
- ['The Tumbler Vault','The Fountain Cup','The Gear Forge','The Clockwork Index','The Clockwork Croupier'],
- ['The Ash-Choked Lock','The Ember Cup','The Pyre Forge','The Charred Archive','The Bone-Ash Table'],
- ['The Geode Lock','The Crystal Basin','The Gem Cutter','The Singing Library','The Prospector’s Table'],
- ['The Pressure Lock','The Lantern Pool','The Abyssal Forge','The Wreck Library','The Angler’s Game'],
- ['The Reliquary of Saints','The Holy Font','The Thurible Forge','The Blood Psalter','The Tithe Table'],
- ['The Hoard Lock','The Molten Cup','The Dragon Forge','The Scorched Annals','The Kobold’s Game'],
- ['The Throne Lock','The Shadow Well','The Night Forge','The Unwritten Library','The Pale Croupier']];
+ ['The Reliquary Lock','The Vigil','The Dead Smithy','The Drowned Library','The Gambler’s Table'],
+ ['The Heartwood Lock','The Moss Candles','The Root Smithy','The Hollow Oak Library','The Toadstool Table'],
+ ['The Sunken Strongbox','The Tide Lamps','The Anchor Forge','The Flooded Chart Room','The Drowned Purser'],
+ ['The Furnace Vault','The Cinder Vigil','The Great Forge','The Ash-Bound Ledgers','The Slag Gambler'],
+ ['The Silk-Wrapped Lock','The Dew Lanterns','The Chitin Smithy','The Cocoon Archive','The Spinner’s Table'],
+ ['The Frozen Coffer','The Frost Candles','The Cold Forge','The Frost-Bound Tomes','The Ice-Cup Game'],
+ ['The Grate Lock','The Spring Vigil','The Scrap Smithy','The Rat-Chewed Ledgers','The Sewer Swindler'],
+ ['The Idol’s Lock','The Lily Lamps','The Coral Forge','The Drowned Scriptures','The Temple Diviner'],
+ ['The Tomb Seal','The Oasis Candles','The Sun Forge','The Buried Scrolls','The Bone-Dice Table'],
+ ['The Bog-Iron Lock','The Still Vigil','The Peat Forge','The Witch’s Pages','The Will-o’ Table'],
+ ['The Armoury Lock','The Chapel Candles','The Garrison Forge','The War Ledgers','The Barracks Dice'],
+ ['The Mycel Seal','The Toadstool Lamps','The Rot Forge','The Spore Codex','The Puffball Table'],
+ ['The Storm Coffer','The Storm Vigil','The Lightning Forge','The Sky Charts','The Wind-Gambler'],
+ ['The Tumbler Vault','The Fountain Lamps','The Gear Forge','The Clockwork Index','The Clockwork Croupier'],
+ ['The Ash-Choked Lock','The Ember Vigil','The Pyre Forge','The Charred Archive','The Bone-Ash Table'],
+ ['The Geode Lock','The Crystal Candles','The Gem Cutter','The Singing Library','The Prospector’s Table'],
+ ['The Pressure Lock','The Lantern Vigil','The Abyssal Forge','The Wreck Library','The Angler’s Game'],
+ ['The Reliquary of Saints','The Holy Vigil','The Thurible Forge','The Blood Psalter','The Tithe Table'],
+ ['The Hoard Lock','The Molten Candles','The Dragon Forge','The Scorched Annals','The Kobold’s Game'],
+ ['The Throne Lock','The Shadow Vigil','The Night Forge','The Unwritten Library','The Pale Croupier']];
 const EVK=['lock','shrine','forge','tome','gamble'];O.mgName=(k)=>{const i=EVK.indexOf(k);return i>=0?((O.EVNAMES[G.dung]||O.EVNAMES[0])[i]):(MG[k]&&MG[k].name)||''};
 
 /* ---------- the shared machinery ---------- */
@@ -213,12 +209,12 @@ function wrapUp(g,def){g.st='done';g.t=0;const ps=here(),d=g.d;
   S().ev('mgEnd',{won:g.won});S().ev(g.won?'boon':'flash',{})}
 O.mgTick=function(dt){const g=G.mg;if(!g)return;const def=MG[g.k];g.t+=dt;
   if(g.st==='brief'){
-    /* an event floor waits until everyone has read the rules and pressed Ready (or a minute has passed), then counts down */
-    if(def.kind==='event'&&!g.go){g.wt=(g.wt||0)+dt;const ps=here(),rd=g.d.rdy||{};if((ps.length&&ps.every(p=>rd[p.slot]))||g.wt>60){g.go=1;g.t=Math.max(g.t,BRIEF-4.2)}else g.t=Math.min(g.t,BRIEF-4.4)}
+    /* every trap and event waits until everyone has read the rules and pressed Ready (or a minute has passed), then counts down */
+    if(!g.go){g.wt=(g.wt||0)+dt;const ps=here(),rd=g.d.rdy||{};if((ps.length&&ps.every(p=>rd[p.slot]))||g.wt>60){g.go=1;g.t=Math.max(g.t,BRIEF-4.2)}else g.t=Math.min(g.t,BRIEF-4.4)}
     if(g.t>BRIEF){g.st='play';g.t=0;S().ev('mgGo',{k:g.k})}}
   else if(g.st==='play'){if(def.tick)def.tick.call(def,g,dt);if(def.prog)for(const p of here())g.d.pr[p.slot]=def.prog.call(def,g,p);
     if(def.hearts&&here().length&&!H.alive(g).length&&here().every(p=>g.d.sw[p.slot]))g.end=1;
     if(g.t>=g.dur||g.end)wrapUp(g,def)}
   else if(g.st==='done'){if(g.t>DONE){G.mg=null;if(!(typeof g.after==='function'&&g.after()))S().offerPath()}}};
-O.mgPub=function(){const g=G.mg;if(!g)return null;return{id:g.id,k:g.k,st:g.st,t:Math.round(g.t*20)/20,d:g.d,out:g.st==='done'?g.out:null,won:g.won?1:0,dur:g.dur,item:g.item||'',go:g.kind!=='event'||g.go?1:0}};
+O.mgPub=function(){const g=G.mg;if(!g)return null;return{id:g.id,k:g.k,st:g.st,t:Math.round(g.t*20)/20,d:g.d,out:g.st==='done'?g.out:null,won:g.won?1:0,dur:g.dur,item:g.item||'',go:g.go?1:0}};
 })();
