@@ -1,4 +1,4 @@
-/* Ossuary Wheel: the four fighters as voxel models. Front is +z. A fighter is about 28 voxels (1.4 m) tall. */
+/* GambaGolf: the four fighters as voxel models. Front is +z. A fighter is about 28 voxels (1.4 m) tall. */
 (()=>{
 const O=window.OW,V=O.V,P=V.Part;
 const PAL={

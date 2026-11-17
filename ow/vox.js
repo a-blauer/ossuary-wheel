@@ -1,4 +1,4 @@
-/* Ossuary Wheel: voxel models.
+/* GambaGolf: voxel models.
    A model is a set of rigid parts, each a dictionary of voxels, built into three.js meshes with face culling,
    per-vertex ambient occlusion and a little per-voxel colour noise. Axes: x right, y up, z toward the model's front. */
 (()=>{

@@ -1,4 +1,4 @@
-/* Ossuary Wheel: the no-account connection, for when the game is hosted outside Claude.
+/* GambaGolf: the no-account connection, for when the game is hosted outside Claude.
    Phones link straight to the big screen with WebRTC (PeerJS). It offers the same small surface the game uses from Claude's room:
    lobby.join(name, {host}) gives a room with presence(obj), peers() and leave(). The big screen is the hub: every phone connects to it,
    sends its own state, and hears the host's. Inside Claude this file does nothing (Claude's own room is used there). */

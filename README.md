@@ -1,4 +1,4 @@
-# Ossuary Wheel
+# GambaGolf
 
 A phone-controller party game: a dark fantasy dungeon crawl where every fight is a mini golf course on the monster's back.
 

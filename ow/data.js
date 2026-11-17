@@ -1,16 +1,16 @@
-/* Ossuary Wheel: static game data */
+/* GambaGolf: static game data */
 window.OW={};
 (()=>{
 const O=window.OW;
 O.F={W:1000,H:1120,cx:500,cy:450,R:340,ly:1060};
 O.FR=230;O.CAPV=250;O.FIT=.8;
-/* the ramp a fighter launches from: len and h are the ramp's run and height, tan the slope the marble leaves its lip at. Every ramp carries a marble the same total distance for the same power; they differ in how much of it is flown. */
+/* the ramp a fighter launches from: len and h are the ramp's run and height, tan the slope the ball leaves its lip at. Every ramp carries a ball the same total distance for the same power; they differ in how much of it is flown. */
 O.RAMPS=[{k:'flat',short:'Putt',fly:0,desc:'Rolls along the ground all the way.'},{k:'low',short:'Chip',fly:.45,tan:.55,desc:'One low hop over whatever is in front of you, then a roll.'},{k:'high',short:'Lob',fly:.9,tan:1.4,desc:'Flies high over everything, rails included, and stops close to where it lands. Land it off the board and it is a miss.'}];
 /* the ring of ground around a wheel, and what a monster can do to it */
 O.TR=[445,555];
-O.TERR={mire:{name:'Sand',cast:'heaps sand across the course',it:'heaps sand',note:'Marbles crawl through sand traps.'},rubble:{name:'Gravel',cast:'scatters gravel over the course',it:'scatters gravel',note:'Gravel knocks rolling marbles off line.'},
-  rift:{name:'Water',cast:'floods pools across the course',it:'floods the course',note:'A marble that rolls into water is lost.'},gale:{name:'Crosswind',cast:'calls up a crosswind',it:'calls a crosswind',note:'Wind pushes marbles sideways down the course; high shots most of all.'}};
-O.TERR_OF=[['rubble'],['mire','rubble'],['mire'],['rift'],['mire'],['gale','rift'],['mire'],['mire','rubble'],['gale','rubble'],['mire','gale'],['rubble'],['mire'],['gale'],['rubble','rift'],['rubble','gale'],['rift','rubble'],['gale','mire'],['rift'],['rift','gale'],['rift','gale','mire']];      // a marble fits a hole when its radius is at most FIT x the hole's radius
+O.TERR={mire:{name:'Sand',cast:'heaps sand across the course',it:'heaps sand',note:'Balls crawl through sand traps.'},rubble:{name:'Gravel',cast:'scatters gravel over the course',it:'scatters gravel',note:'Gravel knocks rolling balls off line.'},
+  rift:{name:'Water',cast:'floods pools across the course',it:'floods the course',note:'A ball that rolls into water is lost.'},gale:{name:'Crosswind',cast:'calls up a crosswind',it:'calls a crosswind',note:'Wind pushes balls sideways down the course; high shots most of all.'}};
+O.TERR_OF=[['rubble'],['mire','rubble'],['mire'],['rift'],['mire'],['gale','rift'],['mire'],['mire','rubble'],['gale','rubble'],['mire','gale'],['rubble'],['mire'],['gale'],['rubble','rift'],['rubble','gale'],['rift','rubble'],['gale','mire'],['rift'],['rift','gale'],['rift','gale','mire']];      // a ball fits a hole when its radius is at most FIT x the hole's radius
 O.LANES=['#d9a441','#5fb3a1','#b98bd9','#8fb85a'];
 O.TIER=['#5fa596','#c9a04c','#d2483a'];
 O.tier=d=>d<=16?0:d<=30?1:2;
@@ -20,58 +20,58 @@ O.sizeNote=r=>['','Fits every hole.','Fits medium and large holes.','Only fits l
 /* Each class has a pool of abilities. A fighter starts a run knowing the first two and learns the rest from drops. */
 O.START=2;
 O.CLASSES={
- warrior:{name:'Warrior',animal:'Badger',hp:80,period:1.3,col:'#c9d2de',blurb:'Large marbles that hit hard and smash iron lids, but only fit large holes. Takes less damage.',ab:[
-  {id:'iron',name:'Iron Shot',cd:0,desc:'One large marble. Breaks an iron lid and keeps rolling. ×2.3.',m:{r:22,mult:2.3,heavy:1}},
-  {id:'twin',name:'Twin Strike',cd:1,desc:'Two large marbles down the same line, one after the other. ×1.5 each.',shots:2,gap:.5,m:{r:19,mult:1.5,heavy:1}},
+ warrior:{name:'Warrior',animal:'Badger',hp:80,period:1.3,col:'#c9d2de',blurb:'Large balls that hit hard and smash iron lids, but only fit large holes. Takes less damage.',ab:[
+  {id:'iron',name:'Iron Shot',cd:0,desc:'One large ball. Breaks an iron lid and keeps rolling. ×2.3.',m:{r:22,mult:2.3,heavy:1}},
+  {id:'twin',name:'Twin Strike',cd:1,desc:'Two large balls down the same line, one after the other. ×1.5 each.',shots:2,gap:.5,m:{r:19,mult:1.5,heavy:1}},
   {id:'sunder',name:'Sunder',cd:2,desc:'Crushes every post and stone block in its path and ploughs straight through sand. ×1.8.',m:{r:22,mult:1.8,heavy:1,sunder:1}},
-  {id:'rage',name:'Bloodrage',cd:3,desc:'Spend 10 health on one large marble that hits for ×4.5.',cost:10,m:{r:24,mult:4.5,heavy:1}},
-  {id:'cleave',name:'Cleave',cd:2,desc:'One large marble. When it sinks, the nearest other open hole takes 60% of its worth too. ×1.8.',m:{r:22,mult:1.8,heavy:1,cleave:.6}},
+  {id:'rage',name:'Bloodrage',cd:3,desc:'Spend 10 health on one large ball that hits for ×4.5.',cost:10,m:{r:24,mult:4.5,heavy:1}},
+  {id:'cleave',name:'Cleave',cd:2,desc:'One large ball. When it sinks, the nearest other open hole takes 60% of its worth too. ×1.8.',m:{r:22,mult:1.8,heavy:1,cleave:.6}},
   {id:'shatter',name:'Shatter',cd:2,desc:'Smashes every iron lid it touches, all layers at once, without slowing. ×1.5.',m:{r:20,mult:1.5,heavy:1,shatter:1}},
   {id:'bash',name:'Shield Bash',cd:3,instant:1,foe:1,desc:'Stuns the monster. It does not attack this round. No aiming.'},
-  {id:'leech',name:'Bloodletter',cd:2,desc:'One large marble that heals you for half the damage it deals. ×1.9.',m:{r:19,mult:1.9,heavy:1,leech:.5}},
+  {id:'leech',name:'Bloodletter',cd:2,desc:'One large ball that heals you for half the damage it deals. ×1.9.',m:{r:19,mult:1.9,heavy:1,leech:.5}},
   {id:'ricochet',name:'Ricochet',cd:1,desc:'A medium iron ball that hits 40% harder for every post or rail it strikes before it sinks. ×1.4.',m:{r:17,mult:1.4,heavy:1,ric:.4}},
   {id:'quake',name:'Earthshaker',cd:3,desc:'Where it first strikes a post, every post and sand trap around it is flattened, and it rolls on. ×2.',m:{r:22,mult:2,heavy:1,quake:160}},
-  {id:'ram',name:'Battering Ram',cd:0,desc:'One large marble that smashes through the windmill, the boulder and stone blocks and keeps rolling. ×1.8.',m:{r:22,mult:1.8,heavy:1,ram:1}}]},
- bard:{name:'Bard',animal:'Toad',hp:55,period:1.5,col:'#f0cc5c',blurb:'Heals and strengthens the party, lifts lids and clears the course. Medium marbles.',ab:[
-  {id:'note',name:'Sour Note',cd:0,desc:'One medium marble. ×1.',m:{r:13,mult:1}},
+  {id:'ram',name:'Battering Ram',cd:0,desc:'One large ball that smashes through the windmill, the boulder and stone blocks and keeps rolling. ×1.8.',m:{r:22,mult:1.8,heavy:1,ram:1}}]},
+ bard:{name:'Bard',animal:'Toad',hp:55,period:1.5,col:'#f0cc5c',blurb:'Heals and strengthens the party, lifts lids and clears the course. Medium balls.',ab:[
+  {id:'note',name:'Sour Note',cd:0,desc:'One medium ball. ×1.',m:{r:13,mult:1}},
   {id:'mend',name:'Mending Ballad',cd:2,instant:1,desc:'Heals every ally and raises the fallen. No aiming.'},
   {id:'hymn',name:'Unbinding Hymn',cd:1,desc:'Lifts every lid and clears every post and sand trap it touches, then bursts where it stops and clears around it. No damage.',m:{r:15,mult:0,hymn:1}},
   {id:'anthem',name:'War Anthem',cd:3,instant:1,desc:"Every ally's next attack hits 50% harder. No aiming."},
   {id:'lull',name:'Lullaby',cd:3,instant:1,desc:'The monster hits half as hard this round. No aiming.'},
-  {id:'rally',name:'Rallying Cry',cd:3,instant:1,desc:"Every other fighter who has not finished their turn gets one more basic marble. No aiming."},
+  {id:'rally',name:'Rallying Cry',cd:3,instant:1,desc:"Every other fighter who has not finished their turn gets one more basic ball. No aiming."},
   {id:'discord',name:'Discord',cd:2,desc:'The monster it wounds takes 25% more damage from everyone for the rest of the fight. ×0.9.',m:{r:13,mult:.9,vuln:1}},
-  {id:'echo',name:'Echo',cd:1,desc:'Two medium marbles, side by side. ×0.85 each.',fan:[-6,6],m:{r:13,mult:.85}},
+  {id:'echo',name:'Echo',cd:1,desc:'Two medium balls, side by side. ×0.85 each.',fan:[-6,6],m:{r:13,mult:.85}},
   {id:'dirge',name:'Dirge',cd:2,desc:'The monster it wounds burns for three rounds. ×0.9.',m:{r:13,mult:.9,burn:.5}},
   {id:'crescendo',name:'Crescendo',cd:3,instant:1,desc:'Every fighter who has already attacked this round spins and attacks again. No aiming.'},
   {id:'grounds',name:'Groundskeeper’s Song',cd:0,instant:1,desc:'Drains every water hazard and clears all sand and gravel from the course. No aiming.'}]},
- mage:{name:'Mage',animal:'Owl',hp:52,period:1.5,col:'#a98bf0',blurb:'Looses several small marbles at once. Fragile.',ab:[
-  {id:'volley',name:'Arcane Volley',cd:0,desc:'A fan of small marbles. ×0.6 each.',fan:[-9,0,9],m:{r:10,mult:.6}},
-  {id:'stream',name:'Spark Stream',cd:1,desc:'Five tiny marbles down one line. ×0.4 each.',shots:5,gap:.18,jit:2.5,m:{r:8,mult:.4}},
-  {id:'orb',name:'Gravity Orb',cd:2,desc:'One medium marble that curves toward the nearest open hole it fits. ×1.1.',m:{r:14,mult:1.1,homing:1}},
-  {id:'stasis',name:'Stasis',cd:3,desc:'Stops the windmill and the boulder, and the monster cannot reshape the course this round. Then looses two small marbles. ×0.7 each.',fan:[-5,5],freeze:1,m:{r:10,mult:.7}},
-  {id:'chain',name:'Chain Lightning',cd:2,desc:'One small marble. When it sinks, lightning arcs to every open hole within 1.5 m for 30% of their worth. ×1.',m:{r:10,mult:1,arc:.3}},
-  {id:'meteor',name:'Meteor',cd:3,desc:'One large marble that breaks lids and hits for ×2.4.',m:{r:20,mult:2.4,heavy:1}},
-  {id:'prism',name:'Prism',cd:2,desc:'Splits into three small marbles the first time it strikes a post, a rail or a lid. ×0.8 each.',m:{r:12,mult:.8,split:1}},
-  {id:'frost',name:'Frost Bolt',cd:1,desc:'A small marble that holes catch even at twice the usual speed. ×0.9.',m:{r:10,mult:.9,capx:2.2}},
-  {id:'wildfire',name:'Wildfire',cd:2,desc:'Three small marbles. Each one that sinks sets the monster burning. ×0.5 each.',fan:[-8,0,8],m:{r:10,mult:.5,burn:.6}},
-  {id:'singular',name:'Singularity',cd:3,desc:'A medium marble that, if it comes to rest near a hole it fits, is drawn down into it. ×0.9.',m:{r:14,mult:.9,settle:120}},
-  {id:'skim',name:'Skimming Stone',cd:0,desc:'A small marble that skips across water instead of sinking, 40% stronger for every skip. ×1.',m:{r:10,mult:1,skim:1}}]},
- archer:{name:'Archer',animal:'Hare',hp:55,period:2.5,col:'#8fd88a',blurb:'Small, accurate marbles for the tightest holes. A long, steady draw.',ab:[
-  {id:'quick',name:'Quick Shot',cd:0,desc:'One small, true marble. ×1.',m:{r:9,mult:1}},
-  {id:'aimed',name:'Aimed Shot',cd:1,sight:1,desc:'Shows on the big screen where the marble will stop, while you pull. ×1.2.',m:{r:9,mult:1.2}},
+ mage:{name:'Mage',animal:'Owl',hp:52,period:1.5,col:'#a98bf0',blurb:'Looses several small balls at once. Fragile.',ab:[
+  {id:'volley',name:'Arcane Volley',cd:0,desc:'A fan of small balls. ×0.6 each.',fan:[-9,0,9],m:{r:10,mult:.6}},
+  {id:'stream',name:'Spark Stream',cd:1,desc:'Five tiny balls down one line. ×0.4 each.',shots:5,gap:.18,jit:2.5,m:{r:8,mult:.4}},
+  {id:'orb',name:'Gravity Orb',cd:2,desc:'One medium ball that curves toward the nearest open hole it fits. ×1.1.',m:{r:14,mult:1.1,homing:1}},
+  {id:'stasis',name:'Stasis',cd:3,desc:'Stops the windmill and the boulder, and the monster cannot reshape the course this round. Then looses two small balls. ×0.7 each.',fan:[-5,5],freeze:1,m:{r:10,mult:.7}},
+  {id:'chain',name:'Chain Lightning',cd:2,desc:'One small ball. When it sinks, lightning arcs to every open hole within 1.5 m for 30% of their worth. ×1.',m:{r:10,mult:1,arc:.3}},
+  {id:'meteor',name:'Meteor',cd:3,desc:'One large ball that breaks lids and hits for ×2.4.',m:{r:20,mult:2.4,heavy:1}},
+  {id:'prism',name:'Prism',cd:2,desc:'Splits into three small balls the first time it strikes a post, a rail or a lid. ×0.8 each.',m:{r:12,mult:.8,split:1}},
+  {id:'frost',name:'Frost Bolt',cd:1,desc:'A small ball that holes catch even at twice the usual speed. ×0.9.',m:{r:10,mult:.9,capx:2.2}},
+  {id:'wildfire',name:'Wildfire',cd:2,desc:'Three small balls. Each one that sinks sets the monster burning. ×0.5 each.',fan:[-8,0,8],m:{r:10,mult:.5,burn:.6}},
+  {id:'singular',name:'Singularity',cd:3,desc:'A medium ball that, if it comes to rest near a hole it fits, is drawn down into it. ×0.9.',m:{r:14,mult:.9,settle:120}},
+  {id:'skim',name:'Skimming Stone',cd:0,desc:'A small ball that skips across water instead of sinking, 40% stronger for every skip. ×1.',m:{r:10,mult:1,skim:1}}]},
+ archer:{name:'Archer',animal:'Hare',hp:55,period:2.5,col:'#8fd88a',blurb:'Small, accurate balls for the tightest holes. A long, steady draw.',ab:[
+  {id:'quick',name:'Quick Shot',cd:0,desc:'One small, true ball. ×1.',m:{r:9,mult:1}},
+  {id:'aimed',name:'Aimed Shot',cd:1,sight:1,desc:'Shows on the big screen where the ball will stop, while you pull. ×1.2.',m:{r:9,mult:1.2}},
   {id:'mark',name:"Hunter's Mark",cd:2,desc:'The hole it sinks into takes 50% more from everyone for the rest of the fight. ×0.8.',m:{r:10,mult:.8,mark:1}},
   {id:'bullseye',name:'Bullseye',cd:3,desc:'Drops into the first open hole it fits that it crosses, at any speed. ×1.3.',slow:1.3,m:{r:10,mult:1.3,sure:1}},
   {id:'pierce',name:'Piercing Arrow',cd:1,desc:'Flies straight through posts and across sand. ×1.1.',m:{r:8,mult:1.1,pierce:1}},
-  {id:'rain',name:'Arrow Rain',cd:2,desc:'A wide fan of five tiny marbles. ×0.45 each.',fan:[-14,-7,0,7,14],m:{r:7,mult:.45}},
+  {id:'rain',name:'Arrow Rain',cd:2,desc:'A wide fan of five tiny balls. ×0.45 each.',fan:[-14,-7,0,7,14],m:{r:7,mult:.45}},
   {id:'hamstring',name:'Hamstring',cd:2,desc:'The monster it wounds hits 40% softer for the rest of the fight. ×0.8.',m:{r:9,mult:.8,weak:1}},
-  {id:'deadeye',name:'Deadeye',cd:3,desc:'A tiny marble that hits for ×2.2. The draw is short and twitchy.',slow:.7,m:{r:7,mult:2.2}},
+  {id:'deadeye',name:'Deadeye',cd:3,desc:'A tiny ball that hits for ×2.2. The draw is short and twitchy.',slow:.7,m:{r:7,mult:2.2}},
   {id:'seeker',name:'Seeker',cd:2,desc:'After it first strikes a post or rail it bends toward the nearest open hole. ×1.',m:{r:9,mult:1,seek:1}},
   {id:'splinter',name:'Splinter',cd:2,desc:'When it sinks, splinters strike two other open holes for 40% of their worth. ×0.9.',m:{r:8,mult:.9,splash:.4}},
   {id:'flag',name:'Flagshot',cd:0,instant:1,desc:'Shoots the lid off the best covered hole on the course. No aiming.'}]}
 };
 
 /* Board layouts. Local coordinates: x right, y toward the players, origin at the wheel centre.
-   Hole radius matters: small (about 17) only takes small marbles, medium (about 24) takes small and medium, large (28 and up) takes anything. */
+   Hole radius matters: small (about 17) only takes small balls, medium (about 24) takes small and medium, large (28 and up) takes anything. */
 const H=(x,y,rad,dmg,armor)=>({x,y,rad,dmg,tier:O.tier(dmg),armor:armor||0,armor0:armor||0});
 const B=(x,y,rad,kind)=>({x,y,rad,kind,on:true});
 const D=(x,y,rad)=>({x,y,rad,on:true});
@@ -117,8 +117,8 @@ O.BOSSES=O.MONSTERS;
 
 O.UPGRADES={
  vigor:{name:'Vigor',desc:'+15 maximum health.',many:1},
- might:{name:'Might',desc:'All your marbles hit 15% harder.',many:1},
- lode:{name:'Deep Dish',desc:'The dish round every hole pulls your marbles 50% harder, and holes catch them a little faster.'},
+ might:{name:'Might',desc:'All your balls hit 15% harder.',many:1},
+ lode:{name:'Deep Dish',desc:'The dish round every hole pulls your balls 50% harder, and holes catch them a little faster.'},
  haste:{name:'Loaded Reels',desc:'Your own symbol turns up far more often on your reels.'},
  sl_wild:{name:'Marrow Star',desc:'Wild stars are more than twice as common on your reels. A star stands for any symbol.'},
  sl_line:{name:'Crooked Lines',desc:'Two more paylines cross your reels: seven instead of five.'},
@@ -129,42 +129,42 @@ O.UPGRADES={
  sl_grave:{name:'Grave Reels',desc:'Skulls and crowns are twice as common on your reels.'},
  thorns:{name:'Thorned Mail',desc:'The monster takes 4 damage whenever it strikes you.'},
  regen:{name:'Troll Blood',desc:'Heal 4 at the start of every round.'},
- lucky:{name:"Gambler's Coin",desc:'Each marble that sinks has a 15% chance to deal double damage.'},
+ lucky:{name:"Gambler's Coin",desc:'Each ball that sinks has a 15% chance to deal double damage.'},
  slayer:{name:'Giant Slayer',desc:'+25% damage to minibosses and bosses.'},
  culler:{name:'Culler',desc:'+30% damage to lesser monsters.'},
  steady:{name:'Steady Hands',desc:'Your draw is 25% longer, so power is finer to set.'},
  grit:{name:'Grit',desc:'You take 10% less damage.',many:1},
  w_hide:{cls:'warrior',name:'Thick Hide',desc:'You take a further 20% less damage.'},
- w_file:{cls:'warrior',name:'Filed Iron',desc:'Your marbles count one size smaller, so they fit medium holes.'},
+ w_file:{cls:'warrior',name:'Filed Iron',desc:'Your balls count one size smaller, so they fit medium holes.'},
  w_exec:{cls:'warrior',name:'Executioner',desc:'+40% damage to monsters below half health.'},
  w_bulk:{cls:'warrior',name:'Bulwark',desc:'+25 maximum health.'},
  w_guard:{cls:'warrior',name:'Guardian',desc:'The monster aims its single blows at you far more often than at your allies.'},
  b_hymn:{ab:'hymn',cls:'bard',name:'Louder Hymn',desc:'Unbinding Hymn bursts across a much wider area.'},
  b_ballad:{ab:'mend',cls:'bard',name:'Sweeter Ballad',desc:'Mending Ballad heals 28 instead of 18.'},
- b_chorus:{ab:'note',cls:'bard',name:'Chorus',desc:'Sour Note looses two marbles side by side.'},
+ b_chorus:{ab:'note',cls:'bard',name:'Chorus',desc:'Sour Note looses two balls side by side.'},
  b_reson:{ab:'hymn',cls:'bard',name:'Resonance',desc:'Unbinding Hymn deals 5 damage for every obstacle and armor plate it removes.'},
  b_encore:{ab:'anthem',cls:'bard',name:'Encore',desc:'War Anthem also heals every ally for 8.'},
- m_fourth:{ab:'volley',cls:'mage',name:'Fourth Missile',desc:'Arcane Volley looses four marbles.'},
+ m_fourth:{ab:'volley',cls:'mage',name:'Fourth Missile',desc:'Arcane Volley looses four balls.'},
  m_orb:{ab:'orb',cls:'mage',name:'Attuned Orb',desc:'Gravity Orb pulls harder and hits 40% harder.'},
- m_focus:{cls:'mage',name:'Focus',desc:'Your small marbles hit 25% harder.'},
+ m_focus:{cls:'mage',name:'Focus',desc:'Your small balls hit 25% harder.'},
  m_barrier:{cls:'mage',name:'Barrier',desc:'The first blow that lands on you in each fight does nothing.'},
- m_surge:{ab:'stream',cls:'mage',name:'Surge',desc:'Spark Stream looses seven marbles.'},
+ m_surge:{ab:'stream',cls:'mage',name:'Surge',desc:'Spark Stream looses seven balls.'},
  a_eye:{cls:'archer',name:'Keen Eye',desc:'Every shot marks your power bar at each hole in your line and shows where it will stop.'},
  a_draw:{ab:'quick',cls:'archer',name:'Heavy Draw',desc:'Quick Shot hits 40% harder.'},
- a_crit:{cls:'archer',name:'Vital Aim',desc:'Each marble that sinks has a 25% chance to deal double damage.'},
+ a_crit:{cls:'archer',name:'Vital Aim',desc:'Each ball that sinks has a 25% chance to deal double damage.'},
  a_twin:{ab:'quick',cls:'archer',name:'Second Arrow',desc:'Quick Shot looses a second arrow down the same line for half damage.'},
  a_hunter:{ab:'mark',cls:'archer',name:'Trophy Hunter',desc:"Hunter's Mark adds 80% instead of 50%."},
- rebound:{name:'Rebound',desc:'Every bounce before a marble sinks adds a further 15% damage.'},
+ rebound:{name:'Rebound',desc:'Every bounce before a ball sinks adds a further 15% damage.'},
  pyre:{name:'Pyre',desc:'Monsters you set burning burn twice as hard.'},
  keen:{name:'Keen Edge',desc:'+50% damage when you sink an exposed weak point.'},
  ward:{name:'Warding Sigil',desc:'The first blow that lands on you in each fight is halved.'},
- w_brute:{cls:'warrior',name:'Brute Arc',desc:'Your marbles that drop straight in from a chip or lob hit 60% harder instead of 25%.'},
+ w_brute:{cls:'warrior',name:'Brute Arc',desc:'Your balls that drop straight in from a chip or lob hit 60% harder instead of 25%.'},
  b_kindle:{ab:'note',cls:'bard',name:'Kindling',desc:'Sour Note sets the monster burning.'},
  m_ember:{ab:'stream',cls:'mage',name:'Ember Sparks',desc:'Spark Stream sets the monster burning.'},
  a_quiver:{ab:'rain',cls:'archer',name:'Deep Quiver',desc:'Arrow Rain looses seven arrows.'},
- wide:{name:'Wide Dish',desc:'The dish round every hole reaches 30% further for your marbles.'},
- ironput:{name:'Iron Putter',desc:'Sand and gravel no longer slow or turn your marbles.'},
- backspin:{name:'Backspin',desc:'Your marbles stop 40% sooner once they slow down, so they settle near where you aim.'}
+ wide:{name:'Wide Dish',desc:'The dish round every hole reaches 30% further for your balls.'},
+ ironput:{name:'Iron Putter',desc:'Sand and gravel no longer slow or turn your balls.'},
+ backspin:{name:'Backspin',desc:'Your balls stop 40% sooner once they slow down, so they settle near where you aim.'}
 };
 /* Items sit in one bag shared by the party. Using one on your turn is free and does not end the turn. */
 O.BAG=6;
@@ -175,8 +175,8 @@ O.ITEMS={
  smoke:{name:'Smoke Bomb',desc:'Every monster hits half as hard this round.'},
  bomb:{name:'Fire Flask',desc:'Burn the monster.',foe:1},
  oil:{name:'Weapon Oil',desc:'Your attack this round hits 75% harder.'},
- chalk:{name:'Grinding Chalk',desc:'Your marbles this round count one size smaller, so they fit tighter holes.'},
- magnet:{name:'Lodestone Dust',desc:'Your marbles this round drop into the first open hole they fit that they cross, at any speed.'},
+ chalk:{name:'Grinding Chalk',desc:'Your balls this round count one size smaller, so they fit tighter holes.'},
+ magnet:{name:'Lodestone Dust',desc:'Your balls this round drop into the first open hole they fit that they cross, at any speed.'},
  pick:{name:'Sapper\u2019s Pick',desc:'Lift every iron lid on the course.',wheel:1},
  glass:{name:'Hourglass',desc:'Spin your reels again.'},
  whet:{name:'Whetstone',desc:'Your attacks hit 30% harder for the rest of this fight.'},
@@ -187,7 +187,7 @@ O.ITEMS={
 };
 /* a drop that teaches an ability is written 'ab:<index in the class pool>' */
 O.upInfo=(u,cls)=>{if(typeof u==='string'&&u.startsWith('it:')){const it=O.ITEMS[u.slice(3)];return it?{name:it.name,desc:'Item for the party bag. '+it.desc}:null}
- if(typeof u==='string'&&u.startsWith('ab:')){const a=O.CLASSES[cls]&&O.CLASSES[cls].ab[+u.slice(3)];return a?{name:'Learn '+a.name,desc:a.desc+(a.m?' '+O.sizeName(a.m.r)+' marble.':'')}:null}return O.UPGRADES[u]||null};
+ if(typeof u==='string'&&u.startsWith('ab:')){const a=O.CLASSES[cls]&&O.CLASSES[cls].ab[+u.slice(3)];return a?{name:'Learn '+a.name,desc:a.desc+(a.m?' '+O.sizeName(a.m.r)+' ball.':'')}:null}return O.UPGRADES[u]||null};
 O.RELICS={
  salt:{name:'Grave Salt',desc:'The monster can no longer put lids back on its holes.'},
  bell:{name:'Bell of Mercy',desc:'The party heals 5 at the start of every round.'},
@@ -195,13 +195,13 @@ O.RELICS={
  axle:{name:'Steady Ground',desc:'The monster fouls the course half as often.'},
  satchel:{name:'Deep Satchel',desc:'Every fight drops an extra item into the party bag.'},
  charm:{name:'Warding Charm',desc:'Traps hurt half as much.'},
- anvil:{name:'Breaker’s Anvil',desc:'Any marble breaks every lid on a hole in one blow.'},
- ember:{name:'Ember Heart',desc:'Every marble that sinks sets its monster burning.'},
- feather:{name:'Raven Feather',desc:'Marbles that drop straight in from a chip or lob hit 50% harder instead of 25%.'},
+ anvil:{name:'Breaker’s Anvil',desc:'Any ball breaks every lid on a hole in one blow.'},
+ ember:{name:'Ember Heart',desc:'Every ball that sinks sets its monster burning.'},
+ feather:{name:'Raven Feather',desc:'Balls that drop straight in from a chip or lob hit 50% harder instead of 25%.'},
  idol:{name:'Bone Idol',desc:'The first fighter to fall in each fight rises at once with a third of their health.'},
  purse:{name:'Miser’s Purse',desc:'The dungeon pays a quarter more gold.'}
 };
-/* Marble skins: how a fighter's marbles look on the big screen. Chosen on the phone; all but the first two come from loot boxes. */
+/* Ball skins: how a fighter's balls look on the big screen. Chosen on the phone; all but the first two come from loot boxes. */
 O.SKINS={
  plain:{name:'Class colours',desc:'The colour of your calling.'},
  bone:{name:'Old Bone',col:'#e6dcc2',glow:'#b8a888',desc:'Polished knucklebone.'},
@@ -257,7 +257,7 @@ for(const id in BEST.beasts){const b=BEST.beasts[id],odd=O.hash(id)%2;
   const st=b.rank==='lesser'?{hp:34,hit:6,dur:1.5}:b.rank==='mini'?{hp:88,aoe:3.5,single:10,dur:2.0,special:b.shield?{shieldEvery:3}:odd?{armorEvery:2}:{drainEvery:4}}:{hp:135,aoe:5,single:13,dur:2.0,special:{armorEvery:2,drainEvery:3}};
   O.MONSTERS[id]=Object.assign({name:b.name,title:'',rank:b.rank,h:b.h,theme:b.theme,plan:b.plan,gen:1,layout:()=>genLayout(id,b)},st)}
 /* ----- what every wheel carries besides holes and studs. Worked out from the monster's name alone, so the host and every phone agree. -----
-   kickers: a few studs that fire a marble away instead of only turning it.
+   kickers: a few studs that fire a ball away instead of only turning it.
    locks and core: if a wheel has an armoured hole, its two cheapest open holes are locks; sink both and the core stands open until the end of the next round.
    at most one moving part: a kicker circling on a ring, or an arm sweeping the plate. */
 /* ----- the reels. Four reels of three. Seven symbols: bone (b), blade (l), flame (f), eye (e), skull (s), crown (c) and the wild star (w).
@@ -267,7 +267,7 @@ for(const id in BEST.beasts){const b=BEST.beasts[id],odd=O.hash(id)%2;
 O.SYMS={b:'Bone',l:'Blade',f:'Flame',e:'Eye',s:'Skull',c:'Crown',w:'Star'};
 O.SIG={warrior:['l','b','f'],bard:['f','b','l'],mage:['f','l','b'],archer:['b','l','f']};        // each fighter's own symbol, second and third
 O.LINES=[[1,1,1,1],[0,0,0,0],[2,2,2,2],[0,1,2,1],[2,1,0,1],[0,0,1,2],[2,2,1,0]];              // the last two only with Crooked Lines
-O.LINEPAY={b:'+15% damage',l:'+30% damage',f:'the attack burns',e:'the marble drops into the first open hole it crosses',s:'the monster’s strike is blunted',c:'the party is mended and finds gold'};
+O.LINEPAY={b:'+15% damage',l:'+30% damage',f:'the attack burns',e:'the ball drops into the first open hole it crosses',s:'the monster’s strike is blunted',c:'the party is mended and finds gold'};
 O.recipes=cls=>{const[S,T,U]=O.SIG[cls]||O.SIG.warrior,R=[[S,S,S],[T,T,T],[U,U,U],['e','e','e'],[S,T,S],[S,S,S,S],['s','s','s'],['e','s','e'],['c','c','c'],[T,S,T]];return O.CLASSES[cls].ab.map((a,i)=>i?R[Math.min(R.length-1,i-1)]:null)};
 O.slotRead=(grid,owned,md,cls)=>{md=md||{};const g=String(grid||''),out={ok:[],bonus:{},mult:1,fx:{},pays:[],hit:{},jack:0},nl=md.lines?7:5;if(g.length<12){if(owned.length)out.ok.push(owned[0]);return out}
   const seqs=[];for(let li=0;li<nl;li++){const L=O.LINES[li],cells=[0,1,2,3].map(c=>c*3+L[c]);seqs.push({li,cells})}        // lines pay from the first reel, left to right
@@ -279,7 +279,7 @@ O.slotRead=(grid,owned,md,cls)=>{md=md||{};const g=String(grid||''),out={ok:[],b
   if(out.jack){out.mult+=.5;out.fx.jack=1;if(md.jack)out.fx.again=1}
   const rec=O.recipes(cls);for(const i of owned){const pat=rec[i];if(!pat){out.ok.push(i);out.bonus[i]=out.mult;continue}let ok=false;for(const q of seqs){for(let st=0;st<1;st++)if(fit(q,pat,st)){ok=true;for(let k=0;k<pat.length;k++)out.hit[q.cells[st+k]]=1}}if(ok){out.ok.push(i);out.bonus[i]=out.mult}}
   return out};
-O.RIM=340;O.RIMH=20;O.LIP=24;O.FRW=125;                 // the plate inside the rim is slicker than the ground outside it, so a marble that gets in keeps rolling
+O.RIM=340;O.RIMH=20;O.LIP=24;O.FRW=125;                 // the plate inside the rim is slicker than the ground outside it, so a ball that gets in keeps rolling
 O.shutAt=(h,ck)=>!!h.shut&&((ck+h.shut.ph)%h.shut.per)>h.shut.per*h.shut.duty;                 // true while the plate is over the hole
 O.orbPos=(mv,ck)=>{const a=mv.ph+mv.w*ck;return[mv.r*Math.cos(a),mv.r*Math.sin(a)]};        // wheel-local
 O.armAng=(mv,ck)=>mv.ph+mv.w*ck;
@@ -342,7 +342,7 @@ for(const k in O.RELICS)if(!BASE_REL.includes(k))O.LOCKS.push('re:'+k);
 for(const k in O.SKINS)if(k!=='plain'&&k!=='bone')O.LOCKS.push('sk:'+k);
 O.lockInfo=id=>{const p=String(id).split(':');
   if(p[0]==='ab'){const c=O.CLASSES[p[1]],a=c&&c.ab[+p[2]];return a?{kind:c.name+' ability',name:a.name,desc:a.desc}:null}
-  if(p[0]==='sk'){const k=O.SKINS[p[1]];return k?{kind:'marble skin',name:k.name,desc:k.desc+' Choose it on your phone, under Character.'}:null}
+  if(p[0]==='sk'){const k=O.SKINS[p[1]];return k?{kind:'ball skin',name:k.name,desc:k.desc+' Choose it on your phone, under Character.'}:null}
   const t={up:[O.UPGRADES,'Upgrade'],it:[O.ITEMS,'Item'],re:[O.RELICS,'Relic']}[p[0]],o=t&&t[0][p[1]];return o?{kind:(o.cls?O.CLASSES[o.cls].name+' ':'')+t[1].toLowerCase(),name:o.name,desc:o.desc}:null};
 O.boxCost=opened=>80+6*opened;
 })();

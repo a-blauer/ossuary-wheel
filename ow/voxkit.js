@@ -1,4 +1,4 @@
-/* Ossuary Wheel: voxel monsters built from body-plan kits. Every monster in the bestiary gets a model from its plan, colour and name;
+/* GambaGolf: voxel monsters built from body-plan kits. Every monster in the bestiary gets a model from its plan, colour and name;
    hand-built models in V.MON take precedence. Front is +z. Part names are shared across plans so one set of animations drives them all:
    body, head, jaw, arm_L/arm_R, leg_*, tail*, wing_L/wing_R, neck*. */
 (()=>{

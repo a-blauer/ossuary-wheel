@@ -1,4 +1,4 @@
-/* Ossuary Wheel: networking, phone controller, host panels and boot. */
+/* GambaGolf: networking, phone controller, host panels and boot. */
 (()=>{
 const O=window.OW,G=O.G,{F,CLASSES,MONSTERS,UPGRADES,RELICS,ITEMS,MAP,LANES}=O,{DEG,clamp,num}=O.util;
 const $=id=>document.getElementById(id);
@@ -103,7 +103,7 @@ function chooseClass(k){
   pushCtrl();renderCtrl()}
 /* a short card over the wheel says what the thing you just tapped does, then gets out of the way */
 function abTip(i){const v=getView(),me=v&&!v.err&&v.me,a=CLASSES[C.cls].ab[i],m=me?O.mods({cls:C.cls,lv:me.lv,ups:me.up}):null,rest=O.cdBase(a,m);
-  C.tip={ic:'ab:'+i,t:a.name,m:(a.m?O.sizeName(a.m.r)+' marble · ':'')+(O.recipes(C.cls)[i]?'needs '+O.recipes(C.cls)[i].map(c=>O.SYMS[c]).join(' · ')+' on a line':'always on the reels'),s:a.desc+(a.m&&m?' '+O.sizeNote(a.m.r*m.size):''),until:performance.now()+5200}}
+  C.tip={ic:'ab:'+i,t:a.name,m:(a.m?O.sizeName(a.m.r)+' ball · ':'')+(O.recipes(C.cls)[i]?'needs '+O.recipes(C.cls)[i].map(c=>O.SYMS[c]).join(' · ')+' on a line':'always on the reels'),s:a.desc+(a.m&&m?' '+O.sizeNote(a.m.r*m.size):''),until:performance.now()+5200}}
 O.chooseClass=chooseClass;
 function setNeedle(){const a=C.aim*DEG,x=150+Math.cos(a)*128,y=162-Math.sin(a)*128;$('needle').setAttribute('x2',x);$('needle').setAttribute('y2',y);$('knob').setAttribute('cx',x);$('knob').setAttribute('cy',y);$('dial').setAttribute('aria-valuenow',Math.round(C.aim))}
 const rdKey=v=>v.nd+':'+v.mo.length+':'+v.rd;
@@ -131,10 +131,10 @@ function sheetInto(box,cls,me,rel,mine){
   const top=el('div','shTop');top.append(headCanvas(cls,84,me?LANES[me.sl]:null));const tt=el('div');tt.append(el('h3',null,`${cl.animal} ${cl.name}`),el('p',null,cl.blurb));top.appendChild(tt);box.appendChild(top);
   const st=el('div','stats');const S=(k,v)=>{const d=el('div');d.append(el('small',null,k),el('b',null,v));st.appendChild(d)};
   S('Level',me?me.lv:1);S('Health',me?`${me.hp} / ${me.mhp}`:cl.hp);S('Damage',m?'+'+Math.round((m.dmg-1)*100)+'%':'+0%');S('Harm taken',m?Math.round(m.take*100)+'%':(cls==='warrior'?'70%':'100%'));box.appendChild(st);
-  if(mine){box.appendChild(el('h4',null,'Your marbles'));const w=el('div','skins');for(const k of['plain','bone',...(mine.sk||[])]){const b=el('button'),K=O.SKINS[k];b.appendChild(O.ico('sk:'+k,cls));b.setAttribute('aria-pressed',(C.skin||'plain')===k);b.setAttribute('aria-label',K.name);b.title=K.name;
+  if(mine){box.appendChild(el('h4',null,'Your balls'));const w=el('div','skins');for(const k of['plain','bone',...(mine.sk||[])]){const b=el('button'),K=O.SKINS[k];b.appendChild(O.ico('sk:'+k,cls));b.setAttribute('aria-pressed',(C.skin||'plain')===k);b.setAttribute('aria-label',K.name);b.title=K.name;
       b.onclick=()=>{C.skin=k==='plain'?'':k;LS.set('ow_skin',C.skin);C.key='';pushCtrl();renderCtrl()};w.appendChild(b)}
     box.append(w,el('p','none',(O.SKINS[C.skin||'plain']||O.SKINS.plain).name+'. '+(mine.sk&&mine.sk.length<Object.keys(O.SKINS).length-2?'More skins come out of loot boxes.':'')))}
-  box.appendChild(el('h4',null,'Abilities'));const own=me&&me.ow?me.ow:[0,1];cl.ab.forEach((a,i)=>{if(!own.includes(i))return;const rest=O.cdBase(a,m);box.appendChild(row('ab:'+i,'row',el('b',null,a.name),el('small',null,(a.m?O.sizeName(a.m.r)+' marble · ':'')+(rest?`rests ${rest} round${rest===1?'':'s'}`:'always ready')),el('p',null,a.desc)))});
+  box.appendChild(el('h4',null,'Abilities'));const own=me&&me.ow?me.ow:[0,1];cl.ab.forEach((a,i)=>{if(!own.includes(i))return;const rest=O.cdBase(a,m);box.appendChild(row('ab:'+i,'row',el('b',null,a.name),el('small',null,(a.m?O.sizeName(a.m.r)+' ball · ':'')+(rest?`rests ${rest} round${rest===1?'':'s'}`:'always ready')),el('p',null,a.desc)))});
   if(own.length<cl.ab.length){box.appendChild(el('h4',null,'Not yet learned'));cl.ab.forEach((a,i)=>{if(own.includes(i))return;box.appendChild(row('ab:'+i,'row locked',el('b',null,a.name),el('small',null,'found in drops'),el('p',null,a.desc)))})}
   box.appendChild(el('h4',null,'Upgrades'));if(me&&me.up.length)me.up.forEach(u=>box.appendChild(row(u,'row',el('b',null,UPGRADES[u].name),el('p',null,UPGRADES[u].desc))));else box.appendChild(el('p','none','None yet. Every fight drops something.'));
   if(me&&me.bag){box.appendChild(el('h4',null,'Party bag'));if(me.bag.length)me.bag.forEach(r=>box.appendChild(row('it:'+r,'row',el('b',null,ITEMS[r].name),el('p',null,ITEMS[r].desc))));else box.appendChild(el('p','none','Empty. An item is free to use before you attack.'))}
@@ -171,12 +171,12 @@ function renderCtrl(){
   else if(v.ph==='lost')st='The party has fallen.';
   else if(me.hp<=0)st="You are down. A Bard's Mending Ballad can raise you.";
   else if(v.ph==='boss')st='The monsters strike back.';
-  else if(me.f||pend){const known=me.ls&&me.ls[0]===C.lsSeen&&C.lsRd===rdKey(v),r=known?(me.ls[1]>0?`Your attack sank ${me.ls[2]} marble${me.ls[2]===1?'':'s'} for ${me.ls[1]} damage. `:'Your attack missed. '):'';
+  else if(me.f||pend){const known=me.ls&&me.ls[0]===C.lsSeen&&C.lsRd===rdKey(v),r=known?(me.ls[1]>0?`Your attack sank ${me.ls[2]} ball${me.ls[2]===1?'':'s'} for ${me.ls[1]} damage. `:'Your attack missed. '):'';
     st=v.actMe?'Your attack is under way. Watch the big screen.':known?r+(v.left>0?`Waiting for ${v.left===1?'one more fighter':v.left+' more fighters'}.`:v.cn?'Watch the big screen.':''):'Loosed. Your attack plays out on the big screen in its turn.'}
     else if(v.sh&&v.sh!==v.myId&&!me.f){const o=(v.pa||[]).find(q=>q.id===v.sh);st=`Wait for your turn: ${o?'the '+CLASSES[o.c].animal:'another fighter'} is shooting. Watch the big screen.`}
     else if(ab.instant)st=ab.foe&&!mon?'Tap a monster, then Cast.':'No aiming needed. Tap Cast.'+(me.sw===C.ab?` Or pick your ${cl.ab[me.ow[0]||0].name} to attack instead.`:'');
-    else if(me.sw>=0&&C.ab===(me.ow[0]||0)&&!me.f&&!pend&&!C.ch&&!C.armed)st=`Your ${cl.ab[me.sw].name} or your basic marble: this one uses up ${cl.ab[me.sw].name} instead. Drag back on the pad to shoot.`;
-  else st=(v.pr?'Practice: every shot is free, and while you pull back a ring on the big screen shows where the marble will stop. ':'')+(me.ex?'You have a second attack this round. ':'')+(me.bf?'War Anthem is on you: this attack hits 50% harder. ':'')+(C.ch?'Steer sideways. Let go to shoot.':v.cn?`${other.replace(/^t/,'T')} is attacking on the big screen. Line up your shot meanwhile.`:'Drag back on the pad. Your aim shows on the big screen.')+(v.tm?` ${v.tm} seconds left.`:'');
+    else if(me.sw>=0&&C.ab===(me.ow[0]||0)&&!me.f&&!pend&&!C.ch&&!C.armed)st=`Your ${cl.ab[me.sw].name} or your basic ball: this one uses up ${cl.ab[me.sw].name} instead. Drag back on the pad to shoot.`;
+  else st=(v.pr?'Practice: every shot is free, and while you pull back a ring on the big screen shows where the ball will stop. ':'')+(me.ex?'You have a second attack this round. ':'')+(me.bf?'War Anthem is on you: this attack hits 50% harder. ':'')+(C.ch?'Steer sideways. Let go to shoot.':v.cn?`${other.replace(/^t/,'T')} is attacking on the big screen. Line up your shot meanwhile.`:'Drag back on the pad. Your aim shows on the big screen.')+(v.tm?` ${v.tm} seconds left.`:'');
   const sight=ab.sight||(me&&me.up.includes('a_eye'));
   if(me)C.steady=O.mods({cls:C.cls,lv:me.lv,ups:me.up}).steady;
   if(me&&mode==='join'){const k=act?rdKey(v)+':'+me.sn:'';if(k&&k!==C.actKey)O.buzz([40,60,40]);C.actKey=k}                    // a nudge whenever it is yours to act
@@ -184,7 +184,7 @@ function renderCtrl(){
   if(me&&me.ls&&me.ls[0]!==C.lsSeen){if(C.lsSeen!=null&&me.ls[0]>C.lsSeen){C.lsRd=rdKey(v);O.buzz(me.ls[1]>0?[30,40,90]:20)}C.lsSeen=me.ls[0]}
   $('reCode').hidden=!(mode==='join'&&v.err==='nohost'&&!!code&&performance.now()-(C.noHostT||0)>2500);
   const key=JSON.stringify([st,me,v.pa,v.mo,v.bd,v.actMe,v.cn,v.ins,v.sc,v.dec,v.mg,v.it,v.pr,v.pz,v.sk,C.skin,C.took&&C.took.t,C.tip&&performance.now()<C.tip.until?C.tip.t:0,C.bagOpen,C.mgV,C.mgGo>0,C.ab,C.rp,C.spun,C.stopped,C.ch?(C.pw<.05?1:2):0,C.armed,C.tab,v.rel,sight?Math.round(C.aim):0,C.sentDec]);trackLive(v);
-  if(key===C.key){if(C.tab==='play'&&!v.err&&v.me){C.view=v;if(!$('pad').hidden&&!$('scope').hidden)drawScope();if(!$('watch').hidden&&!$('liveWrap').hidden)drawScope(true)}return}C.key=key;         // moving parts and marbles in play are redrawn between full renders
+  if(key===C.key){if(C.tab==='play'&&!v.err&&v.me){C.view=v;if(!$('pad').hidden&&!$('scope').hidden)drawScope();if(!$('watch').hidden&&!$('liveWrap').hidden)drawScope(true)}return}C.key=key;         // moving parts and balls in play are redrawn between full renders
   $('tabPlay').setAttribute('aria-pressed',C.tab==='play');$('tabHero').setAttribute('aria-pressed',C.tab==='hero');$('play').hidden=C.tab!=='play';$('sheet').hidden=C.tab!=='hero';
   $('meHp').style.width=me?(100*me.hp/me.mhp)+'%':'100%';$('meHpTxt').textContent=me?`Level ${me.lv} · ${me.hp} / ${me.mhp} health`:`${cl.hp} health`;$('meLane').style.background=me?LANES[me.sl]:'transparent';
   $('swap').hidden=!(v.err||!me||v.sc==='lobby');
@@ -199,18 +199,18 @@ function renderCtrl(){
       b.append(el('b',null,m.n),bar,el('small',mine?'mine':null,it+(m.bn?' · burning':'')));b.onclick=()=>sendTarget(i);tg.appendChild(b)})}}
   /* nothing to do this moment: show what the last attack did and how the party stands */
   {const w=$('watch'),showW=!v.err&&!!me&&v.sc==='combat'&&!combat&&!dc&&!mgOn&&!v.pz&&(v.ph==='aim'||v.ph==='boss');w.hidden=!showW;if(showW){const w=$('watchBox');w.textContent='';$('liveWrap').hidden=true;
-      if(me.ls&&me.ls[0]===C.lsSeen&&C.lsRd===rdKey(v)){const r=el('div','res');r.append(el('b',null,me.ls[1]>0?String(me.ls[1]):'Miss'),el('span',null,me.ls[1]>0?`damage from ${me.ls[2]} marble${me.ls[2]===1?'':'s'}`:'Nothing went in this time.'));w.appendChild(r)}
+      if(me.ls&&me.ls[0]===C.lsSeen&&C.lsRd===rdKey(v)){const r=el('div','res');r.append(el('b',null,me.ls[1]>0?String(me.ls[1]):'Miss'),el('span',null,me.ls[1]>0?`damage from ${me.ls[2]} ball${me.ls[2]===1?'':'s'}`:'Nothing went in this time.'));w.appendChild(r)}
       const ul=el('div','pa');v.pa.forEach(p=>{const d=el('div',p.me?'you':null),bar=el('div','bar'),f=el('i');f.style.width=(100*p.hp/p.mhp)+'%';bar.appendChild(f);
         d.append(headCanvas(p.c,34,LANES[p.sl]),el('b',null,p.me?'You':CLASSES[p.c].name),bar,el('small',null,p.hp<=0?'down':p.aw?'away':v.ph!=='aim'?`${p.hp} / ${p.mhp}`:p.f?'loosed':'aiming'));ul.appendChild(d)});w.appendChild(ul)}}
   $('pad').hidden=!combat;if(!combat)return;
   {const tn=$('terrNote'),tr=v.bd&&v.bd.t;tn.hidden=!tr;if(tr){const T2=O.TERR[tr[0]];tn.textContent=`${T2.name} on the course. ${T2.note} ${tr[1]} round${tr[1]===1?'':'s'} left.`+(C.cls==='bard'?' Your hymns clear it.':'')}
     const rb=$('ramps');rb.style.visibility=ab.instant?'hidden':'';[...rb.children].forEach((b,i)=>b.setAttribute('aria-pressed',i===C.rp))}
   $('btnIns').hidden=!mon||!!v.cn;$('btnIns').setAttribute('aria-pressed',!!v.ins);$('btnIns').textContent=v.ins?'Back':'Look';$('btnLeave').hidden=!v.pr;
-  const fxT=(me.fx&8?'Hexed: your marbles do less damage this round. ':'')+(me.fx&32?'Shrunk: your next marble is two sizes smaller. ':'')+(me.fx&16?'Bleeding. ':'')+(me.fx&1?'Weapon Oil is on this attack. ':'')+(me.fx&2?'Grinding Chalk is on this attack. ':'')+(me.fx&4?'Lodestone Dust is on this attack. ':'');
+  const fxT=(me.fx&8?'Hexed: your balls do less damage this round. ':'')+(me.fx&32?'Shrunk: your next ball is two sizes smaller. ':'')+(me.fx&16?'Bleeding. ':'')+(me.fx&1?'Weapon Oil is on this attack. ':'')+(me.fx&2?'Grinding Chalk is on this attack. ':'')+(me.fx&4?'Lodestone Dust is on this attack. ':'');
   if(!v.it.length)C.bagOpen=false;const bb=$('btnBag');bb.hidden=!v.it.length;bb.textContent=C.bagOpen?'Close':`Bag ${v.it.length}`;bb.setAttribute('aria-pressed',!!C.bagOpen);$('pad').classList.toggle('bagopen',!!C.bagOpen);
   const bg=$('bag');bg.hidden=!C.bagOpen;if(C.bagOpen){bg.textContent='';bg.appendChild(el('h4',null,'Party bag · an item is free and does not use up your attack'));const w=el('div','its');v.it.forEach((id,i)=>{const b=el('button'),I=ITEMS[id],busy=(I.wheel||I.foe)&&v.cn,d=el('div');d.append(el('b',null,I.name),el('span',null,busy?'Wait for the attack on the big screen to finish.':I.desc));b.append(O.ico('it:'+id),d);b.disabled=!!(busy||((I.wheel||I.tgt)&&!mon));b.onclick=()=>{C.bagOpen=false;sendItem(i)};w.appendChild(b)});bg.appendChild(w)}
-  const cdN=0,capT=C.ch?(C.pw<.05?'Pull further back, or let go here to cancel.':'Steer sideways. Let go to shoot.'):ab.instant?ab.name+' needs no aiming. Tap Cast.':fxT?fxT.trim():me.bf?'War Anthem: this attack hits 50% harder.':v.pr?'Practice. Shots are free.':v.cn?'An ally is attacking. Line up your shot on the big screen.':'Your marble: '+ab.name+(me.bg.length>1?' (tap another below to switch)':'');
-  {const md0=O.mods({cls:C.cls,lv:me.lv,ups:me.up});cl.ab.forEach((a,i)=>{const b=$('ab'+i),on=me.bg.includes(i),sz=a.m?Math.max(1,O.mSize(a.m.r)-(md0.sizeDown||0)-(me.fx&32?2:me.fx&2?1:0)):0;b.hidden=!on;b.setAttribute('aria-pressed',i===C.ab);{const alt=me.sw>=0&&i===(me.ow[0]||0);b.classList.toggle('alt',alt);b.children[1].textContent=alt?'or '+a.name:a.name}b.classList.remove('cool');b.lastChild.className='bonus';b.lastChild.textContent=sz?'\u25CF'.repeat(sz):'';b.setAttribute('aria-label',(me.sw>=0&&i===(me.ow[0]||0)?`${a.name}, instead of ${cl.ab[me.sw].name}`:a.name)+(sz?`, ${O.SIZE_NAMES[sz].toLowerCase()} marble`:''))})}
+  const cdN=0,capT=C.ch?(C.pw<.05?'Pull further back, or let go here to cancel.':'Steer sideways. Let go to shoot.'):ab.instant?ab.name+' needs no aiming. Tap Cast.':fxT?fxT.trim():me.bf?'War Anthem: this attack hits 50% harder.':v.pr?'Practice. Shots are free.':v.cn?'An ally is attacking. Line up your shot on the big screen.':'Your ball: '+ab.name+(me.bg.length>1?' (tap another below to switch)':'');
+  {const md0=O.mods({cls:C.cls,lv:me.lv,ups:me.up});cl.ab.forEach((a,i)=>{const b=$('ab'+i),on=me.bg.includes(i),sz=a.m?Math.max(1,O.mSize(a.m.r)-(md0.sizeDown||0)-(me.fx&32?2:me.fx&2?1:0)):0;b.hidden=!on;b.setAttribute('aria-pressed',i===C.ab);{const alt=me.sw>=0&&i===(me.ow[0]||0);b.classList.toggle('alt',alt);b.children[1].textContent=alt?'or '+a.name:a.name}b.classList.remove('cool');b.lastChild.className='bonus';b.lastChild.textContent=sz?'\u25CF'.repeat(sz):'';b.setAttribute('aria-label',(me.sw>=0&&i===(me.ow[0]||0)?`${a.name}, instead of ${cl.ab[me.sw].name}`:a.name)+(sz?`, ${O.SIZE_NAMES[sz].toLowerCase()} ball`:''))})}
   {const so=$('slot'),need=!!me.g&&C.spun<2&&!v.pz;so.hidden=!need;$('pad').classList.toggle('spinning',need);so.classList.toggle('done',!!C.stopped);$('abil').style.visibility=need?'hidden':'';so.classList.toggle('going',C.spun===1);so.classList.toggle('jack',C.spun===1&&sl.jack>0);
     if(need&&C.slotDom!==C.slotKey+':'+C.spun){C.slotDom=C.slotKey+':'+C.spun;symCss();const rl=$('reels');rl.textContent='';const pool='bbllffeescw',md1=O.mods({cls:C.cls,lv:me.lv,ups:me.up}),nl=md1.lines?7:5,rec=O.recipes(C.cls),LC=['#ffd24a','#7fe0c8','#ff8a6a','#c9a0ff','#9fd0ff','#ffb0d8','#d0ff8a'];
       const cell=(ch,idx)=>{const d=el('div','cell');if(ch==='?'){d.appendChild(el('i','sy sy-q'));return d}d.appendChild(el('i','sy sy-'+ch));if(idx>=0&&sl.hit[idx])d.classList.add('hit');return d};
@@ -226,15 +226,15 @@ function renderCtrl(){
       const pt=$('paytab');pt.textContent='';me.ow.forEach(i=>{const pat=rec[i];if(!pat)return;const r=el('div','pt'+(C.spun&&sl.ok.includes(i)?' on':''));const sy=el('span','pat');pat.forEach(ch=>sy.appendChild(el('i','sy sy-'+ch)));r.append(sy,el('b',null,cl.ab[i].name));pt.appendChild(r)});
       if(!me.ow.some(i=>rec[i]))pt.appendChild(el('p',null,'Learn more attacks and their lines appear here.'));
       const names=(me.bg.length?me.bg:[]).filter(i=>rec[i]).map(i=>cl.ab[i].name),pays=[...new Set(sl.pays.map(p=>(p.n===4?'Four ':'Three ')+O.SYMS[p.sym].toLowerCase()+'s: '+O.LINEPAY[p.sym]))];
-      /* what the spin won, spelled out: the marble first, then every bonus once, with its size */
+      /* what the spin won, spelled out: the ball first, then every bonus once, with its size */
       {const ss=$('slotSum');ss.textContent='';ss.className=C.spun?'win'+(names.length||sl.jack?' big':''):'';
-        if(!C.spun)ss.textContent='Match a line to win a special marble for this turn. Stars are wild. No line: your basic marble.';
+        if(!C.spun)ss.textContent='Match a line to win a special ball for this turn. Stars are wild. No line: your basic ball.';
         else{const fx=sl.fx||{},nl2=new Set(sl.pays.map(p=>p.li)).size,head=sl.jack?'JACKPOT! Four of a kind':sl.pays.length||names.length?`${nl2} line${nl2===1?'':'s'} paid`:'No line';
-          const li=[];li.push(names.length?['Marble',names.join(' and ')]:['Marble',cl.ab[me.ow[0]].name+' (your basic attack)']);
+          const li=[];li.push(names.length?['Ball',names.join(' and ')]:['Ball',cl.ab[me.ow[0]].name+' (your basic attack)']);
           const dm=Math.round(((sl.mult||1)-1)*100);if(dm>0)li.push(['Damage',`+${dm}%`+(sl.jack?(dm>50?', of which +50% is the jackpot':' from the jackpot'):'')]);
-          if(fx.burn)li.push(['Burn',`if it sinks, the monster burns for ${Math.round(fx.burn*100)}% of the hit over 3 rounds`]);if(fx.sure)li.push(['Eye','the marble drops into the first open hole it crosses']);
+          if(fx.burn)li.push(['Burn',`if it sinks, the monster burns for ${Math.round(fx.burn*100)}% of the hit over 3 rounds`]);if(fx.sure)li.push(['Eye','the ball drops into the first open hole it crosses']);
           if(fx.blunt)li.push(['Skulls','the monster’s next strike is blunted']);if(fx.heal||fx.gold)li.push(['Crowns',[fx.heal?`everyone heals ${Math.round(fx.heal)}`:'',fx.gold?`${fx.gold} gold`:''].filter(Boolean).join(', ')]);
-          if(fx.again)li.push(['Bonus','spin again after this marble']);
+          if(fx.again)li.push(['Bonus','spin again after this ball']);
           ss.appendChild(el('b','sh',head));const ul=el('ul','sl');for(const[k,v]of li){const r=el('li');r.append(el('span','k',k),el('span',null,v));ul.appendChild(r)}ss.appendChild(ul)}}}
     {const sb=$('spinBtn');sb.hidden=C.spun===1&&!C.stopped;sb.textContent=C.spun?'Take aim':'Pull the lever'}}
   const f=$('fire'),ok=canFire(v);f.disabled=!ok;f.hidden=!ab.instant;f.textContent='Cast';f.classList.toggle('hot',ok);$('pwBar').hidden=true;const useScope=C.spun===2&&!ab.instant;$('scope').hidden=!useScope;$('dial').toggleAttribute('hidden',true);
@@ -291,7 +291,7 @@ function mgHint(g,d,sl,t){switch(g.k){
   case'shrine':return`Shot ${Math.min(3,((d.sh||{})[sl]||0)+(((d.b||[]).some(q=>q[2]===sl))?0:1))} of 3. Pick putt, chip or lob, drag back, aim on the big screen.`;
   case'forge':return'Tap STRIKE as each ember touches the gold line. The beat stays steady, then changes after a warning.';
   case'tome':return d.who===sl?`Your turn: ${Math.max(0,Math.ceil(7-(t-(d.tt||0))))}s. Turn over two pages.`:'Watch and remember. Wait for your turn.';
-  case'gamble':return t<d.bt?'Place your bet from the party’s purse.':t<d.se?'Watch the cups on the big screen!':'Which cup hides the marble?';}return''}
+  case'gamble':return t<d.bt?'Place your bet from the party’s purse.':t<d.se?'Watch the cups on the big screen!':'Which cup hides the ball?';}return''}
 const mgBtn=(label,cls,fn,hold)=>{const b=el('button','btn mgB '+(cls||''),label);if(hold){b.addEventListener('pointerdown',e=>{fn(1);e.preventDefault()});const up=e=>{fn(0);e.preventDefault()};b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('pointerleave',up)}else b.addEventListener('pointerdown',e=>{fn();e.preventDefault()});return b};
 function mgArea(x){let a=x.querySelector('.mgArea');if(!a){a=el('div','mgArea');x.appendChild(a)}return a}
 function mgControl(g,d,sl,t,x0){const send=v=>{sendMg(g.id,v);C.mgK=''},V=C.mgV||'',out=d.out&&d.out[sl]!=null,x=mgArea(x0);
@@ -335,8 +335,8 @@ function drawForge(cv,g){if(!g||!g.d)return;const w=cv.clientWidth,h=cv.clientHe
 }
 const pinH=()=>{const per=C.pinPer||1.5,u=((performance.now()-C.pinT)/1000/per)%2;return u<1?u:2-u};
 function drawShrine(g){const cv=$('mgCv');if(!cv)return;const d=(g&&g.d)||{},me=C.view&&C.view.me,sl=me?me.sl:0,shots=(d.sh||{})[sl]||0,flying=(d.b||[]).some(q=>q[2]===sl),p=C.mgPull,ready=shots<3&&!flying;
-  slingDraw(cv,{ch:!!p,pw:p?p.p:0,aim:p?p.a:90,lane:LANES[sl]||'#e9dfc6',col:'#e8e0c8',ready,msg:ready?`Shot ${shots+1} of 3 · ${(d.sk||{})[sl]||0} sunk`:shots>=3?`All three shots taken · ${(d.sk||{})[sl]||0} sunk`:'Watch your marble on the big screen',sub:'Drag down, aim on the big screen, let go'})}
-/* the phone's own view of the wheel: holes your marble fits are bright, your aim line runs from your launch spot. Drag on it to aim. */
+  slingDraw(cv,{ch:!!p,pw:p?p.p:0,aim:p?p.a:90,lane:LANES[sl]||'#e9dfc6',col:'#e8e0c8',ready,msg:ready?`Shot ${shots+1} of 3 · ${(d.sk||{})[sl]||0} sunk`:shots>=3?`All three shots taken · ${(d.sk||{})[sl]||0} sunk`:'Watch your ball on the big screen',sub:'Drag down, aim on the big screen, let go'})}
+/* the phone's own view of the wheel: holes your ball fits are bright, your aim line runs from your launch spot. Drag on it to aim. */
 const SXA={x:130,y:40,w:740,h:1108},SXL={x:136,y:86,w:728,h:728};                    // the part of the field the phone shows: the wheel, the ground before it, and every launch spot
 const SYM={
  b:['#2f6f66','<g transform="rotate(38 24 24)"><rect x="9" y="21" width="30" height="6" rx="3"/><circle cx="10" cy="20.500" r="4.200"/><circle cx="10" cy="27.500" r="4.200"/><circle cx="38" cy="20.500" r="4.200"/><circle cx="38" cy="27.500" r="4.200"/></g><g transform="rotate(-38 24 24)"><rect x="9" y="21" width="30" height="6" rx="3"/><circle cx="10" cy="20.500" r="4.200"/><circle cx="10" cy="27.500" r="4.200"/><circle cx="38" cy="20.500" r="4.200"/><circle cx="38" cy="27.500" r="4.200"/></g>',''],
@@ -351,7 +351,7 @@ let symDone=false;function symCss(){if(symDone)return;symDone=true;let css='';fo
 const ckNow=()=>C.ck0+(C.view&&C.view.pz?0:(performance.now()-C.ckT)/1000);
 function liveNow(){const B=C.lmB,A=C.lmA;if(!B||!B.m.length)return[];if(!A||!A.m.length)return B.m;const f=clamp((performance.now()-B.t)/Math.max(40,B.t-A.t),0,1);
   return B.m.map(q=>{const p0=A.m.find(a=>a[5]===q[5]);return p0?[p0[0]+(q[0]-p0[0])*f,p0[1]+(q[1]-p0[1])*f,p0[2]+(q[2]-p0[2])*f,q[3],q[4],q[5]]:q})}
-/* Follow the marbles the host says are in play: keep two samples to draw between, buzz when one of yours touches something or drops,
+/* Follow the balls the host says are in play: keep two samples to draw between, buzz when one of yours touches something or drops,
    and remember the path of your own shot so the launcher can show it afterwards. */
 function trackLive(v){
   if(!v||v.err||!Array.isArray(v.lm))return;const now=performance.now();if(v.ck!==C.ckSeen){C.ckSeen=v.ck;C.ck0=v.ck;C.ckT=now}
@@ -399,7 +399,7 @@ function drawScope(live){if(!live)return drawSling();
   if(bd.t){const[tk,,sp,dir]=bd.t;for(const q of sp){const[px,py]=S(q[0],q[1]);x.fillStyle=tk==='rift'?'#2a5a8a':tk==='mire'?'#c9b080':'#7a7580';x.beginPath();x.arc(px,py,R(q[2]),0,7);x.fill();if(tk==='rift'){x.strokeStyle='#7ab8e0';x.lineWidth=2;x.stroke()}}
     if(tk==='gale'){x.strokeStyle='rgba(207,224,255,.7)';x.lineWidth=2;for(let i=0;i<8;i++){const y=320+((i*197+tm*120)%(Cc.len-500)),[px,py]=S(Cc.cx(y),y);x.beginPath();x.moveTo(px-dir*14,py-5);x.lineTo(px+dir*14,py);x.lineTo(px-dir*14,py+5);x.stroke()}}}
   for(const q of bd.blk){const[px,py]=S(q[0],q[1]);x.fillStyle='#8a8f9a';x.fillRect(px-R(q[2])/2,py-R(q[3])/2,R(q[2]),R(q[3]))}
-  /* holes: lidded, grated (too small for your marble) or glowing (it fits). Each shows its worth and its size in dots. */
+  /* holes: lidded, grated (too small for your ball) or glowing (it fits). Each shows its worth and its size in dots. */
   x.textAlign='center';x.textBaseline='middle';
   bd.h.forEach((hh,hi)=>{const[px,py]=S(hh[0],hh[1]),rr=Math.max(5,R(hh[2])),lid=hh[4]>0||(!!hh[7]&&O.shutAt({shut:hh[7]},ck)),fit=live||!msz||ab.m.hymn||O.fitsSize(msz,hh[8]),col=O.TIER[clamp(hh[5],0,2)];
     x.fillStyle='rgba(0,0,0,.35)';x.beginPath();x.arc(px,py,rr+Math.max(4,R(26)),0,7);x.fill();                                   // the dish
@@ -420,7 +420,7 @@ function drawScope(live){if(!live)return drawSling();
   if(!live)for(const t of C.trail){if(t.p.length<2)continue;x.strokeStyle='rgba(233,226,208,.5)';x.lineWidth=2;x.setLineDash([2,6]);x.beginPath();t.p.forEach((q,i)=>{const[px,py]=S(q[0],q[1]);i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();x.setLineDash([])}
   for(const q of liveNow()){const[px,py]=S(q[0],q[1]);x.fillStyle=LANES[q[4]];x.beginPath();x.arc(px,py-Math.max(0,q[2])*k*.4,Math.max(3,R(q[3]))*(1+Math.max(0,q[2])/200),0,7);x.fill();x.strokeStyle='#fff';x.lineWidth=1.5;x.stroke()}
   if(live)return;
-  /* your spot on the tee; once armed, the band you pull and the way the marble will leave */
+  /* your spot on the tee; once armed, the band you pull and the way the ball will leave */
   const[lx,ly]=S(me.x,O.COURSE.TEE),a=C.aim*DEG,dx=Math.cos(a),dy=-Math.sin(a),lane=LANES[me.sl];
   x.fillStyle=lane;x.globalAlpha=.4;x.beginPath();x.arc(lx,ly,9,0,7);x.fill();x.globalAlpha=1;
   if(!C.armed||ab.instant)return;
@@ -430,7 +430,7 @@ function drawScope(live){if(!live)return drawSling();
   {const px0=-dy*16,py0=dx*16,hot=Math.round(200+55*pull)+','+Math.round(190-90*pull)+','+Math.round(160-110*pull);x.strokeStyle='rgb('+hot+')';x.lineWidth=2+2*pull;x.lineCap='round';x.beginPath();x.moveTo(lx+px0,ly+py0);x.lineTo(mx,my);x.lineTo(lx-px0,ly-py0);x.stroke()}
   x.fillStyle=cl.col;x.beginPath();x.arc(mx,my,mr,0,7);x.fill();x.strokeStyle=lane;x.lineWidth=2;x.beginPath();x.arc(mx,my,mr+4,0,7);x.stroke();
   if((ab.sight||md.eye||v.pr)&&C.ch){const d=O.powD(Cc.len,C.pw),[px,py]=S(me.x+Math.cos(a)*d,O.COURSE.TEE+Math.sin(a)*d);x.strokeStyle='#fff';x.lineWidth=2;x.beginPath();x.arc(px,py,7,0,7);x.stroke()}}
-/* Pull back and release. Touch anywhere on the wheel and drag: the marble is drawn back against the band the opposite way,
+/* Pull back and release. Touch anywhere on the wheel and drag: the ball is drawn back against the band the opposite way,
    so dragging down and to the left aims up and to the right. The length of the pull is the power. Let go to launch; slide back to where you started to cancel. */
 function pullStart(e){const v=getView();if($('scope').hidden||!C.cls||C.pull)return false;if(CLASSES[C.cls].ab[C.ab].instant||!canFire(v)||C.spun!==2)return false;C.pull={x:e.clientX,y:e.clientY,step:0,key:!e.clientX&&!e.clientY};C.ch=true;C.pw=0;C.tip=null;C.key='';pushCtrl();renderCtrl();return true}
 function pullMove(e){const p=C.pull;if(!p||p.key)return;const r=$('scope').getBoundingClientRect(),dx=e.clientX-p.x,dy=e.clientY-p.y,len=Math.hypot(dx,dy),cl=CLASSES[C.cls],max=clamp(r.height*.3,80,150)*clamp(cl.period/1.6,.82,1.45)*clamp(cl.ab[C.ab].slow||1,.7,1.3)*C.steady;        // each fighter draws differently: the archer's pull is long and fine, the warrior's short
@@ -483,7 +483,7 @@ function initCtrl(){
 let panelKey='',sideKey='',mgKey='',menuKey='',accent='',pauseKey='',loadKey='',armed='';
 function awardBox(){const w=el('div','awards');for(const a of O.awards()){const d=el('div');d.append(el('b',null,a[0]),el('span',null,a[1]),el('small',null,a[2]));w.appendChild(d)}return w}
 let menuTab='dung',menuBuilt='',wheelRot=0;
-const KINDS=[['ab','Abilities'],['up','Upgrades'],['it','Items'],['re','Relics'],['sk','Marble skins']],DEPTH=['Normal','Grim','Dire','Doomed'];
+const KINDS=[['ab','Abilities'],['up','Upgrades'],['it','Items'],['re','Relics'],['sk','Ball skins']],DEPTH=['Normal','Grim','Dire','Doomed'];
 const btn2=(txt,cls,fn)=>{const b=el('button',cls||'btn');b.appendChild(el('b',null,txt));b.onclick=fn;return b};
 /* a button that must be pressed twice, for things that cannot be undone */
 const sure=(txt,again,fn,cls)=>{const b=btn2(txt,cls||'btn warn',()=>{if(armed===txt){armed='';fn()}else{armed=txt;b.firstChild.textContent=again;setTimeout(()=>{if(armed===txt){armed='';b.firstChild.textContent=txt}},4000)}});return b};
@@ -547,7 +547,7 @@ function fillOpt(body){
   sw('Pixel art picture',O.pixOn(),()=>O.setPix(!O.pixOn()));sw('Glow and soft light',O.fxOn(),()=>O.setFx(!O.fxOn()));sw('Screen shake and flashes',O.shakeOn(),()=>O.setShake(!O.shakeOn()));sw('Fine detail (turn off if the picture stutters)',O.detailOn(),()=>O.setDetail(!O.detailOn()));
   a.appendChild(btn2(document.fullscreenElement?'Leave full screen':'Full screen','btn',()=>{fullscreen();setTimeout(()=>{menuKey=''},400)}));
   b.append(el('h3',null,'Playing together'),el('p',null,mode==='solo'?'You are playing solo: the launcher sits beside the dungeon. To play with friends, go back and choose Host on a big screen.':'Phones join with the code on the Dungeons page. A phone that drops out keeps its fighter and picks it up again when it returns.'),el('p',null,'Gold, unlocks and a run in progress are kept on this device.'),
-    el('h3',null,'The fight in brief'),el('p',null,'Every turn starts with a spin. The reels pay along lines, from the first reel, left to right. Each special attack you know has its own line of symbols: match it and you win that marble for this turn. Win two and you get both, one after the other. No line at all and you get your basic marble.'),el('p',null,'Three alike on a line pay extra: bones and blades add damage, flames burn, eyes guide the marble, skulls blunt the monster, crowns mend the party and find gold. Four alike is a jackpot: half as much damage again.'),el('p',null,'Drag back anywhere on your phone like a slingshot: your aim shows on the big screen, and letting go shoots. A marble only hurts the monster if it drops into a hole; the flag on the hole shows the damage.'),el('p',null,'Holes and marbles come in three sizes, shown as dots. A marble fits any hole with as many dots or more. Holes too small for your marble are grated over; holes it fits glow. The dish round each hole draws slow marbles in.'),el('p',null,'Putt rolls the whole way, Chip hops once over what is in front of you, Lob flies high and stops near where it lands.'),el('p',null,'A red ring marks the hole that holds the monster\u2019s coming strike: sink it and the blow lands at half weight. Blue rings are locks: sink both and the core opens.'),el('p',null,'From the second round on, one open hole wears a gold ring. Sink that one for double.'),el('p',null,'A burning monster takes its burn again at the end of each of the next three rounds.'),
+    el('h3',null,'The fight in brief'),el('p',null,'Every turn starts with a spin. The reels pay along lines, from the first reel, left to right. Each special attack you know has its own line of symbols: match it and you win that ball for this turn. Win two and you get both, one after the other. No line at all and you get your basic ball.'),el('p',null,'Three alike on a line pay extra: bones and blades add damage, flames burn, eyes guide the ball, skulls blunt the monster, crowns mend the party and find gold. Four alike is a jackpot: half as much damage again.'),el('p',null,'Drag back anywhere on your phone like a slingshot: your aim shows on the big screen, and letting go shoots. A ball only hurts the monster if it drops into a hole; the flag on the hole shows the damage.'),el('p',null,'Holes and balls come in three sizes, shown as dots. A ball fits any hole with as many dots or more. Holes too small for your ball are grated over; holes it fits glow. The dish round each hole draws slow balls in.'),el('p',null,'Putt rolls the whole way, Chip hops once over what is in front of you, Lob flies high and stops near where it lands.'),el('p',null,'A red ring marks the hole that holds the monster\u2019s coming strike: sink it and the blow lands at half weight. Blue rings are locks: sink both and the core opens.'),el('p',null,'From the second round on, one open hole wears a gold ring. Sink that one for double.'),el('p',null,'A burning monster takes its burn again at the end of each of the next three rounds.'),
     sure('Reset all progress','Press again to erase everything',()=>{O.resetStash();menuKey=''}));body.append(a,b)}
 /* the main menu on the host screen: turn the wheel to choose a dungeon, open loot boxes, read the bestiary, set options */
 function hostMenu(){
@@ -581,7 +581,7 @@ function hostPanels(){
     if(show){const d=g.d,ps=G.players.filter(p=>!p.away);box.append(el('div','mgTag '+D.kind,D.kind==='trap'?'Trap':'Event'),el('h3',null,d.name||D.name));
       if(g.st==='brief'){box.append(el('p',null,D.brief));if(D.ctl)box.append(el('p','mgGoal',D.ctl));
         if(D.kind==='event'&&!g.go){const rd=g.d.rdy||{},lb=el('div','mgReady');ps.forEach(p=>{const s2=el('span',rd[p.slot]?'on':null,CLASSES[p.cls].animal+(rd[p.slot]?' ✓ ready':' · reading'));s2.style.borderColor=LANES[p.slot];lb.appendChild(s2)});box.append(el('p','mgGoal','Read the rules, then press READY on your phone.'),lb)}}
-      else{const left=Math.max(0,Math.ceil(g.dur-g.t));box.append(el('p',null,({lock:'Stop the needle in the gold band.',shrine:'Three shots each at the cup: putt, chip or lob.',forge:'Strike on the beat!',tome:'Find the pairs together.',gamble:g.t<d.bt?'Place your bets!':g.t<d.se?'Keep your eye on the marble…':'Pick a cup!'})[g.k]||''));
+      else{const left=Math.max(0,Math.ceil(g.dur-g.t));box.append(el('p',null,({lock:'Stop the needle in the gold band.',shrine:'Three shots each at the cup: putt, chip or lob.',forge:'Strike on the beat!',tome:'Find the pairs together.',gamble:g.t<d.bt?'Place your bets!':g.t<d.se?'Keep your eye on the ball…':'Pick a cup!'})[g.k]||''));
         if(!['tome','lock','shrine'].includes(g.k))box.append(el('div','sig',left+''));const lb=el('ol','mgBoard');
         ps.forEach(p=>{const k=p.slot,li=el('li');li.style.borderLeftColor=LANES[k];li.append(el('b',null,CLASSES[p.cls].animal));if(g.k==='tome'&&d.who===k)li.appendChild(el('span','turn','← turn'));li.appendChild(el('span','sc',String(d.pr[k]||'')));lb.appendChild(li)});box.append(lb)}}}
   const key=[G.screen,G.result,d&&d.id,d&&d.k,d&&d.t,votes,picked,n,mode,O.inspect,!!g,G.finale].join('|');
@@ -590,7 +590,7 @@ function hostPanels(){
     if(G.screen==='lobby'&&!O.inspect){}
     else if(G.screen==='result'){ov.hidden=false;ov.className='overlay';
       if(G.result==='win'&&G.finale){const st=G.stash,tot=Object.values(st.kills).reduce((a,b)=>a+b,0);ov.className='overlay finale';
-        card.append(el('small',null,'The twentieth dungeon'),el('h2',null,'The Hollow Throne stands empty'),el('p',null,'The last wheel has stopped turning. What sat the throne is marbles and dust, and the dark under the world is only dark again.'),
+        card.append(el('small',null,'The twentieth dungeon'),el('h2',null,'The Hollow Throne stands empty'),el('p',null,'The last wheel has stopped turning. What sat the throne is balls and dust, and the dark under the world is only dark again.'),
           el('p',null,`${st.clear.length} dungeons cleared, ${tot} monsters destroyed, ${st.opened} loot box${st.opened===1?'':'es'} opened. The party earns ${G.gain} gold.`),awardBox(),
           el('p','after','Every dungeon can now be entered again at a deeper setting: Grim, Dire and Doomed, each harder and richer than the last.'),btn('Return to the menu',0))}
       else if(G.result==='win'){const D=O.DUNGEONS[G.dung],nx=G.newDung&&O.DUNGEONS[G.dung+1],mt=O.maxTier(G.dung);ov.className='overlay low';card.append(el('h2',null,D.name.replace(/^The /,'')+' is cleared'),el('p',null,`${O.MONSTERS[D.boss].name} is destroyed. The party earns ${G.gain} gold.`+(nx?` ${nx.name} is now open.`:'')+(G.tier<3&&mt===G.tier+1?` ${D.name} can now be entered at ${DEPTH[mt]} depth.`:'')),awardBox(),btn('Return to the menu',0))}

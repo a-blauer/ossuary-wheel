@@ -1,4 +1,4 @@
-/* Ossuary Wheel: every monster's attacks, and the three reels it pulls to choose one.
+/* GambaGolf: every monster's attacks, and the three reels it pulls to choose one.
    A move is [symbol, name, reach, power, effect, line].
      reach: 'one' a single fighter, 'two' two fighters, 'all' the whole party. A leading '!' marks a special: it only fires on a pair or better.
      power: damage against the monster's base for that reach (a single blow or a party-wide one).
@@ -21,10 +21,10 @@ const M={
  slagbug:[['ingot','Slag Spit','one',1,'hex','Spits molten slag that gums up the next shot.'],['shell','Carapace','one',.7,'guard','Rams, then settles behind its iron back.']],
  mite:[['web','Silk Snare','one',1,'shrink','Binds a fighter in sticky silk.']],
  moth:[['eye','Dazzle','one',1,'','Its eyespots flare, and it strikes while you blink.'],['moon','Dust of Wings','all',.7,'hex','Shakes glittering dust over everyone.']],
- rimewolf:[['fang','Frostbite','one',1,'bleed2','Bites, and the cold spreads from the wound.'],['flake','Winter Howl','all',.6,'shrink','A howl so cold the marbles frost over.']],
+ rimewolf:[['fang','Frostbite','one',1,'bleed2','Bites, and the cold spreads from the wound.'],['flake','Winter Howl','all',.6,'shrink','A howl so cold the balls frost over.']],
  icewisp:[['icicle','Ice Needle','one',1,'','Hurls a needle of ice.'],['flake','Rime Veil','one',.5,'guard','Wraps itself in a skin of rime.']],
  rat:[['rat','Gnaw','one',1,'bleed2','Gnaws with filthy yellow teeth.']],
- bile:[['drop','Bile Spit','one',1,'hex','Spits acid that pits the next marble.'],['bottle','Engulf','one',1.2,'drain','Swallows a fighter whole for a moment.']],
+ bile:[['drop','Bile Spit','one',1,'hex','Spits acid that pits the next ball.'],['bottle','Engulf','one',1.2,'drain','Swallows a fighter whole for a moment.']],
  viper:[['fang','Venom Strike','one',1,'bleed3','A strike from the dark. The venom lingers.']],
  idol:[['idol','Cursed Gleam','one',1,'hex','A sickly light picks out one fighter.'],['sun','Sun Shard','all',.75,'','Flings bright shards in every direction.']],
  scarab:[['scarab','Mandibles','one',1.1,'','Scissors its jaws shut.'],['hourglass','Burrow','one',.6,'terr:mire','Digs in, kicking sand across the course.']],
@@ -42,7 +42,7 @@ const M={
  ghoul:[['claw','Ash Claw','one',1,'','Claws grey with old ash.'],['urn','Grave Feast','one',1.1,'drain','Feeds on what it tears.']],
  graveworm:[['coffin','Burst Up','one',1.1,'','Erupts from below in a spray of grave dirt.'],['bone','Upheaval','all',.6,'terr:rubble','Churns grave dirt and bone across the course.']],
  shardlizard:[['claw','Tail Lash','one',1.1,'','Whips its spiked tail.'],['crystal','Shard Spines','two',.9,'bleed2','Rattles its back and flings shards at two fighters.']],
- geode:[['crystal','Glint Bite','one',1,'shrink','Chips a sliver off the next marble.']],
+ geode:[['crystal','Glint Bite','one',1,'shrink','Chips a sliver off the next ball.']],
  eel:[['bolt','Shock','one',1,'hex','Coils and discharges into a fighter.'],['wave','Riptide','all',.7,'terr:rift','Floods the course with black water.']],
  angler:[['fang','Maw Snap','one',1.2,'','The lantern goes dark, and the jaws close.'],['lure','Lure','one',.6,'hex','The lantern bobs, and a fighter drifts closer.']],
  flagellant:[['cross','Scourge','one',1,'bleed3','Lashes with a barbed scourge.'],['heart','Penance','one',.5,'rage','Whips itself into a holy frenzy.']],
@@ -50,7 +50,7 @@ const M={
  kobold:[['pick','Spear Jab','one',1,'','Jabs with a rusty spear.'],['coin','Dirty Trick','one',.6,'hex','Flings grit in a fighter’s eyes.']],
  whelp:[['claw','Scratch','one',1,'','All claws and temper.'],['flame','Spark Breath','one',.9,'bleed2','Coughs up its first real flame.']],
  voidspawn:[['moon','Null Touch','one',1,'hex','A cold touch that drains the will.'],['mask','Swallow Light','all',.75,'','The torchlight bends into it and goes out.']],
- nullshade:[['mask','Fade Strike','one',1.1,'','Vanishes, and strikes from where it was not.'],['hourglass','Unmake','one',.7,'shrink','Unravels a little of a fighter’s next marble.']],
+ nullshade:[['mask','Fade Strike','one',1.1,'','Vanishes, and strikes from where it was not.'],['hourglass','Unmake','one',.7,'shrink','Unravels a little of a fighter’s next ball.']],
  /* ---------- champions ---------- */
  spider:[['fang','Venom Fang','one',1,'bleed3','Sinks a fang and pumps venom.'],['web','Web Spray','all',.9,'shrink','Sprays silk over the whole party.'],['spider','Seal with Silk','one',.6,'lid','Spins a lid of silk over its best hole.'],['egg','Clutch Hatches','!all',1.4,'bleed2','An egg sac bursts, and spiderlings swarm everyone.']],
  bulwark:[['sword','Mace Blow','one',1,'','A flanged mace, swung without hurry.'],['shield','Raise the Door','one',.6,'shield','Bashes, then lifts his great shield again.'],['helm','Shield Charge','two',1,'','Charges two fighters behind the door-shield.'],['tower','Rampart Slam','!all',1.4,'guard','Drops the shield on the party and hunkers behind it.']],
@@ -80,7 +80,7 @@ const M={
  mothermaw:[['fang','Engulfing Bite','one',1.2,'drain','A mouth that could take a cart.'],['wave','Tidal Thrash','all',1,'terr:rift','Thrashes, and the vault floods.'],['shell','Coil','one',.6,'guard','Coils tight around itself.'],['fish','Spawn Swarm','two',1,'bleed2','Her young boil up around two fighters.'],['anchor','Drag to the Depths','!one',1.7,'shrink','Takes a fighter down into the dark.'],['drop','The Deluge','!all',1.4,'hex','The whole vault comes down as water.']],
  kilntyrant:[['flame','Kiln Blast','all',1,'','Opens its door. Heat.'],['ember','Cinder Rain','all',.8,'bleed2','Rains embers that stick.'],['ingot','Pour Slag','one',1.2,'lid','Pours slag that hardens over a hole.'],['hammer','Forge Strike','one',1.2,'','A blow like a drop hammer.'],['anvil','Stoke the Kiln','!one',.6,'rage','Feeds its fire. The next blast will be worse.'],['sun','Firestorm','!all',1.6,'bleed3','The whole forge erupts.']],
  matron:[['fang','Venom Bite','one',1.1,'bleed3','Fangs as long as daggers.'],['web','Web Cage','two',.9,'shrink','Cages two fighters in silk.'],['spider','Brood Call','all',.9,'','Calls her brood down from the ceiling.'],['egg','Egg Wall','one',.6,'lid','Lays a clutch across her best hole.'],['drop','Venom Flood','!all',1.4,'bleed2','Venom drips from every strand at once.'],['eye','Eight Eyes','!two',1.5,'hex','All eight eyes fix on two fighters.']],
- palestag:[['icicle','Antler Gore','one',1.2,'','Lowers antlers like a thicket of icicles.'],['flake','Hoarfrost','all',.9,'shrink','Frost creeps over every marble.'],['moon','Moon Bound','two',1,'','Leaps by moonlight onto two fighters.'],['star','Pale Ward','one',.6,'guard','A ring of pale light closes round it.'],['crown','Antler Crown','!all',1.5,'hex','The crown of antlers blazes white.'],['wisp','Winter’s Heart','!one',.7,'mend','Breathes in the cold, and its wounds close.']],
+ palestag:[['icicle','Antler Gore','one',1.2,'','Lowers antlers like a thicket of icicles.'],['flake','Hoarfrost','all',.9,'shrink','Frost creeps over every ball.'],['moon','Moon Bound','two',1,'','Leaps by moonlight onto two fighters.'],['star','Pale Ward','one',.6,'guard','A ring of pale light closes round it.'],['crown','Antler Crown','!all',1.5,'hex','The crown of antlers blazes white.'],['wisp','Winter’s Heart','!one',.7,'mend','Breathes in the cold, and its wounds close.']],
  glutton:[['drop','Gorge','one',1.2,'drain','Stuffs a fighter in its mouth.'],['bottle','Spew','all',.9,'bleed2','Spews what it ate last week.'],['rat','Belly Rats','two',1,'','Rats pour from its belly onto two fighters.'],['heart','Bloat','one',.5,'guard','Swells up tight as a drum.'],['skull','Devour','!one',1.8,'drain','Eats a fighter. Mostly.'],['cloud','Rot Belch','!all',1.4,'hex','A belch that peels paint.']],
  coatl:[['sun','Sun Ray','one',1.1,'','A beam of hot gold from its crest.'],['wave','Feather Storm','all',.9,'terr:gale','Beats a storm of feathers across the course.'],['idol','Temple Curse','two',1,'hex','The idols turn their heads toward two fighters.'],['fang','Serpent Coil','one',1,'shrink','Wraps a fighter and squeezes.'],['crown','Plumed Wrath','!all',1.5,'','Spreads its plumes and strikes everyone.'],['heart','Blood Offering','!one',1.3,'drain','Takes the offering it is owed.']],
  shade:[['scarab','Scarab Swarm','all',.9,'bleed2','A tide of black scarabs.'],['hourglass','Sands of Time','one',.7,'terr:mire','Spills an hourglass across the course.'],['mask','Death Mask','one',1.2,'hex','Presses its gold mask to a fighter’s face.'],['urn','Canopic Seal','one',.6,'lid','Seals its best hole like a tomb.'],['sun','Wrath of the Sun','!all',1.5,'','The desert sun, all at once.'],['coin','Tomb Tax','!two',1.3,'drain','Takes its due from two fighters.']],
@@ -125,8 +125,8 @@ O.pullReels=id=>{const S=O.movesOf(id),T=S.reel.reduce((a,b)=>a+b,0),g=[];for(le
 O.fxText=(m,dmg,fv,tri)=>{const T=O.TERR;switch(m.fx){
   case'bleed':return`Bleeds ${fv} a round for ${tri?3:2} rounds`;case'drain':return tri?'Heals itself by all the damage':'Heals itself by half the damage';case'mend':return`Heals itself ${fv}`;
   case'lid':return tri?'Puts lids on its two best holes':'Puts a lid on its best hole';case'shield':return tri?'Raises a stronger shield':'Raises its shield';
-  case'terr':{const t=T[m.terr];return(t?t.name:'Rubble')+` on the course for ${tri?4:3} rounds`}case'shrink':return tri?'Next marble two sizes smaller':'Next marble one size smaller';
-  case'hex':return tri?'Marbles do 45% less next round':'Marbles do 30% less next round';case'rage':return tri?'Its next attack is twice as strong':'Its next attack is half again as strong';
+  case'terr':{const t=T[m.terr];return(t?t.name:'Rubble')+` on the course for ${tri?4:3} rounds`}case'shrink':return tri?'Next ball two sizes smaller':'Next ball one size smaller';
+  case'hex':return tri?'Balls do 45% less next round':'Balls do 30% less next round';case'rage':return tri?'Its next attack is twice as strong':'Its next attack is half again as strong';
   case'guard':return tri?'Takes a third of the damage until it acts again':'Takes half damage until it acts again';default:return''}};
 /* who a pulled move hits and what it does, in one line: nm turns a fighter id into words */
 O.intentText=(id,it,nm)=>{const mv=O.movesOf(id).mv[it.mv]||O.movesOf(id).mv[0],who=mv.t==='all'?'everyone':[it.t&&nm(it.t),it.t2&&nm(it.t2)].filter(Boolean).join(' and ')||O.reachText(mv.t),fx=O.fxText(mv,it.dmg,it.fv,it.pw>1.2),out=[];

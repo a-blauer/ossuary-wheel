@@ -1,4 +1,4 @@
-/* Ossuary Wheel: monsters as voxel models. Front is +z. */
+/* GambaGolf: monsters as voxel models. Front is +z. */
 (()=>{
 const O=window.OW,V=O.V,P=V.Part;
 const BONE={bone:{c:'#ddd3bb',n:.08,alt:'#cbbf9f',p:.22},bone_d:{c:'#a99c7f',n:.08},bone_l:{c:'#f1ead7',n:.04},sock:{c:'#151012',n:0},

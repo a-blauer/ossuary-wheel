@@ -1,6 +1,6 @@
-/* Ossuary Wheel: icons. Every ability, upgrade, item, relic and marble skin has its own sign: a glyph cut into a medallion.
+/* GambaGolf: icons. Every ability, upgrade, item, relic and ball skin has its own sign: a glyph cut into a medallion.
    The medallion's shape and metal say what kind of thing it is (round and jewelled for an ability, an iron hex for an upgrade,
-   a leather tag for an item, gilt for a relic, a glass sphere for a marble skin); the glyph says which one. */
+   a leather tag for an item, gilt for a relic, a glass sphere for a ball skin); the glyph says which one. */
 (()=>{
 const O=window.OW;
 const P=d=>`<path fill-rule='evenodd' d='${d}'/>`,C=(x,y,r)=>`<circle cx='${x}' cy='${y}' r='${r}'/>`;
@@ -97,5 +97,5 @@ O.ico=function(key,cls,extra){
   if(o.kind==='sk'){const k=O.SKINS[o.skin]||{},cc=cls&&O.CLASSES[cls]?O.CLASSES[cls].col:'#c9d2de';e.style.setProperty('--sc',k.col||cc);e.style.setProperty('--sg',k.glow||k.col||cc)}
   else{const i=document.createElement('i');i.className='g-'+o.g;e.appendChild(i)}
   return e};
-O.kindName=function(key,cls){const o=O.iconOf(key,cls);return o.kind==='ab'?'Ability':o.kind==='it'?'Item':o.kind==='re'?'Relic':o.kind==='sk'?'Marble skin':o.cls?O.CLASSES[o.cls].name+' upgrade':'Upgrade'};
+O.kindName=function(key,cls){const o=O.iconOf(key,cls);return o.kind==='ab'?'Ability':o.kind==='it'?'Item':o.kind==='re'?'Relic':o.kind==='sk'?'Ball skin':o.cls?O.CLASSES[o.cls].name+' upgrade':'Upgrade'};
 })();

@@ -1,4 +1,4 @@
-/* Ossuary Wheel: the twenty dungeon bosses, built by hand in voxels. Front is +z. Shared part names drive the stage's animations:
+/* GambaGolf: the twenty dungeon bosses, built by hand in voxels. Front is +z. Shared part names drive the stage's animations:
    body, head, jaw, arm_L/arm_R, wing_L/wing_R, neck*, tail*, leg_*. */
 (()=>{
 const O=window.OW,V=O.V,P=V.Part,H=V.hash;

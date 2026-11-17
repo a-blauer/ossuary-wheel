@@ -1,6 +1,6 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 
-<title>Ossuary Wheel · Mini-game lab</title>
+<title>GambaGolf · Mini-game lab</title>
 <style>
 /* fonts and libraries ship with the game, so the page loads nothing from other websites */
 @font-face{font-family:'Grenze Gotisch';font-style:normal;font-weight:400;font-display:swap;src:url(ow/fonts/grenze-gotisch-latin-400-normal.woff2) format('woff2')}
@@ -11,7 +11,7 @@
 @font-face{font-family:'Alegreya Sans';font-style:normal;font-weight:700;font-display:swap;src:url(ow/fonts/alegreya-sans-latin-700-normal.woff2) format('woff2')}
 @font-face{font-family:'Alegreya Sans';font-style:normal;font-weight:800;font-display:swap;src:url(ow/fonts/alegreya-sans-latin-800-normal.woff2) format('woff2')}
 @font-face{font-family:'Alegreya Sans';font-style:italic;font-weight:400;font-display:swap;src:url(ow/fonts/alegreya-sans-latin-400-italic.woff2) format('woff2')}
-/* Ossuary Wheel. The interface is cut from the same stuff as the dungeon: chamfered stone plates, bone lettering, gilt fittings. The dungeon in play stains the accents (--dn). */
+/* GambaGolf. The interface is cut from the same stuff as the dungeon: chamfered stone plates, bone lettering, gilt fittings. The dungeon in play stains the accents (--dn). */
 :root{
   color-scheme:dark;
   --soot:#0b090a; --crypt:#151013; --slab:#221a1e; --slab2:#2d2328; --seam:#43363a; --edge:#5c4c40;
@@ -639,8 +639,8 @@ html[data-mode=host] .card{max-width:30rem}
 
 <section id="landing">
   <div class="hero">
-    <h1>The Ossuary Wheel</h1>
-    <p>Twenty dungeons. Every monster is a mini golf course of holes: sink your marbles into them to bring it down. One screen shows the dungeon, and every phone is a launcher.</p>
+    <h1>GambaGolf</h1>
+    <p>Twenty dungeons. Every monster is a mini golf course of holes: sink your balls into them to bring it down. One screen shows the dungeon, and every phone is a launcher.</p>
   </div>
   <div class="modes">
     <button class="mode first" id="goHost"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="4" y="8" width="40" height="26"/><path d="M16 42h16M24 34v8"/><circle cx="24" cy="21" r="7"/><circle cx="24" cy="21" r="1.6" fill="currentColor"/></svg><b>Host on this screen</b><span>Shows the dungeon. Use a laptop or TV everyone can see.</span></button>
@@ -651,9 +651,9 @@ html[data-mode=host] .card{max-width:30rem}
   <div class="how">
     <div><h3>Choose a dungeon</h3><p>The host picks a dungeon and shows a four-letter code; phones join with it. Clearing a dungeon pays gold and opens the next. Gold buys loot boxes, and each box unlocks a new ability, upgrade, item or relic for every later run.</p></div>
     <div><h3>Climb the map</h3><p>Each dungeon is a map of floors from the gate to the boss. The party votes on the way: monsters, minibosses, reliquaries, a shrine, a smithy, a library, a gambler and traps.</p></div><div><h3>Mini games</h3><p>Traps and the other floors are quick party games played on the phones. Everyone is ranked against everyone else, and medals set the stakes: in a trap, no medal costs health and gold heals you, and the winner takes a prize for the bag.</p></div>
-    <div><h3>Sink your marbles</h3><p>Each round everyone plays at once. Spin your reels: every special attack whose line comes up gives you its marble, and no line gives you your basic one. Then drag back anywhere on your phone like a slingshot: your aim shows on the big screen, and letting go shoots. Putt rolls, Chip hops once, Lob flies high. The rails hold a rolling marble, but one in the air can fly clean over them, and a marble that lands off the board is a miss. Only a marble in a hole does damage.</p></div>
-    <div><h3>Read the course</h3><p>Holes and marbles come in three sizes, shown as dots: a marble fits holes with as many dots or more. Holes too small for yours are grated over, holes it fits glow, and a dish round every hole draws slow marbles in. The number on each flag is what a sink deals: big holes near the tee pay little, while small, far, gated or lidded holes pay the most. Iron lids, posts, windmills and boulders guard them, and the monster fouls the course with sand, gravel, water and wind before it strikes back.</p></div>
-    <div><h3>The monster’s reels</h3><p>At the start of every round the monster pulls three reels of its own, on the big screen. Each face is one of its attacks, and they pay left to right like yours: two alike from the left reel along a line fire that attack, and three alike is a Triple: half again as hard, with a stronger effect too. When several lines pay, a Triple beats any pair, and between equal lines a special wins. Lesser monsters read the middle row, champions all three rows, masters the rows and both diagonals. If nothing lines up, the monster falls back on its basic attack. Lesser monsters know one or two attacks, champions four, masters six. Some bleed you, shrink or weaken your next marbles, lid a hole, foul the course, heal, or guard themselves. Sink the marked hole to blunt the blow.</p></div>
+    <div><h3>Sink your balls</h3><p>Each round everyone spins at once, then you shoot in turn, from the middle of the tee. Spin your reels: every special attack whose line comes up gives you its ball, and no line gives you your basic one. Then drag down anywhere on your phone like a slingshot: slide sideways to steer, further down for more power. Your aim shows on the big screen, and letting go shoots at once. Putt rolls, Chip hops once, Lob flies high. The rails hold a rolling ball, but one in the air can fly clean over them, and a ball that lands off the board is a miss. Only a ball in a hole does damage.</p></div>
+    <div><h3>Read the course</h3><p>Holes and balls come in three sizes, shown as dots: a ball fits holes with as many dots or more. Holes too small for yours are grated over, holes it fits glow, and a dish round every hole draws slow balls in. The number on each flag is what a sink deals: big holes near the tee pay little, while small, far, gated or lidded holes pay the most. Iron lids, posts, windmills and boulders guard them, and the monster fouls the course with sand, gravel, water and wind before it strikes back.</p></div>
+    <div><h3>The monster’s reels</h3><p>At the start of every round the monster pulls three reels of its own, on the big screen. Each face is one of its attacks, and they pay left to right like yours: two alike from the left reel along a line fire that attack, and three alike is a Triple: half again as hard, with a stronger effect too. When several lines pay, a Triple beats any pair, and between equal lines a special wins. Lesser monsters read the middle row, champions all three rows, masters the rows and both diagonals. If nothing lines up, the monster falls back on its basic attack. Lesser monsters know one or two attacks, champions four, masters six. Some bleed you, shrink or weaken your next balls, lid a hole, foul the course, heal, or guard themselves. Sink the marked hole to blunt the blow.</p></div>
   </div>
 </section>
 

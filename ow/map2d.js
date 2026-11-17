@@ -1,4 +1,4 @@
-/* Ossuary Wheel: the dungeon map, cut into a slab of dark stone and lit by the fire of the dungeon it charts.
+/* GambaGolf: the dungeon map, cut into a slab of dark stone and lit by the fire of the dungeon it charts.
    Floors climb from the gate at the bottom to the boss at the top. Walked ways glow; the ways still open are picked out in bone. */
 (()=>{
 const O=window.OW,G=O.G,MAP=O.MAP;

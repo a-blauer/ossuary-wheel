@@ -1,4 +1,4 @@
-/* Ossuary Wheel: the voxel stage on the big screen. Lobby hall, the creature course, fighters and monster, marbles, particles, camera and HUD.
+/* GambaGolf: the voxel stage on the big screen. Lobby hall, the creature course, fighters and monster, balls, particles, camera and HUD.
    The dungeon map is drawn by map2d.js. Course coordinates map to the world as x -> x*W, y (down the course) -> -y*W. */
 (()=>{
 const O=window.OW,T=THREE,G=O.G,V=O.V,CG=O.CG,{CLASSES,MONSTERS,MAP,LANES,TIER}=O,$=id=>document.getElementById(id);
@@ -70,7 +70,7 @@ function syncCourse(){
       ledge.position.set(wx(C.cx(150)-C.half(150)-90),-.34,wz(150))}}
   lobbyG.visible=!C&&G.screen!=='map';ledge.visible=!!C;if(!course)return;
   const C2=mo.course;course.update(G.ck,cam);
-  /* who the course's grates and glowing rims speak to: the marble in play, or the one fighter lining up a shot */
+  /* who the course's grates and glowing rims speak to: the ball in play, or the one fighter lining up a shot */
   const ci=G.cine;let fit=0;
   if(ci&&!ci.atk.ab.instant&&ci.atk.ab.m)fit=O.mSize(ci.atk.ab.m.r);
   else{const aimers=G.players.filter(p=>p.hp>0&&!p.fired&&(G.players.length===1||p.id===G.shooter));if(aimers.length===1){const p=aimers[0],ab=CLASSES[p.cls].ab[p.ab];if(ab&&ab.m)fit=Math.max(1,O.mSize(ab.m.r)-(O.mods(p).sizeDown||0)-(p.small<1?1:0))}}
@@ -143,7 +143,7 @@ function syncHeroes(dt){
     if(u.hurtT>0){f.position.x+=Math.sin(u.hurtT*40)*.04}
     const onMap=G.screen==='map'&&!G.mg;f.scale.setScalar(onMap?.55:1)});
   /* a direction arrow at the tee for anyone pulling back their shot: direction only, never where it lands */
-  /* each fighter's aim, drawn big at their tee while they pull on their phone: a sling, the marble drawn back, and an arrow the way it will leave */
+  /* each fighter's aim, drawn big at their tee while they pull on their phone: a sling, the ball drawn back, and an arrow the way it will leave */
   while(aimArrows.length<4){const g=mkSling();world.add(g);aimArrows.push(g)}
   const pv=new T.Vector3();
   /* each fighter's last shot, a faint dashed line in their colour, so they can learn from it */
@@ -152,7 +152,7 @@ function syncHeroes(dt){
     if(!L||L.userData.n!==p.trailN){if(L){world.remove(L);L.geometry.dispose()}const pts=[];{const tr=p.trail;let acc=0;pts.push(new T.Vector3(wx(tr[0][0]),.03+tr[0][2]*W,wz(tr[0][1])));for(let k=1;k<tr.length;k++){const a0=tr[k-1],b0=tr[k],seg=Math.hypot(b0[0]-a0[0],b0[1]-a0[1],b0[2]-a0[2]);let t0=10-acc;while(t0<=seg){const f=t0/seg;pts.push(new T.Vector3(wx(a0[0]+(b0[0]-a0[0])*f),.03+(a0[2]+(b0[2]-a0[2])*f)*W,wz(a0[1]+(b0[1]-a0[1])*f)));t0+=10}acc=(acc+seg)%10}}
       L=new T.Points(new T.BufferGeometry().setFromPoints(pts),new T.PointsMaterial({color:LANES[p.slot],size:Math.max(4,renderer.domElement.height/170),sizeAttenuation:false,transparent:true,opacity:.75,depthTest:false}));L.renderOrder=4;L.userData.n=p.trailN;world.add(L);trails[i]=L}
     L.visible=true});
-  /* fighters whose ability or upgrade shows where the marble stops (and everyone in practice) see that ring on the big screen */
+  /* fighters whose ability or upgrade shows where the ball stops (and everyone in practice) see that ring on the big screen */
   while(aimRings.length<4){const r=new T.Mesh(new T.RingGeometry(.11,.15,28),new T.MeshBasicMaterial({color:'#fff',transparent:true,opacity:.9,depthTest:false,side:T.DoubleSide}));r.rotation.x=-Math.PI/2;r.renderOrder=6;r.visible=false;world.add(r);aimRings.push(r)}
   aimRings.forEach((r,i)=>{const p=G.players[i],C=G.mons[0]&&G.mons[0].course;let on=!!p&&!!C&&G.screen==='combat'&&G.phase==='aim'&&!G.cine&&p.ch&&!p.fired;
     if(on){const ab=CLASSES[p.cls].ab[p.ab||0];on=!!(ab&&ab.sight)||!!(O.mods(p).eye)||!!G.practice}r.visible=on;if(!on)return;
@@ -160,7 +160,7 @@ function syncHeroes(dt){
   aimArrows.forEach((g,i)=>{const p=G.players[i],C=G.mons[0]&&G.mons[0].course;const on=!!p&&!!C&&G.screen==='combat'&&G.phase==='aim'&&!G.cine&&p.ch&&!p.fired;g.visible=on;if(!on)return;const u=g.userData,pw=clamp(p.pw||0,0,1);
     g.position.set(wx(O.launchX(p)),.03,wz(O.COURSE.TEE)-.55);g.scale.setScalar(1.7);g.rotation.y=(p.aim-90)*Math.PI/180;poseSling(g,p,pw)})
 }
-/* a sling for the big screen: posts, a band, the marble drawn back and an arrow the way it will leave (local -z is forward) */
+/* a sling for the big screen: posts, a band, the ball drawn back and an arrow the way it will leave (local -z is forward) */
 function mkSling(){const g=new T.Group(),lane=new T.MeshBasicMaterial({color:'#fff',transparent:true,opacity:.95,depthTest:false}),wood=new T.MeshBasicMaterial({color:K0lin('#7a5a3a')}),band=new T.MeshBasicMaterial({color:K0lin('#e8c8a0')});
     const sh=new T.Shape();sh.moveTo(-.05,0);sh.lineTo(.05,0);sh.lineTo(.05,-.55);sh.lineTo(.13,-.55);sh.lineTo(0,-.78);sh.lineTo(-.13,-.55);sh.lineTo(-.05,-.55);sh.lineTo(-.05,0);
     lane.side=T.DoubleSide;const ar=new T.Mesh(new T.ShapeGeometry(sh),lane);ar.rotation.x=Math.PI/2;ar.position.set(0,.06,-.12);ar.renderOrder=5;g.add(ar);
@@ -170,7 +170,7 @@ function mkSling(){const g=new T.Group(),lane=new T.MeshBasicMaterial({color:'#f
     g.userData={ar,ball,bands,lane};g.visible=false;return g}
 function poseSling(g,p,pw,col){const u=g.userData;u.lane.color.set(LANES[p.slot]);u.ar.scale.set(1.3,1+pw*1.6,1);u.ar.position.z=-.14;u.ball.material.color.set(col||(CLASSES[p.cls]||{}).col||'#fff');u.ball.position.set(0,.08,.06+pw*.42);
   u.bands.forEach((b,k)=>{const sx=(k?1:-1)*.16,dx=u.ball.position.x-sx,dy=u.ball.position.y-.2,dz=u.ball.position.z-.02,L=Math.hypot(dx,dy,dz);b.position.set((sx+u.ball.position.x)/2,(.2+u.ball.position.y)/2,(.02+u.ball.position.z)/2);b.scale.set(1,L,1);b.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),new T.Vector3(dx,dy,dz).normalize())})}
-/* ---------- marbles ---------- */
+/* ---------- balls ---------- */
 function syncMarbles(dt){
   const live=new Set();for(const m of G.marbles){live.add(m.id);let o=marbles.get(m.id);if(!o){o=CG.marble(m.r,m.col);world.add(o);marbles.set(m.id,o)}
     const y=m.r*W+(m.off?m.z:Math.max(0,m.z))*W;o.position.set(wx(m.x),y,wz(m.y));const b=o.userData.ball;b.rotation.x-=m.vy*W*dt/(m.r*W);b.rotation.z-=m.vx*W*dt/(m.r*W);
@@ -296,7 +296,7 @@ function hud(){foes();aimPow();
   else if(fight&&G.phase==='boss'&&G.mons[G.actor]&&G.mons[G.actor].atk&&G.mons[G.actor].atk.t>=-O.FOE_HOLD&&G.mons[G.actor].atk.t<G.mons[G.actor].atk.W+.5){const am=G.mons[G.actor],q=am.atk;title=am.name;threat=true;const mon=am;
     if(q.it&&q.it.mv!=null){const mv=O.movesOf(mon.id).mv[q.it.mv];title=mv.name;tag=q.it.pw>1.2?'Triple!':mv.sp?'Special':'';sub=O.intentText(mon.id,q.it,nmAnimal)+'.'}
     else sub=(q.target?`strikes the ${CLASSES[q.target.cls].animal}${q.t2?' and the '+CLASSES[q.t2.cls].animal:''}`:'strikes the whole party')+(q.dmg?` for ${q.dmg}`:'')+(O.TERR[q.x]?' and '+O.TERR[q.x].it:'')}
-  else if(C&&!C.rep&&(C.st==='cast'||C.st==='pan')){title=C.atk.ab.name;sub=`${CLASSES[C.atk.pl.cls].animal} ${CLASSES[C.atk.pl.cls].name}`+(C.atk.ab.m?' · '+O.SIZE_NAMES[O.mSize(C.atk.ab.m.r)].toLowerCase()+' marble':'')}
+  else if(C&&!C.rep&&(C.st==='cast'||C.st==='pan')){title=C.atk.ab.name;sub=`${CLASSES[C.atk.pl.cls].animal} ${CLASSES[C.atk.pl.cls].name}`+(C.atk.ab.m?' · '+O.SIZE_NAMES[O.mSize(C.atk.ab.m.r)].toLowerCase()+' ball':'')}
   const ter=mon&&mon.terr;
   const key=[G.screen,!!G.dec,!!G.mg,G.phase,G.round,ter?ter.k+ter.t:'',mon?Math.ceil(mon.hp):0,mon?mon.enraged:0,mon&&mon.stun,mon&&mon.intent?mon.intent.t+mon.intent.t2+mon.intent.dmg:0,mon&&mon.burn?mon.burn.d+':'+mon.burn.t:0,G.combo,G.msg,title,sub,tag,wait,left<=20?left:0,G.practice].join('|');
   if(key===hudKey)return;hudKey=key;

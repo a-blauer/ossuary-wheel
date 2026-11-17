@@ -1,4 +1,4 @@
-/* Ossuary Wheel: drawing a creature course in voxels.
+/* GambaGolf: drawing a creature course in voxels.
    World units are metres: one course unit is 1 cm, so x maps to x*W and y (down the course) to -y*W. */
 (()=>{
 const O=window.OW,V=O.V,T=THREE;
@@ -76,7 +76,7 @@ G.build=function(C,opt){
     for(let y=200;y<C.len;y+=470){const s=(Math.floor(y/470)%2)?1:-1,m=bm.clone();m.position.set(wx(C.cx(y)+s*(C.half(y)+70)),-.6,wz(y));m.rotation.y=y;grp.add(m)}
     const st=new V.Part('s',[0,0,0]);for(let k=0;k<4;k++)st.box(-26+k*2,25-k*2,k,k,-14+k,13-k*2,k%2?'stone':'stone_d');
     const sm=V.build({pal:lk,parts:[st]},.1);sm.position.set(wx(C.cx(C.len)),-.65,wz(C.len+170));grp.add(sm)}
-  /* holes: a grate for marbles that do not fit, a glowing rim for those that do, and a flag with the hole's worth and size */
+  /* holes: a grate for balls that do not fit, a glowing rim for those that do, and a flag with the hole's worth and size */
   const holes=C.holes.map(h=>{const g=new T.Group();g.position.set(wx(h.x),0,wz(h.y));grp.add(g);
     const gr=new T.Group();const bm=new T.MeshLambertMaterial({color:'#2c2a2e'}),rm=new T.MeshLambertMaterial({color:'#4a474e'});const R=h.rad*W;
     for(let k=-3;k<=3;k++){const b=new T.Mesh(new T.BoxGeometry(.025,.03,R*2*Math.sqrt(1-Math.pow(k/3.6,2))),bm);b.position.set(k*R/3.6,-.085,0);gr.add(b)}
@@ -119,7 +119,7 @@ G.build=function(C,opt){
       for(const o of blocks)o.m.visible=o.q.on;for(const o of sand)o.m.visible=o.s.on!==false;for(const o of bumps)o.m.visible=o.b.on!==false;if(mill)mill.visible=!C.mv.broken;if(boulder)boulder.visible=!C.mv.broken}};
   return api};
 
-/* a marble: a cut-glass gem with a glow */
+/* a ball: a cut-glass gem with a glow */
 G.marble=function(r,col){const g=new T.Group(),R=r*W;
   const m=new T.Mesh(new T.IcosahedronGeometry(R,1),new T.MeshStandardMaterial({color:col,roughness:.25,metalness:.1,flatShading:true,emissive:col,emissiveIntensity:.25}));m.castShadow=true;g.add(m);
   if(!G._halo){const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d'),gr=x.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.35,'rgba(255,255,255,.35)');gr.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=gr;x.fillRect(0,0,64,64);G._halo=new T.CanvasTexture(c)}

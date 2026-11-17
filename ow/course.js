@@ -1,9 +1,9 @@
-/* Ossuary Wheel: the creature course. Each monster is a mini golf course instead of a wheel.
+/* GambaGolf: the creature course. Each monster is a mini golf course instead of a wheel.
    Course coordinates: x across (right is +), y along the course away from the players. The tee is at y=0, the far wall at y=len.
    This file has no drawing in it, so the host simulation and the phones agree on the same course. */
 (()=>{
 const O=window.OW;
-/* ---- sizes: every hole and every marble has a size of 1 (small), 2 (medium) or 3 (large). A marble fits a hole of its size or bigger. ---- */
+/* ---- sizes: every hole and every ball has a size of 1 (small), 2 (medium) or 3 (large). A ball fits a hole of its size or bigger. ---- */
 O.hSize=rad=>rad<21?1:rad<28?2:3;
 O.mSize=r=>r<=11?1:r<=16?2:3;
 O.SIZE_NAMES=['','Small','Medium','Large'];
@@ -60,14 +60,14 @@ O.rateHoles=rateHoles;
 O.millAng=(mv,t)=>mv.ph+mv.w*t;
 O.boulderX=(C,mv,t)=>{const c=C.cx(mv.y),h=C.half(mv.y)-mv.rad-8;return c+Math.sin(mv.ph+mv.w*t)*h};
 
-/* one marble's step on a course. m: {x,y,vx,vy,r,size,...}. Returns an event string or null. hooks.fits(m,h) decides fit and openness. */
+/* one ball's step on a course. m: {x,y,vx,vy,r,size,...}. Returns an event string or null. hooks.fits(m,h) decides fit and openness. */
 O.courseStep=function(C,m,dt,t,hooks){
   const K=O.COURSE;let sp=Math.hypot(m.vx,m.vy);
   /* ground: rolling friction, more in sand */
   let fr=K.FR*(m.fric||1);for(const s of C.sand)if(s.on&&Math.hypot(m.x-s.x,m.y-s.y)<s.r)fr*=4.2;
   for(const w of C.water)if(Math.hypot(m.x-w.x,m.y-w.y)<w.r-m.r*.4)return'water';
   if(sp>0){const ns=Math.max(0,sp-fr*dt);m.vx*=ns/sp;m.vy*=ns/sp;sp=ns}
-  /* holes: a dished indent around each open hole the marble fits draws it in; a grated or armored hole does nothing */
+  /* holes: a dished indent around each open hole the ball fits draws it in; a grated or armored hole does nothing */
   for(const h of C.holes){const dx=h.x-m.x,dy=h.y-m.y,d=Math.hypot(dx,dy);if(d>h.rad+K.IND+m.r)continue;
     const ok=hooks.fits(m,h);
     if(h.armor>0){if(d<h.rad+m.r){if(hooks.armor&&hooks.armor(m,h))return null;const nx=-dx/(d||1),ny=-dy/(d||1);bounce(m,nx,ny,.6);m.x=h.x+nx*(h.rad+m.r+.5);m.y=h.y+ny*(h.rad+m.r+.5)}continue}

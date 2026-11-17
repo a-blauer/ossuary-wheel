@@ -1,4 +1,4 @@
-/* Ossuary Wheel: trap and event floors as mini games. The party plays together against the dungeon:
+/* GambaGolf: trap and event floors as mini games. The party plays together against the dungeon:
    every fighter passes or fails on their own, a pass costs nothing, a fail costs health, and if everyone passes the party finds an item.
    Each dungeon has its own two trap games (mg_*.js register them); the five event floors are shared but dressed per dungeon.
    The big screen shows a voxel room and a HUD (vstage.js), every phone a control (app.js). A game here is rules only:
@@ -122,7 +122,7 @@ const EV={
     const left=S().shuffle(Object.keys(O.RELICS).filter(r=>!G.relics.includes(r)&&S().has('re:'+r))).slice(0,Math.min(4,cnt)),gold=tot*5;if(gold&&!G.practice){G.stash.gold+=gold;S().saveStash()}
     for(const p of ps)g.d.rw[p.slot]=`You set ${plural(g.d.set[p.slot]||0,'tumbler')}; the party set ${tot}${gold?`: ${gold} gold`:''} and a choice of ${left.length} relics.`;
     if(left.length)return()=>{S().say(`${plural(tot,'tumbler')} set${gold?`, and ${gold} gold`:''}. Choose a relic from ${left.length}.`);S().setDec('relic',left);return true}}},
- shrine:{name:'The Shrine Cup',brief:'Three shots each at the shrine’s narrow cup, through a fence of posts. Drag back on your phone and aim on the big screen. Putt along the green, chip a low hop, or lob high over the posts (land off the green and it is lost). Every marble the party sinks heals everyone more; the first one raises the fallen.',
+ shrine:{name:'The Shrine Cup',brief:'Three shots each at the shrine’s narrow cup, through a fence of posts. Drag back on your phone and aim on the big screen. Putt along the green, chip a low hop, or lob high over the posts (land off the green and it is lost). Every ball the party sinks heals everyone more; the first one raises the fallen.',
   setup(g){g.dur=40;g.d.sk={};g.d.sh={};g.balls=[];g.C=O.shrineCourse()},
   input(g,p,v){const[n,rest]=String(v).split(':'),[a,w,rp0]=String(rest||'').split(',').map(Number);if(+n!==(g.d.sh[p.slot]||0)+1||g.balls.some(b=>b.pl===p&&!b.done)||(g.d.sh[p.slot]||0)>=3)return;if(!isFinite(a)||!isFinite(w))return;
     /* a putt rolls; a chip hops once; a lob flies high and nearly stops where it lands. In the air it clears the posts, and landing off the green loses it. */
@@ -160,7 +160,7 @@ const EV={
   prog:g=>`${g.d.found}/6 pairs`,pass:g=>g.d.found>=3,
   finish(g){for(const p of here()){p.mgN=Math.min(4,1+Math.floor(g.d.found/2));g.d.rw[p.slot]=`The party found ${plural(g.d.found,'pair')}: you choose from ${p.mgN}.`}
     return()=>{S().say(`${plural(g.d.found,'pair')} found. Everyone chooses something to learn.`);S().offerUpgrades('tome');return true}}},
- gamble:{name:'The Gambler’s Table',brief:'A goblin hides a marble under one of three cups and shuffles, faster and faster. Bet gold from the party’s purse, then pick a cup. The right cup doubles the bet.',
+ gamble:{name:'The Gambler’s Table',brief:'A goblin hides a ball under one of three cups and shuffles, faster and faster. Bet gold from the party’s purse, then pick a cup. The right cup doubles the bet.',
   setup(g){const r=rng(g.seed);g.d.cup=Math.floor(r()*3);g.d.sw=[];g.d.bt=7;let t=7.6,iv=.62;for(let i=0;i<14;i++){const a=Math.floor(r()*3);g.d.sw.push([a,(a+1+Math.floor(r()*2))%3,+t.toFixed(2),+iv.toFixed(2)]);t+=iv;iv=Math.max(.2,iv*.88)}
     g.d.se=+(t+.3).toFixed(2);g.d.bet={};g.d.pick={};g.dur=g.d.se+9;g.d.purse=G.stash.gold;g.d.net={}},
   input(g,p,v){const[b,c]=String(v).split(':').map(Number);if(g.t<g.d.bt)g.d.bet[p.slot]=[0,10,25,50].includes(b)&&b<=g.d.purse?b:0;else if(g.t>=g.d.se&&c>=0&&c<3&&g.d.pick[p.slot]==null)g.d.pick[p.slot]=c},

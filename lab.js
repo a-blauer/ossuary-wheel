@@ -1,4 +1,4 @@
-/* Ossuary Wheel mini-game lab: the game in solo mode, with a picker that starts any trap or event floor on demand. */
+/* GambaGolf mini-game lab: the game in solo mode, with a picker that starts any trap or event floor on demand. */
 (()=>{
 const O=window.OW,G=O.G,q=new URLSearchParams(location.search),CLS=q.get('cls')||'bard',BOTS=Math.max(0,Math.min(3,+q.get('bots')||0));
 const css=`#lab{position:fixed;left:12px;bottom:12px;z-index:9999;font:14px/1.3 var(--body,system-ui);color:#efe4cc;pointer-events:auto}
@@ -48,6 +48,6 @@ function waitMap(n){if(G.screen==='map'||n>60){ready=true;G.dec=null;G.travel=nu
 /* once a game ends, clear whatever the map would do next and bring the picker back */
 setInterval(()=>{if(G.mg&&G.mg.st==='brief'&&G.mg.d.rdy)for(const p of G.players)if(String(p.id).startsWith('idle'))G.mg.d.rdy[p.slot]=1;if(!ready)return;if(running&&!G.mg){running=false;setTimeout(()=>{G.dec=null;G.travel=null;G.after=null;for(const p of G.players)p.hp=Math.max(p.hp,1);open=true;pan.hidden=false;status('Done. Pick another, or play the last one again.')},1500)}
   if(!running&&ready&&G.screen==='map'){G.travel=null;if(G.dec&&!G.mg)G.dec=null}},400);
-document.title='Ossuary Wheel · Mini-game lab';
+document.title='GambaGolf · Mini-game lab';
 window.addEventListener('load',()=>{build();setTimeout(boot,900)});
 })();

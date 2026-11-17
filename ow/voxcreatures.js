@@ -1,4 +1,4 @@
-/* Ossuary Wheel: hand-shaped voxel models for the lesser monsters and minibosses.
+/* GambaGolf: hand-shaped voxel models for the lesser monsters and minibosses.
    Rounded bodies from ellipsoids and tapered tubes, by archetype, each creature with its own build and features.
    Front is +z. Part names drive the stage's animations: body, head, jaw, arm_L/arm_R, wing_L/wing_R, leg_*, tail*. */
 (()=>{

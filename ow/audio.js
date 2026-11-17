@@ -1,4 +1,4 @@
-/* Ossuary Wheel: sound and music. Everything is synthesised in the browser: no audio files. Starts on the first press of a button.
+/* GambaGolf: sound and music. Everything is synthesised in the browser: no audio files. Starts on the first press of a button.
    Effects and music run on their own buses with their own volume, and both feed one stone-hall reverb. */
 (()=>{
 const O=window.OW;let ac=null,master=null,sfxBus=null,musBus=null,revIn=null,noiseBuf=null,roll=null,drone=null,on=true;const vol={music:.7,sfx:.9};
@@ -10,7 +10,7 @@ function init(){
     {const len=Math.floor(ac.sampleRate*2.8),ir=ac.createBuffer(2,len,ac.sampleRate);for(let c=0;c<2;c++){const d=ir.getChannelData(c);let lp=0;for(let i=0;i<len;i++){const t=i/len,n=Math.random()*2-1;lp+=(n-lp)*(.55-.4*t);d[i]=lp*Math.pow(1-t,2.6)*(i<400?i/400:1)}}       // a made-up impulse: the tail of a stone hall
       const cv=ac.createConvolver();cv.buffer=ir;const wet=ac.createGain();wet.gain.value=.5;cv.connect(wet);wet.connect(master);revIn=ac.createGain();revIn.connect(cv);const s1=ac.createGain();s1.gain.value=.2;sfxBus.connect(s1);s1.connect(revIn);const s2=ac.createGain();s2.gain.value=.55;musBus.connect(s2);s2.connect(revIn)}
     noiseBuf=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
-    // the marble's rumble: filtered noise whose loudness and pitch follow its speed
+    // the ball's rumble: filtered noise whose loudness and pitch follow its speed
     const src=ac.createBufferSource();src.buffer=noiseBuf;src.loop=true;const f=ac.createBiquadFilter();f.type='bandpass';f.frequency.value=300;f.Q.value=1.2;const g=ac.createGain();g.gain.value=0;src.connect(f);f.connect(g);g.connect(sfxBus);src.start();roll={f,g}}catch(e){ac=null}}
 O.audioInit=function(){init();if(ac&&ac.state==='suspended')ac.resume().catch(()=>{})};
 O.soundOn=()=>on;
@@ -76,7 +76,7 @@ const S={
  travel(){for(let i=0;i<4;i++)noise(.08,.12,'lowpass',500,200,1,i*.22)}
 };
 O.sfx=function(name,o){if(!ac||!on||!S[name])return;try{S[name](o)}catch(e){}};
-/* called every frame by the stage with the fastest marble's speed (field units per second), 0 when nothing rolls */
+/* called every frame by the stage with the fastest ball's speed (field units per second), 0 when nothing rolls */
 O.sfxRoll=function(sp,heavy){if(!roll)return;const t=now(),v=Math.min(1,sp/600);roll.g.gain.setTargetAtTime(on?v*(heavy?.34:.2):0,t,.05);roll.f.frequency.setTargetAtTime((heavy?140:260)+v*(heavy?320:700),t,.05)};
 /* a low drone under everything, retuned per dungeon and raised in a fight */
 O.sfxDrone=function(root,fight){

@@ -1,4 +1,4 @@
-/* Ossuary Wheel: host-side rules, physics and run flow. Field units: 1000 x 1120, wheel at (500,450) r340.
+/* GambaGolf: host-side rules, physics and run flow. Field units: 1000 x 1120, wheel at (500,450) r340.
    A fight holds one or more monsters, each with its own wheel. In a round every fighter picks a monster and launches when ready;
    the shots are played out one after another in the order they were loosed, and then the monsters answer. */
 (()=>{
@@ -44,7 +44,7 @@ O.goldFor=(d,t)=>Math.round(O.DUNGEONS[d].gold*(1+.5*t));
 O.BLESS=150;O.buyBlessing=()=>{const st=G.stash;if(st.bless||st.gold<O.BLESS)return false;st.gold-=O.BLESS;st.bless=1;saveStash();return true};
 O.openBox=function(){const st=G.stash,cost=O.boxCost(st.opened),left=O.LOCKS.filter(x=>!st.unl.includes(x));if(!left.length||st.gold<cost)return null;st.gold-=cost;st.opened++;const id=pick(left);st.unl.push(id);st.last=id;saveStash();return id};
 const has=id=>!O.LOCKS.includes(id)||G.stash.unl.includes(id),DG=()=>O.DUNGEONS[G.dung];
-O.HPB=1;                 // marbles find holes far more often on a rimmed wheel, so monsters carry more health to keep fights the same length
+O.HPB=1;                 // balls find holes far more often on a rimmed wheel, so monsters carry more health to keep fights the same length
 const HPK=()=>DG().hpK*(1+.35*G.tier)*O.HPB,DMGK=()=>O.MDMG*Math.pow(DG().dmgK,.45)*(1+.22*G.tier)*(O.PARTY_DMG[G.players.length-1]||1);
 function say(t){G.msg=t;G.log.unshift(t);if(G.log.length>30)G.log.pop()}
 const float=(x,y,txt,col)=>ev('text',{x,y,txt,col});
@@ -75,10 +75,10 @@ O.cdBase=()=>0;                 // attacks no longer rest between uses: the reel
 function spin(p){const md=mods(p),sg=(O.SIG[p.cls]||['b'])[0],sg2=(O.SIG[p.cls]||['b','l'])[1],W={b:6,l:6,f:6,e:3.5,s:2.2*(md.grave?2:1),c:1.2*(md.grave?2:1),w:3*(md.sw?2:1)};W[sg]+=md.haste?12:7;W[sg2]+=3;
   const ks=Object.keys(W),tot=ks.reduce((a,k)=>a+W[k],0);let g='';for(let k=0;k<O.SLOT_N;k++){let r=Math.random()*tot;for(const c of ks){r-=W[c];if(r<=0){g+=c;break}}if(g.length<=k)g+='b'}
   if(md.nail)g=g[0]+sg+g.slice(2);p.grid=g;p.gn=(p.gn||0)+1;p.paid=false;p.bag=bagOf(p);p.bagN=p.bag.length}
-/* the marbles a spin wins: one of every special attack whose line came up, or the fighter's basic attack when none did */
+/* the balls a spin wins: one of every special attack whose line came up, or the fighter's basic attack when none did */
 function bagOf(p){const sl=O.slotRead(p.grid,p.owned,mods(p),p.cls),b=p.owned[0]||0,sp=sl.ok.filter(i=>i!==b);return sp.length?sp:[b]}
 O.bagOf=bagOf;
-/* a utility marble (anything with no aiming) can always be traded for the basic one: the bag offers basic beside it, and firing basic uses up that utility */
+/* a utility ball (anything with no aiming) can always be traded for the basic one: the bag offers basic beside it, and firing basic uses up that utility */
 const swapOf=p=>{const b=p.owned[0]||0,bag=p.bag||[];if(bag.includes(b))return -1;for(let k=bag.length-1;k>=0;k--)if(CLASSES[p.cls].ab[bag[k]].instant)return bag[k];return -1};
 O.swapOf=swapOf;O.choicesOf=p=>{const bag=p.bag||[],sw=swapOf(p);return sw>=0?[...bag,p.owned[0]||0]:bag.slice()};
 O.SLOT_N=12;O.spin=spin;O.slotOf=p=>O.slotRead(p.grid,p.owned,mods(p),p.cls);
@@ -260,7 +260,7 @@ function fire(pl,abi,ang,pow,rp){
   ang=clamp(num(ang,90),8,172);pow=clamp(num(pow),0,1);rp=clamp(Math.floor(num(rp)),0,2);
   if(!pl.paid){pl.paid=true;const fx=sl.fx,tm=G.mons[pl.tgt];if(fx.blunt&&tm&&!tm.dead&&!tm.blunt){tm.blunt=true;if(tm.intent){if(!tm.intent.pend)tm.intent.dmg=Math.max(1,Math.ceil(tm.intent.dmg/2));tm.intent.b=1}say(`A line of skulls: ${tm.name}'s strike is blunted.`)}
     if(fx.heal)for(const q of G.players)if(q.hp>0){q.hp=Math.min(q.mhp,q.hp+Math.round(fx.heal));ev('heal',{pl:q,col:'#f0cc5c'})}if(fx.gold&&!G.practice){G.stash.gold+=fx.gold;say(`A line of crowns: ${fx.gold} gold for the stash.`)}if(fx.jack){say('Jackpot! Four of a kind.');ev('boon',{})}if(fx.again&&!pl.extra)pl.extra=1}
-  pl.bag.splice(pl.bag.indexOf(use),1);pl.sn++;                    // each marble the reels won is loosed in turn; when the bag is empty the turn is done
+  pl.bag.splice(pl.bag.indexOf(use),1);pl.sn++;                    // each ball the reels won is loosed in turn; when the bag is empty the turn is done
   if(!pl.bag.length){if(pl.extra>0){pl.extra--;spin(pl)}else pl.fired=true}
   if(!ab.instant)pl.st.shots++;
   pl.ch=false;G.inspect=false;
@@ -272,7 +272,7 @@ function applyInstant(a){
   if(id==='mend'){for(const p of G.players){a.pl.st.heal+=Math.min(m.heal,p.mhp-Math.max(0,p.hp));p.hp=Math.min(p.mhp,p.hp+m.heal);float(laneX(p),TY,'+'+m.heal,'#5fa596');ev('heal',{pl:p})}}
   else if(id==='anthem'){for(const p of G.players){p.buff=true;float(laneX(p),TY,'+50%','#f0cc5c');ev('heal',{pl:p,col:'#f0cc5c'});if(m.encore&&p.hp>0)p.hp=Math.min(p.mhp,p.hp+m.encore)}}
   else if(id==='lull'){G.ward=Math.min(G.ward,.5);say('The monsters grow drowsy. They hit half as hard this round.');for(const q of alive())ev('monFlinch',{uid:q.uid,dmg:0,col:'#f0cc5c'})}
-  else if(id==='rally'){for(const p of G.players){if(p===a.pl||p.hp<=0||p.fired)continue;(p.bag=p.bag||[]).push(p.owned[0]||0);float(laneX(p),TY,'+1 marble','#f0cc5c');ev('heal',{pl:p,col:'#f0cc5c'})}}
+  else if(id==='rally'){for(const p of G.players){if(p===a.pl||p.hp<=0||p.fired)continue;(p.bag=p.bag||[]).push(p.owned[0]||0);float(laneX(p),TY,'+1 ball','#f0cc5c');ev('heal',{pl:p,col:'#f0cc5c'})}}
   else if(id==='grounds'&&mon){mon.terr=null;G.terr=null;for(const q of mon.sand)q.on=false;G.boardVer++;say('The course is swept and drained.');ev('boon',{})}
   else if(id==='flag'&&mon){const hs=mon.holes.filter(h=>h.armor>0).sort((p,q)=>q.dmg-p.dmg);if(hs.length){const h=hs[0];h.armor=0;burst(h.x,h.y,'#d8cfba',20);float(h.x,h.y,'lid shot off','#d8cfba');ev('ring',{x:h.x,y:h.y,col:'#8fd88a',R:80});G.boardVer++}else say('There is no lid left to shoot off.')}
   else if(id==='crescendo'){let n=0;for(const p of G.players)if(p.hp>0&&p!==a.pl){if(p.fired){p.fired=false;spin(p);n++}else if(!p.extra)p.extra=1;ev('heal',{pl:p,col:'#ff9a3a'})}ev('boon',{});say(`${who(a.pl)} plays a Crescendo. Everyone attacks again.`.replace(/^t/,'T'))}
@@ -293,7 +293,7 @@ function spawn(p){
     ric:m.ric||0,burn:p.fb||m.burn||((id==='note'&&md.kindle)||(id==='stream'&&md.ember)?.4:0),settle:m.settle||0,seek:m.seek||0,splash:m.splash||0,quake:m.quake||0,glow:sk&&sk.glow||'',
     capK:md.capv*(m.capx||1),z:rmp.fly?.1:0,vz:rmp.fly?v*rmp.tan:0,keep:rmp.k==='high'?.22:.62,fly:rmp.fly?1:0,in:null,still:0,pull:360*md.orb,burst:md.burst,col,lane:LANES[p.pl.slot],age:0,told:null,skips:0});
   burst(x,ty,col,16);ev('ring',{x,y:ty,col,R:70});ev('shake',{v:.2});ev('launch',{cls:p.pl.cls,r:m.r})}
-/* a Prism marble breaks into three the first time it strikes something solid */
+/* a Prism ball breaks into three the first time it strikes something solid */
 function splitM(m){if(!m.split)return;m.split=0;m.r=Math.min(m.r,8);const sp=Math.hypot(m.vx,m.vy)||1;burst(m.x,m.y,m.col,14);
   for(const da of[-.5,.5]){const c=Math.cos(da),s2=Math.sin(da);G.marbles.push(Object.assign({},m,{id:++G.mid,vx:(m.vx*c-m.vy*s2),vy:(m.vx*s2+m.vy*c),told:null,age:m.age,path:null}))}}
 function collideMarbles(){
@@ -313,19 +313,19 @@ function damageMon(d,x,y,col,mon){
     ev('enrage',{uid:mon.uid})}
   return d}
 function bounce(m,nx,ny,rest){const vn=m.vx*nx+m.vy*ny;if(vn<0){m.vx-=(1+rest)*vn*nx;m.vy-=(1+rest)*vn*ny;return vn<-60}return false}
-/* A marble that has dropped into a hole wounds the monster. */
+/* A ball that has dropped into a hole wounds the monster. */
 function sinkInto(m,h,hx,hy){
   const mon=cm(),md=m.md;let k=m.mult*(h.mark||1);if(mon){k*=mon.rank==='lesser'?md.culler:md.slayer;if(mon.hp<=mon.max/2)k*=md.exec}
   if(Math.random()<md.crit){k*=2;float(hx,hy-34,'critical','#f0cc5c')}
   const bn=Math.min(4,m.bn||0);k*=1+(m.ric+md.ricb)*bn;
   let weak=false;if(mon&&mon.wk>=0&&mon.holes[mon.wk]===h){weak=true;mon.wk=-1;k*=2*md.keen;float(hx,hy-106,'weak point','#ffd24a')}
-  G.combo++;const chain=Math.min(5,G.combo-1),tch=Math.min(10,m.bn||0),trick=tch>=5?2:tch>=2?1:0;const full=!!m.fly;k*=(1+.1*chain)*(full?md.full:1);if(full)float(hx,hy-82,'on the full','#f0cc5c');          // a chain of sinks pays extra, and so does every thing the marble touched on its way in
+  G.combo++;const chain=Math.min(5,G.combo-1),tch=Math.min(10,m.bn||0),trick=tch>=5?2:tch>=2?1:0;const full=!!m.fly;k*=(1+.1*chain)*(full?md.full:1);if(full)float(hx,hy-82,'on the full','#f0cc5c');          // a chain of sinks pays extra, and so does every thing the ball touched on its way in
   if(m.by&&m.by!==m.pl&&G.players.includes(m.by)){k*=1.25;m.by.st.assists=(m.by.st.assists||0)+1;float(hx,hy-154,'assist: '+CLASSES[m.by.cls].animal,'#9fd0ff')}
   if(mon&&mon.sg>=0&&mon.holes[mon.sg]===h){mon.sg=-1;mon.blunt=true;if(mon.intent){if(!mon.intent.pend)mon.intent.dmg=Math.max(1,Math.ceil(mon.intent.dmg/2));mon.intent.b=1}float(hx,hy-130,'strike blunted','#ff9a7a');say(`${mon.name}'s strike is blunted: it will land at half weight.`);ev('blunt',{uid:mon.uid,x:hx,y:hy})}
   if(mon&&mon.locks&&!mon.coreT){const li=mon.locks.findIndex(i=>mon.holes[i]===h);if(li>=0&&!(mon.lk&(1<<li))){mon.lk|=1<<li;
       if(mon.lk===3){mon.coreT=3;const c=mon.holes[mon.core];c.armor=0;G.boardVer++;const[cx2,cy2]=wpos(c.x,c.y);float(cx2,cy2-40,'the core is open','#9fd0ff');say(`Both locks are broken. ${mon.name}'s core stands open until the end of next round.`);ev('core',{x:cx2,y:cy2})}
       else{float(hx,hy-130,'lock broken: one more','#9fd0ff');ev('lock',{x:hx,y:hy})}}}
-  const dmg=Math.round(h.dmg*k);if(m.mark)h.mark=md.markx;G.stop=G.marbles.some(q=>q!==m&&!q.dead)?0:dmg>=20?.16:.07;        // no freeze while other marbles are still rolling
+  const dmg=Math.round(h.dmg*k);if(m.mark)h.mark=md.markx;G.stop=G.marbles.some(q=>q!==m&&!q.dead)?0:dmg>=20?.16:.07;        // no freeze while other balls are still rolling
   
   ev('sink',{x:hx,y:hy,tier:h.tier,dmg,combo:G.combo,trick,col:TIER[h.tier]});const ps=m.pl.st;ps.sinks++;if(trick)ps.trick++;
   burst(hx,hy,TIER[h.tier],26);ev('ring',{x:hx,y:hy,col:TIER[h.tier],R:90});ev('shake',{v:Math.min(1,dmg/40)});const dealt=damageMon(dmg,hx,hy,TIER[h.tier]);m.dead=true;m.pl.st.dmg+=dealt;m.pl.st.best=Math.max(m.pl.st.best,dealt);if(G.cine)G.cine.sinks=(G.cine.sinks||0)+1;
@@ -336,14 +336,14 @@ function sinkInto(m,h,hx,hy){
     if(m.arc)for(const o of G.holes){if(o===h||lidOn(o)||Math.hypot(o.x-h.x,o.y-h.y)>150)continue;const d2=Math.round(o.dmg*m.mult*m.arc);burst(o.x,o.y,'#9fd0ff',12);ev('ring',{x:o.x,y:o.y,col:'#9fd0ff',R:50});m.pl.st.dmg+=damageMon(d2,o.x,o.y,'#9fd0ff')}
     if(m.cleave){let b=null,bd=1e9;for(const o of G.holes){if(o===h||lidOn(o))continue;const d=Math.hypot(o.x-h.x,o.y-h.y);if(d<bd){bd=d;b=o}}if(b){const d2=Math.round(b.dmg*m.mult*m.cleave);burst(b.x,b.y,m.col,14);ev('ring',{x:b.x,y:b.y,col:m.col,R:60});m.pl.st.dmg+=damageMon(d2,b.x,b.y,m.col)}}
     if(m.leech&&m.pl.hp>0){const hl=Math.round(dealt*m.leech);m.pl.hp=Math.min(m.pl.mhp,m.pl.hp+hl);float(laneX(m.pl),TY,'+'+hl,'#5fa596');ev('heal',{pl:m.pl})}}}
-/* Marble physics on a course. Marbles roll with friction on the turf, fly when chipped or lobbed, bounce off rails, posts, lids and the moving parts,
-   and are drawn into the dish round any open hole they fit. A slow marble over a hole drops in; a fast one lips out and is turned aside. */
+/* Ball physics on a course. Balls roll with friction on the turf, fly when chipped or lobbed, bounce off rails, posts, lids and the moving parts,
+   and are drawn into the dish round any open hole they fit. A slow ball over a hole drops in; a fast one lips out and is turned aside. */
 const KICK=470;
 const fitsH=(m,h)=>O.fitsSize(m.size,h.size);
 const fits=fitsH;
 O.holeR=(m,h)=>h.rad;
 const lidOn=h=>h.armor>0||(!!h.shut&&O.shutAt(h,G.ck));
-function hitLid(m,h,d,dx,dy){                  // a marble strikes an iron lid: heavy marbles break one, Shatter and the Hymn lift them all
+function hitLid(m,h,d,dx,dy){                  // a ball strikes an iron lid: heavy balls break one, Shatter and the Hymn lift them all
   if(m.lidT>0)return;m.lidT=.25;const mon=cm();
   h.armor=m.hymn||m.shatter||G.relics.includes('anvil')?0:h.armor-1;if(m.hymn&&m.md.reson)damageMon(m.md.reson,h.x,h.y,'#f0cc5c');
   burst(h.x,h.y,mon?MONSTERS[mon.id].theme:'#aaa',16);float(h.x,h.y,h.armor>0?'lid cracked':'lid broken','#d8cfba');ev('shake',{v:.25});G.boardVer++;
@@ -354,7 +354,7 @@ function stepMarble(m,dt){
   if(m.path!==null){m.pt=(m.pt||0)+dt;if(m.pt>=.035){m.pt=0;const P=m.path||(m.path=[]);if(P.length<500)P.push([Math.round(m.x),Math.round(m.y),Math.round(m.off?m.z:Math.max(0,m.z))])}}
   const C=G.C,K=O.COURSE,md=m.md,mon=cm(),t=G.ck;m.age+=dt;m.near=false;m.in=null;if(m.lidT>0)m.lidT-=dt;if(!C){m.dead=true;return}
   const ter=mon&&mon.terr;
-  /* the crosswind blows over the middle of the course, harder on a marble in the air */
+  /* the crosswind blows over the middle of the course, harder on a ball in the air */
   if(ter&&ter.k==='gale'&&m.y>280&&m.y<C.len-180)m.vx+=ter.dir*(70+Math.min(160,m.z*1.2))*dt;
   /* in the air: nothing on the ground touches it but the rails */
   /* over the edge: it keeps falling past the board and is lost */
@@ -368,7 +368,7 @@ function stepMarble(m,dt){
     return}
   if(ter&&ter.k==='rift'){const s=inSpot(m,'rift');if(s){if(m.skim&&Math.hypot(m.vx,m.vy)>120){m.vz=160;m.z=.1;m.skips++;m.mult*=1.4;burst(m.x,m.y,'#7ab8e0',12);float(m.x,m.y,'skip!','#9fd0ff');ev('tick',{x:m.x,y:m.y})}
       else{burst(m.x,m.y,'#5a9ad0',18);float(m.x,m.y,'into the water','#9fd0ff');ev('miss',{});m.dead=true;return}}}
-  /* rolling: friction, more in sand; gravel knocks the marble about */
+  /* rolling: friction, more in sand; gravel knocks the ball about */
   let sp=Math.hypot(m.vx,m.vy),fr=K.FR*(sp<200?md.bspin:1);
   for(const q of mon?mon.sand:[]){if(!q.on||Math.hypot(m.x-q.x,m.y-q.y)>=q.r)continue;if(m.sunder||m.hymn){q.on=false;G.boardVer++;burst(q.x,q.y,'#c9b080',14);continue}if(!m.pierce&&!md.iron){fr*=4.2;if(!m.mired){m.mired=1;float(m.x,m.y,'in the sand','#c9b080')}}}
   if(ter&&ter.k==='mire'&&inSpot(m,'mire')&&!m.pierce&&!md.iron){fr*=4.2;if(!m.mired){m.mired=1;float(m.x,m.y,'in the sand','#c9b080')}}
@@ -424,7 +424,7 @@ function stepMarble(m,dt){
     m.dead=true}
 }
 /* the rails down both sides follow the fairway; a bend turns the bounce with it */
-/* the rails stand RAIL_H high (the far wall RAIL_HB): a marble in the air clears them and can carry off the board; on the ground they always hold it */
+/* the rails stand RAIL_H high (the far wall RAIL_HB): a ball in the air clears them and can carry off the board; on the ground they always hold it */
 const RAIL_H=20,RAIL_HB=30;
 function offBoard(m,C){const y=Math.max(0,Math.min(C.len,m.y));return m.y>C.len||m.y<-40||Math.abs(m.x-C.cx(y))>C.half(y)}
 function rails(m,C,z){z=z||0;if(z>=RAIL_HB)return;const K=O.COURSE,c=C.cx(m.y),hw=C.half(m.y),e=2,dc=(C.cx(m.y+e)-C.cx(m.y-e))/(2*e),dh=(C.half(m.y+e)-C.half(m.y-e))/(2*e);let hit=false;
@@ -498,7 +498,7 @@ function updateCombat(dt){
       const w=waiting();
       if(!w.length){if(G.practice)practiceRound();else beginMonsters()}
       else{G.turnT+=dt;const here=w.filter(p=>!p.away);
-        /* fighters take their shots one at a time, in party order: the shooter keeps the turn until their reels' marbles are all loosed */
+        /* fighters take their shots one at a time, in party order: the shooter keeps the turn until their reels' balls are all loosed */
         let sh=G.players.find(p=>p.id===G.shooter);if(!sh||sh.fired||sh.hp<=0||(sh.away&&here.length)){const i0=sh?G.players.indexOf(sh):-1,ord=[...G.players.slice(i0+1),...G.players.slice(0,i0+1)];sh=ord.find(p=>w.includes(p)&&!p.away)||w[0];
           if(sh.id!==G.shooter){G.shooter=sh.id;G.turnT=0;if(G.players.length>1)say(`${who(sh)}'s shot.`.replace(/^t/,'T'));ev('turn',{pl:sh})}}
         if(!here.length){if(G.turnT>6){w.forEach(p=>{p.fired=true});say('The fighters who have gone quiet lose the turn.')}}                 // a phone that dropped out does not hold up the round
@@ -585,7 +585,7 @@ function tick(dt){
         say((lvl?'The party grows stronger. Everyone chooses a drop.':'The way is clear. Everyone chooses a drop.')+found);offerUpgrades('drop')}}
     return}
   if(G.phase==='lost'){G.deathT+=dt;if(G.deathT>2.2){G.screen='result';G.result='lose';G.phase='idle';ev('lose',{});setDec('end',['retry','again'])}return}
-  if(G.stop>0){G.stop-=dt;dt*=.06}                 // a beat of stillness when a marble lands a real blow
+  if(G.stop>0){G.stop-=dt;dt*=.06}                 // a beat of stillness when a ball lands a real blow
   updateCine(dt);updateCombat(dt*G.ts);
 }
 O.tick=tick;
@@ -593,8 +593,8 @@ O.tick=tick;
 O.awards=function(){
   const P=G.players,out=[],nm=p=>CLASSES[p.cls].animal+' '+CLASSES[p.cls].name,top=(f,min)=>{let b=null;for(const p of P)if(f(p)>(b?f(b):min||0))b=p;return b};if(!P.length)return out;
   let p=top(q=>q.st.dmg);if(p)out.push(['Wrecking Ball',nm(p),p.st.dmg+' damage dealt']);
-  p=top(q=>q.st.shots>=3?(q.st.hits||0)/q.st.shots:0);if(p)out.push(['Sharpshooter',nm(p),Math.min(100,Math.round(100*(p.st.hits||0)/p.st.shots))+'% of attacks sank a marble']);
-  p=top(q=>q.st.best);if(p)out.push(['Heaviest Blow',nm(p),p.st.best+' in one marble']);
+  p=top(q=>q.st.shots>=3?(q.st.hits||0)/q.st.shots:0);if(p)out.push(['Sharpshooter',nm(p),Math.min(100,Math.round(100*(p.st.hits||0)/p.st.shots))+'% of attacks sank a ball']);
+  p=top(q=>q.st.best);if(p)out.push(['Heaviest Blow',nm(p),p.st.best+' in one ball']);
   p=top(q=>q.st.trick);if(p)out.push(['Trickster',nm(p),p.st.trick+' trick shot'+(p.st.trick===1?'':'s')]);
   if(P.length>1){p=top(q=>q.st.taken);if(p)out.push(['Punching Bag',nm(p),p.st.taken+' damage taken']);p=top(q=>q.st.heal);if(p)out.push(['Lifeline',nm(p),p.st.heal+' health restored'])}
   return out};
