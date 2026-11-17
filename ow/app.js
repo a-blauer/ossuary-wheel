@@ -395,7 +395,7 @@ function drawSling(){const v=C.view,cv=$('scope');if(!v||!v.me||cv.hidden)return
   slingDraw(cv,{ch:C.ch,ph:C.pull&&C.pull.key?'pow':SL.phase(),pw:C.pw,aim:C.aim,lane:LANES[me.sl]||'#e9dfc6',col:cl.col,ready:rdy,msg:other?`Wait: the ${CLASSES[other.c].animal} is shooting`:'',sub:other?'Your turn comes next. Spin your reels meanwhile.':''})}
 function drawScope(live){if(!live)return drawSling();
   const v=C.view,cv=$(live?'live':'scope');if(!v||!v.me||cv.hidden)return;const bd=live?v.bdc:v.bd;if(!bd)return;const Cc=bd.C,wrap=cv.parentNode,bw=wrap.clientWidth,bh=wrap.clientHeight;if(!bw||!bh)return;
-  const dpr=Math.min(2,window.devicePixelRatio||1),X0=-320,X1=320,Y0=-90,Y1=Cc.len+30,k=Math.min(bw/(X1-X0),bh/(Y1-Y0)),ox=bw/2,oy=bh/2+k*(Y0+Y1)/2,S=(px,py)=>[ox+px*k,oy-py*k],R=r=>r*k;
+  const dpr=Math.min(2,window.devicePixelRatio||1),X1=Math.max(320,(Cc.ext||300)+24),X0=-X1,Y0=-90,Y1=Cc.len+30,k=Math.min(bw/(X1-X0),bh/(Y1-Y0)),ox=bw/2,oy=bh/2+k*(Y0+Y1)/2,S=(px,py)=>[ox+px*k,oy-py*k],R=r=>r*k;
   if(cv.width!==Math.round(bw*dpr)||cv.height!==Math.round(bh*dpr)||cv.style.width!==bw+'px'){cv.width=Math.round(bw*dpr);cv.height=Math.round(bh*dpr);cv.style.width=bw+'px';cv.style.height=bh+'px'}
   const x=cv.getContext('2d'),me=v.me,cl=CLASSES[C.cls],ab=cl.ab[C.ab],ck=ckNow(),tm=performance.now()/1000,md=O.mods({cls:C.cls,lv:me.lv,ups:me.up}),msz=ab.m?Math.max(1,O.mSize(ab.m.r)-(md.sizeDown||0)-(me.fx&32?2:me.fx&2?1:0)):0;
   x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle='#0b090a';x.fillRect(0,0,bw,bh);

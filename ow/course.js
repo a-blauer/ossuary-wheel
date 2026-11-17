@@ -13,30 +13,35 @@ O.COURSE={FR:250,IND:42,PULL:330,CAP:330,WALL_E:.62,BUMP_E:.78,KICK:470,TEE:70};
 /* a course is laid out from the monster's old wheel plan, stretched down a fairway: the far side of the wheel becomes the far end of the course */
 O.course=function(id){
   const d=O.MONSTERS[id];if(!d)return null;const L=d.layout(),hs=O.hash('course'+id),r=O.rng(hs);
-  const rank=d.rank,len=rank==='boss'?1800:rank==='mini'?1550:1300;
-  const ys=[...L.holes,...L.bumps].map(o=>o.y),yMin=Math.min(...ys),yMax=Math.max(...ys),sx=.85,toY=ly=>340+(yMax-ly)/Math.max(1,yMax-yMin)*(len-480);
+  /* every creature's course has its own character, fixed by its name: a length, how far the holes spread across, an outline and a bend */
+  const rank=d.rank,big=rank==='boss'?2:rank==='mini'?1:0,len=Math.round(([1300,1550,1800][big])*(.94+r()*.12)/20)*20;
+  const ys=[...L.holes,...L.bumps].map(o=>o.y),yMin=Math.min(...ys),yMax=Math.max(...ys),toY=ly=>340+(yMax-ly)/Math.max(1,yMax-yMin)*(len-480);
+  const xs=[...L.holes.map(h=>Math.abs(h.x)+h.rad*.5),...L.bumps.map(b=>Math.abs(b.x))],spread=[230,268,298][big]+r()*55,sx=Math.max(.95,Math.min(2.2,spread/Math.max(60,...xs))),flip=r()<.5?-1:1;
+  const SHAPES=['even','bowl','fan','funnel','hourglass','lobes'],shape=SHAPES[Math.floor(r()*SHAPES.length)],base=[255,280,302][big]*(.92+r()*.16);
+  const prof=t=>shape==='bowl'?.84+.34*Math.sin(Math.PI*t):shape==='fan'?.8+.42*t:shape==='funnel'?1.2-.36*t:shape==='hourglass'?1.16-.34*Math.sin(Math.PI*t):shape==='lobes'?1+.2*Math.sin(Math.PI*2*t-Math.PI/2)*-1:1;
   /* the fairway bends: straight, a dogleg one way or the other, or an S */
-  const bend=['straight','left','right','s','left','right'][hs%6],A=rank==='lesser'?70:95;
+  const bend=['straight','left','right','s','left','right'][hs%6],A=(big?80:55)+r()*(big?90:70);
   const cx=y=>{const t=Math.max(0,Math.min(1,(y-220)/(len-420)));if(bend==='straight')return 0;if(bend==='s')return A*Math.sin(t*Math.PI*2)*.8;const s=bend==='left'?-1:1;return s*A*(1-Math.cos(t*Math.PI))/2};
-  const P=(x,y)=>{const yy=toY(y);return[x*sx+cx(yy),yy]};
+  const P=(x,y)=>{const yy=toY(y);return[flip*x*sx+cx(yy),yy]};
   const holes=L.holes.map((h,i)=>{const[x,y]=P(h.x,h.y);const rad=Math.round(h.rad*1.05);return Object.assign({},h,{i,x,y,rad,size:O.hSize(rad)})});
   const bumps=L.bumps.map(b=>{const[x,y]=P(b.x,b.y);return Object.assign({},b,{x,y})});
   const sand=L.divots.map(q=>{const[x,y]=P(q.x,q.y);return{x,y,r:q.rad*1.5,on:true}});
   /* width: wide enough at every station for whatever stands there, smoothly varying */
   const N=Math.ceil(len/20)+1,hw=new Float32Array(N);
-  for(let k=0;k<N;k++){const y=k*20;let w=y<300?150:170;const c=cx(y);
-    for(const h of holes)if(Math.abs(h.y-y)<h.rad+60)w=Math.max(w,Math.abs(h.x-c)+h.rad+58);
-    for(const b of bumps)if(Math.abs(b.y-y)<b.rad+40)w=Math.max(w,Math.abs(b.x-c)+b.rad+50);
-    hw[k]=Math.min(300,w)}
+  for(let k=0;k<N;k++){const y=k*20,t=Math.max(0,Math.min(1,(y-300)/(len-360))),tee=Math.max(0,Math.min(1,(y-160)/220));let w=Math.min(250,base*.9)*(1-tee)+base*prof(t)*tee;const c=cx(y);
+    for(const h of holes)if(Math.abs(h.y-y)<h.rad+60)w=Math.max(w,Math.abs(h.x-c)+h.rad+64);
+    for(const b of bumps)if(Math.abs(b.y-y)<b.rad+40)w=Math.max(w,Math.abs(b.x-c)+b.rad+56);
+    hw[k]=Math.min(440,w)}
   for(let pass=0;pass<6;pass++)for(let k=1;k<N-1;k++)hw[k]=Math.max(hw[k],(hw[k-1]+hw[k+1])/2*.985);       // never narrower than its need, but no sudden notches
-  const C={id,rank,len,bend,N,hw,holes,bumps,sand,water:[],blocks:[],mv:null,locks:L.locks||null,core:L.core==null?-1:L.core,walls:L.walls||[]};
+  const C={id,rank,len,bend,shape,N,hw,holes,bumps,sand,water:[],blocks:[],mv:null,locks:L.locks||null,core:L.core==null?-1:L.core,walls:L.walls||[]};
   C.cx=cx;C.half=y=>{const k=Math.max(0,Math.min(N-1.001,y/20)),i=Math.floor(k),f=k-i;return hw[i]*(1-f)+hw[Math.min(N-1,i+1)]*f};
+  {let e=0;for(let k=0;k<N;k++)e=Math.max(e,Math.abs(cx(k*20))+hw[k]);C.ext=e}                 // how far the course reaches either side, for anything that frames it
   /* the moving part: a boulder rolling across, or a windmill arm sweeping the fairway */
   if(L.mv){if(L.mv.k==='orb'){const y=toY(-L.mv.r*.4)|0;C.mv={k:'boulder',y,rad:20,w:Math.abs(L.mv.w)*.9,ph:L.mv.ph}}
     else{let best=len*.55,bs=1e9;for(let y=len*.35;y<len*.8;y+=20){const s=holes.reduce((a,h)=>a+Math.max(0,140-Math.abs(h.y-y)),0)+bumps.reduce((a,b)=>a+Math.max(0,60-Math.abs(b.y-y)),0);if(s<bs){bs=s;best=y}}
-      C.mv={k:'mill',x:cx(best),y:best,len:Math.min(150,C.half(best)-30),w:L.mv.w*1.4,ph:L.mv.ph}}}
+      C.mv={k:'mill',x:cx(best),y:best,len:Math.min(210,C.half(best)-30),w:L.mv.w*1.4,ph:L.mv.ph}}}
   /* a shield wall becomes a row of blocks across the approach to the best holes */
-  if(C.walls.length){const y=len-360,c=cx(y);C.blocks=[-1,0,1].map(k=>({x:c+k*92,y,w:52,h:22,hp:2,on:true}))}
+  if(C.walls.length){const y=len-360,c=cx(y);const gap=Math.min(140,C.half(y)*.42);C.blocks=[-1,0,1].map(k=>({x:c+k*gap,y,w:56,h:22,hp:2,on:true}))}
   rateHoles(C);return C};
 
 /* damage follows difficulty: a hole far down the course, small, off the line, behind posts or the windmill, shuttered, lidded or locked
