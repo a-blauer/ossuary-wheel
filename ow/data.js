@@ -245,7 +245,7 @@ function genLayout(id,b){
   sk.slice(0,want).forEach(([x,y,c])=>{
     if(c==='J'&&b.rank==='lesser')c='M';
     const rad=c==='S'?16+Math.floor(r()*3):c==='M'?23+Math.floor(r()*3):c==='J'?(big?20:18):29+Math.floor(r()*7);
-    const dmg=c==='S'?26+Math.floor(r()*9):c==='M'?13+Math.floor(r()*4):c==='J'?(big?56:42):8+Math.floor(r()*5),armor=c==='J'?(big?2:1):c==='S'&&big&&r()<.6?1:c==='S'&&mini&&r()<.35?1:0;
+    const dmg=c==='S'?26+Math.floor(r()*9):c==='M'?13+Math.floor(r()*4):c==='J'?(big?56:42):8+Math.floor(r()*5),armor=c==='J'?1:c==='S'&&big&&r()<.3?1:c==='S'&&mini&&r()<.15?1:0;
     const py=jit(y);for(const sx of(x===0||b.plan==='serpent'?[1]:[-1,1])){const px=x===0?0:sx*x+(b.plan==='serpent'?(r()-.5)*16:0);if(free(px,py,rad))holes.push(H(Math.round(px),Math.round(py),rad,dmg,armor))}});
   const kind=BUMPK[b.plan]||'knob';
   for(const h of holes.filter(h=>h.dmg>=24)){const n=h.dmg>=40?3:2;for(let i=0;i<n;i++){const a=Math.PI/2+(i-(n-1)/2)*.75+(r()-.5)*.2,d=h.rad+30,x=h.x+Math.cos(a)*d,y=h.y+Math.sin(a)*d;if(free(x,y,12))bumps.push(B(Math.round(x),Math.round(y),11+Math.floor(r()*3),kind))}}
@@ -298,6 +298,7 @@ O.plan=function(L,id,rank){
   else if(kind==='orb'){let best=205,bs=1e9;for(const R of[150,205,262]){const n=L.holes.reduce((a,h)=>a+(Math.abs(Math.hypot(h.x,h.y)-R)<h.rad+16?1:0),0)+L.bumps.reduce((a,q)=>a+(Math.abs(Math.hypot(q.x,q.y)-R)<q.rad+16?.3:0),0);if(n<bs){bs=n;best=R}}
     L.mv={k:'orb',r:best,w:dir*(big?.95:.75),ph:r()*6.283,rad:15}}
   else L.mv={k:'arm',r0:64,r1:206,w:dir*.5,ph:r()*6.283};
+  for(const h of L.holes){h.armor0=Math.min(h.armor0||0,1);h.armor=Math.min(h.armor||0,1)}          // every lid breaks with one good hit
   return L};
 for(const id in O.MONSTERS){const d=O.MONSTERS[id],f=d.layout;d.layout=()=>O.plan(f(),id,d.rank)}
 O.BOSSES=O.MONSTERS;

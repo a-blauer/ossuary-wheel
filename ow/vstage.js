@@ -73,7 +73,7 @@ function syncCourse(){
   /* who the course's grates and glowing rims speak to: the marble in play, or the one fighter lining up a shot */
   const ci=G.cine;let fit=0;
   if(ci&&!ci.atk.ab.instant&&ci.atk.ab.m)fit=O.mSize(ci.atk.ab.m.r);
-  else{const aimers=G.players.filter(p=>p.hp>0&&!p.fired&&(p.ch||G.players.length===1));if(aimers.length===1){const p=aimers[0],ab=CLASSES[p.cls].ab[p.ab];if(ab&&ab.m)fit=Math.max(1,O.mSize(ab.m.r)-(O.mods(p).sizeDown||0)-(p.small<1?1:0))}}
+  else{const aimers=G.players.filter(p=>p.hp>0&&!p.fired&&(G.players.length===1||p.id===G.shooter));if(aimers.length===1){const p=aimers[0],ab=CLASSES[p.cls].ab[p.ab];if(ab&&ab.m)fit=Math.max(1,O.mSize(ab.m.r)-(O.mods(p).sizeDown||0)-(p.small<1?1:0))}}
   course.setFit(G.phase==='aim'?fit:0);
   /* the monster's sand, gravel, water or wind */
   const tr=mo.terr,tk=tr?tr.k+':'+tr.spots.map(s=>s.x+','+s.y).join(';'):'';
@@ -121,8 +121,8 @@ function heroSpot(p,i){
   if(mgS&&G.mg&&G.screen==='map'&&podOn()){const ps=G.players.filter(q=>!q.away),r=podRank(p),n=ps.length;return[MGX+PODX(r,n),PODH(r),MGZ+PODZ,0,false]}
   if(mgS&&G.mg&&G.screen==='map'){const s=mgS.spot(p,i,G.players.length);return[MGX+s[0],s[1],MGZ+s[2],s[3],false]}
   const fight=G.screen==='combat'||G.screen==='result'&&false,C=G.mons[0]&&G.mons[0].course;
-  if(G.screen==='combat'&&C){const ci=G.cine,me=ci&&ci.atk.pl===p&&ci.st!=='out',aiming=G.phase==='aim'&&!p.fired&&p.hp>0&&(p.ch||G.players.length===1);
-    if(me||aiming)return[wx(O.laneX(p)),0,wz(O.TY+20),Math.PI,true];
+  if(G.screen==='combat'&&C){const ci=G.cine,me=ci&&ci.atk.pl===p&&ci.st!=='out',aiming=G.phase==='aim'&&!ci&&!p.fired&&p.hp>0&&(G.players.length===1||G.shooter===p.id);
+    if(me||aiming)return[wx(O.launchX(p)),0,wz(O.TY+20),Math.PI,true];
     const k=G.players.filter(q=>q!==p).indexOf(p)<0?i:G.players.indexOf(p);return[wx(C.cx(150)-C.half(150)-90),-.03,wz(30+k*95),Math.PI/2,false]}
   const n=G.players.length;return[(i-(n-1)/2)*1.1,-.35,.4,0,false]}
 function syncHeroes(dt){
@@ -156,9 +156,9 @@ function syncHeroes(dt){
   while(aimRings.length<4){const r=new T.Mesh(new T.RingGeometry(.11,.15,28),new T.MeshBasicMaterial({color:'#fff',transparent:true,opacity:.9,depthTest:false,side:T.DoubleSide}));r.rotation.x=-Math.PI/2;r.renderOrder=6;r.visible=false;world.add(r);aimRings.push(r)}
   aimRings.forEach((r,i)=>{const p=G.players[i],C=G.mons[0]&&G.mons[0].course;let on=!!p&&!!C&&G.screen==='combat'&&G.phase==='aim'&&!G.cine&&p.ch&&!p.fired;
     if(on){const ab=CLASSES[p.cls].ab[p.ab||0];on=!!(ab&&ab.sight)||!!(O.mods(p).eye)||!!G.practice}r.visible=on;if(!on)return;
-    const a=p.aim*Math.PI/180,d=O.powD(C.len,p.pw||0);r.position.set(wx(O.laneX(p)+Math.cos(a)*d),.05,wz(O.COURSE.TEE+Math.sin(a)*d));r.material.color.set(LANES[p.slot])});
+    const a=p.aim*Math.PI/180,d=O.powD(C.len,p.pw||0);r.position.set(wx(O.launchX(p)+Math.cos(a)*d),.05,wz(O.COURSE.TEE+Math.sin(a)*d));r.material.color.set(LANES[p.slot])});
   aimArrows.forEach((g,i)=>{const p=G.players[i],C=G.mons[0]&&G.mons[0].course;const on=!!p&&!!C&&G.screen==='combat'&&G.phase==='aim'&&!G.cine&&p.ch&&!p.fired;g.visible=on;if(!on)return;const u=g.userData,pw=clamp(p.pw||0,0,1);
-    g.position.set(wx(O.laneX(p)),.03,wz(O.COURSE.TEE)-.55);g.scale.setScalar(1.7);g.rotation.y=(p.aim-90)*Math.PI/180;poseSling(g,p,pw)})
+    g.position.set(wx(O.launchX(p)),.03,wz(O.COURSE.TEE)-.55);g.scale.setScalar(1.7);g.rotation.y=(p.aim-90)*Math.PI/180;poseSling(g,p,pw)})
 }
 /* a sling for the big screen: posts, a band, the marble drawn back and an arrow the way it will leave (local -z is forward) */
 function mkSling(){const g=new T.Group(),lane=new T.MeshBasicMaterial({color:'#fff',transparent:true,opacity:.95,depthTest:false}),wood=new T.MeshBasicMaterial({color:K0lin('#7a5a3a')}),band=new T.MeshBasicMaterial({color:K0lin('#e8c8a0')});
@@ -241,8 +241,8 @@ function direct(dt){
       else{const near=ci.close;wantPos.set(fx-dx*(near?1.8:3)+(wide?.6:0),near?1.3:2.2,fz-dz*(near?1.8:3));wantTgt.set(fx+dx*1.4,.1,fz+dz*1.4)}st=ci.st==='pan'?.5:.28}
     else if(ci&&ci.st==='hit'){const m=monChest();wantPos.set(m.x+3.5,monH*.75,m.z+5.5);wantTgt.copy(m);st=.35}
     else if(G.phase==='boss'){const m=monChest();if(wide){wantPos.set(7*k,6.5*k,m.z+7*k);wantTgt.set(0,1,m.z+3)}else{wantPos.set(0,7,m.z+9);wantTgt.set(0,1,m.z+2)}st=.7}
-    else if(G.phase==='aim'&&!ci&&!G.inspect&&!G.practice||(G.phase==='aim'&&!ci&&G.practice&&!G.inspect)){const live=G.players.filter(p=>!p.fired&&p.hp>0&&!p.away),ch=live.filter(p=>p.ch),rd=live.filter(p=>p.rdy||p.ch);
-      if(rd.length){const aimX=ch.length===1?wx(O.laneX(ch[0])):null,key=C.id+':'+asp.toFixed(2)+':'+(aimX==null?'s':aimX.toFixed(2));if(key!==strKey){strKey=key;fitStraight(C,asp,wide,aimX)}wantPos.copy(strP);wantTgt.copy(strT);st=aimX==null?.32:.3}
+    else if(G.phase==='aim'&&!ci&&!G.inspect&&!G.practice||(G.phase==='aim'&&!ci&&G.practice&&!G.inspect)){const live=G.players.filter(p=>!p.fired&&p.hp>0&&!p.away&&(G.players.length===1||!G.shooter||p.id===G.shooter)),ch=live.filter(p=>p.ch),rd=live.filter(p=>p.rdy||p.ch);
+      if(rd.length){const aimX=ch.length===1?wx(O.launchX(ch[0])):null,key=C.id+':'+asp.toFixed(2)+':'+(aimX==null?'s':aimX.toFixed(2));if(key!==strKey){strKey=key;fitStraight(C,asp,wide,aimX)}wantPos.copy(strP);wantTgt.copy(strT);st=aimX==null?.32:.3}
       else{over();st=.7}}
     else{over();st=.7}}
   else if(G.screen==='map'&&mapG&&mapG.visible&&MAP[G.node]&&MAP[G.node]._p){const tr=G.travel;let p=MAP[G.node]._p;if(tr&&MAP[tr.to]._p){const A=MAP[tr.from]._p,B2=MAP[tr.to]._p,e=sm(0,1,tr.t);p=[lerp(A[0],B2[0],e),lerp(A[1],B2[1],e)]}

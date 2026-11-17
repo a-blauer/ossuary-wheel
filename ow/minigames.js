@@ -139,11 +139,14 @@ const EV={
   prog:(g,p)=>plural(g.d.sk[p.slot]||0,'sink'),pass:(g,p)=>(g.d.sk[p.slot]||0)>0,
   finish(g){const ps=here(),n=ps.reduce((a,p)=>a+(g.d.sk[p.slot]||0),0);if(n)for(const p of G.players)if(p.hp<=0){p.hp=Math.round(p.mhp*.5);S().ev('heal',{pl:p,col:'#f0cc5c'})}
     const frac=Math.min(.8,.1+.08*n);for(const p of G.players)heal(p,p.mhp*frac);for(const p of ps)g.d.rw[p.slot]=`The party sank ${n}: everyone heals ${Math.round(frac*100)}%.`;S().ev('boon',{});S().say(`${plural(n,'sink')} at the shrine. The party heals ${Math.round(frac*100)}%.`)}},
- forge:{name:'The Dead Smithy',brief:'Strike on every beat of the hammer. It speeds up, and late on it adds quick double beats; strikes off the beat count against you. The cleaner your work, the more you choose from.',
-  setup(g){const b=[];let t=2,iv=.78;for(let i=0;i<20;i++){b.push(+t.toFixed(2));if(i>=10&&i%3===1){b.push(+(t+iv/2).toFixed(2))}t+=iv;iv=Math.max(.42,iv-.018)}g.d.beats=b;g.dur=t+1.2;g.d.sc={};g.taps={}},
+ forge:{name:'The Dead Smithy',brief:'Strike as each glowing ember on your phone reaches the anvil line. The hammer keeps a steady beat in each passage, then changes: faster, then double strikes, then fastest of all. A warning shows before every change. Strikes off the beat cost you. The cleaner your work, the more you choose from.',
+  /* four passages, each with a steady beat, so the rhythm can be learned; the pace changes between them */
+  setup(g){const r=rng(g.seed),b=[],P=[['Steady',8,.82,0],['Faster!',8,.64,0],['Double strikes!',8,.86,1],['Fastest!',10,.54,0]];g.d.secs=[];g.d.sl=[];let t=2.6;
+    for(const[lab,n,iv0,dbl]of P){const iv=+(iv0+(r()-.5)*.04).toFixed(3);g.d.secs.push(+t.toFixed(2));g.d.sl.push(lab);for(let i=0;i<n;i++){b.push(+t.toFixed(2));if(dbl&&i%2===1)b.push(+(t+iv/2).toFixed(2));t+=iv}t+=1.1}
+    g.d.beats=b;g.dur=t+.6;g.d.sc={};g.taps={}},
   input(g,p,v){const set=g.taps[p.slot]=g.taps[p.slot]||new Set();for(const t of String(v).split(',').map(Number).filter(isFinite))set.add(+t.toFixed(2));
-    const taps=[...set].sort((a,b)=>a-b);let s=0;const used=new Set();for(const b of g.d.beats){let best=null;for(const t of taps){if(used.has(t))continue;const dd=Math.abs(t-b);if(dd<.22&&(!best||dd<best[0]))best=[dd,t]}if(best){used.add(best[1]);s+=best[0]<.09?1:.5}}
-    const stray=taps.length-used.size;g.d.sc[p.slot]=Math.max(0,Math.round((s-.5*stray)/g.d.beats.length*100))},
+    const taps=[...set].sort((a,b)=>a-b);let s=0;const used=new Set();for(const b of g.d.beats){let best=null;for(const t of taps){if(used.has(t))continue;const dd=Math.abs(t-b);if(dd<.2&&(!best||dd<best[0]))best=[dd,t]}if(best){used.add(best[1]);s+=best[0]<.1?1:.6}}
+    const stray=taps.length-used.size;g.d.sc[p.slot]=Math.max(0,Math.round((s-.3*stray)/g.d.beats.length*100))},
   prog:(g,p)=>(g.d.sc[p.slot]||0)+'%',pass:(g,p)=>(g.d.sc[p.slot]||0)>=50,
   finish(g){for(const p of here()){const s=g.d.sc[p.slot]||0;p.mgN=2+(s>=70?1:0)+(s>=88?1:0);p.mgAb=s>=88?1:0;g.d.rw[p.slot]=`Your timing: ${s}%. Your work offers ${p.mgN} choices${p.mgAb?', one of them a new ability':''}.`}
     return()=>{S().say('The smithy rings again. Everyone chooses from their work.');S().offerUpgrades('forge');return true}}},
@@ -217,5 +220,5 @@ O.mgTick=function(dt){const g=G.mg;if(!g)return;const def=MG[g.k];g.t+=dt;
     if(def.hearts&&here().length&&!H.alive(g).length&&here().every(p=>g.d.sw[p.slot]))g.end=1;
     if(g.t>=g.dur||g.end)wrapUp(g,def)}
   else if(g.st==='done'){if(g.t>DONE){G.mg=null;if(!(typeof g.after==='function'&&g.after()))S().offerPath()}}};
-O.mgPub=function(){const g=G.mg;if(!g)return null;return{id:g.id,k:g.k,st:g.st,t:Math.round(g.t*10)/10,d:g.d,out:g.st==='done'?g.out:null,won:g.won?1:0,dur:g.dur,item:g.item||''}};
+O.mgPub=function(){const g=G.mg;if(!g)return null;return{id:g.id,k:g.k,st:g.st,t:Math.round(g.t*20)/20,d:g.d,out:g.st==='done'?g.out:null,won:g.won?1:0,dur:g.dur,item:g.item||'',go:g.kind!=='event'||g.go?1:0}};
 })();

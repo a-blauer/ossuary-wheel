@@ -624,7 +624,8 @@ html[data-mode=host] .card{max-width:30rem}
 #fire[hidden]{display:none}
 
 /* ---- the pull, on the big screen ---- */
-#aimPow{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(2.5% + 108px);display:flex;flex-direction:column;gap:6px;width:min(44%,30rem)}
+#aimPow{position:absolute;left:2.5%;bottom:34%;display:flex;flex-direction:column;gap:6px;width:min(25%,19rem)}
+#aimPow .ap{grid-template-columns:1fr 3.4em!important;grid-template-rows:auto auto}#aimPow .ap b{grid-column:1/-1}
 #aimPow .ap{display:grid;grid-template-columns:auto 1fr 3.4em;gap:10px;align-items:center;padding:6px 12px;background:rgba(14,10,12,.82);border:1px solid var(--lc,#c9b98f);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.5)}
 #aimPow b{font-family:var(--display);font-weight:700;font-size:clamp(.85rem,1.8cqw,1.2rem);color:var(--lc,#efe4cc);white-space:nowrap}
 #aimPow .apBar{height:clamp(12px,1.8cqw,20px);background:#0b090a;border-radius:4px;overflow:hidden;box-shadow:inset 0 2px 4px #000}
@@ -632,6 +633,8 @@ html[data-mode=host] .card{max-width:30rem}
 #aimPow em{font-style:normal;font-family:var(--display);font-weight:800;font-size:clamp(1rem,2.2cqw,1.5rem);color:#fff4e4;text-align:right}
 .mgRamps{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}.mgRamps .btn{--c:7px;padding:9px 4px;font-weight:700;color:var(--tallow)}.mgRamps .btn[aria-pressed=true]{--line:var(--gilt2);--fill:linear-gradient(#4a3620,#2a1d14);color:var(--gilt2)}
 .mgCv{height:min(48dvh,400px)}
+.mgLane{width:100%;height:min(46dvh,340px);display:block;border:1px solid var(--seam);margin-bottom:8px;touch-action:none}
+.mgX .wide,#mgX .wide{width:100%;min-height:110px}
 </style>
 
 <section id="landing">

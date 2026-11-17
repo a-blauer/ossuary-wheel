@@ -85,6 +85,7 @@ O.SLOT_N=12;O.spin=spin;O.slotOf=p=>O.slotRead(p.grid,p.owned,mods(p),p.cls);
 const cdOf=(pl,i)=>O.cdBase(CLASSES[pl.cls].ab[i],mods(pl)),noCd=cls=>CLASSES[cls].ab.map(()=>0);
 O.mods=mods;O.maxHp=maxHp;
 const laneX=pl=>{const i=G.players.indexOf(pl),n=G.players.length;return(i-(n-1)/2)*80};
+const launchX=()=>0;O.launchX=launchX;                 // every shot leaves from the middle of the tee
 const TY=-55,MX=()=>G.C?G.C.cx(G.C.len):0,MY=()=>G.C?G.C.len+170:1500;O.TY=TY;
 O.laneX=laneX;
 const startOwned=()=>Array.from({length:O.START},(_,i)=>i);
@@ -236,7 +237,7 @@ function retarget(){
   for(const p of G.players)p.tgt=only;G.focus=only;
   if(!G.cine&&!G.queue.length&&only>=0&&G.cur!==only)loadBoard(only)}
 function startRound(){
-  G.round++;G.phase='aim';planIntents();
+  G.round++;G.phase='aim';G.shooter='';planIntents();
   G.fervorOn=false;for(const m of alive()){const open=m.holes.map((h,i)=>h.armor<=0?i:-1).filter(i=>i>=0);m.wk=open.length>1&&(G.round>1||G.practice)?pick(open):-1;
     const sg=open.filter(i=>i!==m.wk&&i!==m.core);m.sg=sg.length&&m.intent&&!m.stun&&!G.practice?pick(sg):-1;m.blunt=false}       // and one hole carries the strike the monster is winding up: sink it and the blow lands at half weight
   // each round one open hole on every wheel lies exposed (sink it for double)
@@ -244,7 +245,7 @@ function startRound(){
     p.hex=1;if(p.deb){if(p.deb.shrink)p.small=p.deb.shrink>1?.5:.75;if(p.deb.hex)p.hex=p.deb.hex>1?.55:.7;p.deb=null}
     const rg=(G.relics.includes('bell')?5:0)+(G.round>1?mods(p).regen:0);if(rg&&p.hp>0&&p.hp<p.mhp)p.hp=Math.min(p.mhp,p.hp+rg)}
   G.active=-1;G.turnT=0;{const p0=G.players.length===1?G.players[0]:null,keep=p0&&p0.hp>0&&G.mons[p0.tgt]&&!G.mons[p0.tgt].dead;G.focus=keep?p0.tgt:-1}loadBoard(G.focus);retarget();ev('round',{});        // with a party the big screen opens each round on the whole pack; a lone fighter goes straight back to their wheel
-  say(G.practice?'Take your shots. Nothing here strikes back.':G.players.length>1?`Round ${G.round}. Everyone aims at once.`:`Round ${G.round}.`)}
+  say(G.practice?'Take your shots. Nothing here strikes back.':G.players.length>1?`Round ${G.round}. Take your shots in turn.`:`Round ${G.round}.`)}
 function setTarget(pid,i){return;
   const pl=G.players.find(p=>p.id===pid);if(!pl||G.screen!=='combat'||G.phase!=='aim'||pl.fired||pl.hp<=0)return;i=Math.floor(num(i,-1));const quiet=!G.cine&&!G.queue.length;
   if(i<0){if(alive().length>1){pl.tgt=-1;if(quiet&&!waiting().some(p=>p.tgt>=0)){G.focus=-1;loadBoard(-1)}}return}
@@ -253,6 +254,7 @@ O.setTarget=setTarget;
 O.toggleInspect=pid=>{if(G.cine||G.queue.length||G.phase!=='aim')return;const p=waiting().find(q=>q.id===pid);if(G.cur<0&&p&&G.mons[p.tgt]&&!G.mons[p.tgt].dead){G.focus=p.tgt;loadBoard(p.tgt)}if(G.cur<0)return;if(pid==='host'||p)G.inspect=!G.inspect};
 function fire(pl,abi,ang,pow,rp){
   if(G.screen!=='combat'||G.phase!=='aim'||!G.players.includes(pl)||pl.fired||pl.hp<=0)return false;
+  if(G.players.length>1&&G.shooter&&G.shooter!==pl.id)return false;                 // not your turn yet
   abi=Math.floor(num(abi,-1));const ab=CLASSES[pl.cls].ab[abi];if(!ab||!pl.owned.includes(abi))return false;if(!Array.isArray(pl.bag))return false;let use=abi;if(!pl.bag.includes(abi)){const sw=swapOf(pl);if(abi!==(pl.owned[0]||0)||sw<0)return false;use=sw}const sl=O.slotOf(pl);
   const needs=!ab.instant||ab.foe;if(needs&&(!G.mons[pl.tgt]||G.mons[pl.tgt].dead))return false;
   ang=clamp(num(ang,90),8,172);pow=clamp(num(pow),0,1);rp=clamp(Math.floor(num(rp)),0,2);
@@ -283,7 +285,7 @@ function launch(a){
   if(id==='quick'&&m.twin)one(.4,0,.5);
   if(a.twice){const n=G.pending.length;for(let i=0;i<n;i++){const q=G.pending[i];G.pending.push(Object.assign({},q,{t:q.t+.7}))}}}                 // a Twinning Mirror looses the whole attack again
 function spawn(p){
-  const C=G.C,rmp=O.RAMPS[p.rp||0],m=p.ab.m,md=mods(p.pl),x=laneX(p.pl),sk=O.SKINS[p.pl.skin],col=(sk&&sk.col)||CLASSES[p.pl.cls].col,id=p.ab.id;
+  const C=G.C,rmp=O.RAMPS[p.rp||0],m=p.ab.m,md=mods(p.pl),x=launchX(p.pl),sk=O.SKINS[p.pl.skin],col=(sk&&sk.col)||CLASSES[p.pl.cls].col,id=p.ab.id;
   const sz=Math.max(1,O.mSize(m.r)-(md.sizeDown||0)-(p.small<=.5?2:p.small<1?1:0)),r=Math.min(m.r,[0,11,16,30][sz]),v=O.strokeV(O.powD(C.len,p.pow),rmp),a=p.ang*DEG,ty=O.COURSE.TEE;
   let mult=m.mult*p.mult*md.dmg;if(p.ab.id==='quick')mult*=md.draw;if(m.homing&&md.orb>1)mult*=1.4;if(sz===1)mult*=md.focus;
   G.marbles.push({id:++G.mid,x,y:ty,vx:Math.cos(a)*v,vy:Math.sin(a)*v,r,size:sz,mult,heavy:m.heavy,sunder:m.sunder,hymn:m.hymn,homing:m.homing,ram:m.ram,skim:m.skim,arc:m.arc||0,cleave:m.cleave||0,
@@ -321,7 +323,7 @@ function sinkInto(m,h,hx,hy){
   if(m.by&&m.by!==m.pl&&G.players.includes(m.by)){k*=1.25;m.by.st.assists=(m.by.st.assists||0)+1;float(hx,hy-154,'assist: '+CLASSES[m.by.cls].animal,'#9fd0ff')}
   if(mon&&mon.sg>=0&&mon.holes[mon.sg]===h){mon.sg=-1;mon.blunt=true;if(mon.intent){if(!mon.intent.pend)mon.intent.dmg=Math.max(1,Math.ceil(mon.intent.dmg/2));mon.intent.b=1}float(hx,hy-130,'strike blunted','#ff9a7a');say(`${mon.name}'s strike is blunted: it will land at half weight.`);ev('blunt',{uid:mon.uid,x:hx,y:hy})}
   if(mon&&mon.locks&&!mon.coreT){const li=mon.locks.findIndex(i=>mon.holes[i]===h);if(li>=0&&!(mon.lk&(1<<li))){mon.lk|=1<<li;
-      if(mon.lk===3){mon.coreT=2;const c=mon.holes[mon.core];c.armor=0;G.boardVer++;const[cx2,cy2]=wpos(c.x,c.y);float(cx2,cy2-40,'the core is open','#9fd0ff');say(`Both locks are broken. ${mon.name}'s core stands open until the end of next round.`);ev('core',{x:cx2,y:cy2})}
+      if(mon.lk===3){mon.coreT=3;const c=mon.holes[mon.core];c.armor=0;G.boardVer++;const[cx2,cy2]=wpos(c.x,c.y);float(cx2,cy2-40,'the core is open','#9fd0ff');say(`Both locks are broken. ${mon.name}'s core stands open until the end of next round.`);ev('core',{x:cx2,y:cy2})}
       else{float(hx,hy-130,'lock broken: one more','#9fd0ff');ev('lock',{x:hx,y:hy})}}}
   const dmg=Math.round(h.dmg*k);if(m.mark)h.mark=md.markx;G.stop=G.marbles.some(q=>q!==m&&!q.dead)?0:dmg>=20?.16:.07;        // no freeze while other marbles are still rolling
   
@@ -454,14 +456,14 @@ function monAct(mon){
   const t=mon.atk.target&&party.includes(mon.atk.target)?mon.atk.target:null,t2=mon.atk.t2&&party.includes(mon.atk.t2)?mon.atk.t2:null;
   let tg=mv.t==='all'?party:[t,t2].filter(Boolean);if(!tg.length)tg=[pick(party)];
   let dealt=0;if(it.raw>0)for(const p of tg)dealt+=hurt(p,it.raw);
-  const lid=()=>{if(G.relics.includes('salt'))return say('Grave Salt keeps the hole open.');const open=mon.holes.filter(h=>h.armor<=0&&!h.core).sort((a,c)=>c.dmg-a.dmg);if(open.length){open[0].armor=Math.max(1,open[0].armor0||1);G.boardVer++;float(open[0].x,open[0].y,'lidded','#c9bfae')}};
+  const lid=()=>{if(G.relics.includes('salt'))return say('Grave Salt keeps the hole open.');if(G.round-(mon.lidR||-9)<3)return;mon.lidR2=G.round;const open=mon.holes.filter(h=>h.armor<=0&&!h.core).sort((a,c)=>c.dmg-a.dmg);if(open.length){open[0].armor=Math.max(1,open[0].armor0||1);G.boardVer++;float(open[0].x,open[0].y,'lidded','#c9bfae')}};
   const tri=it.pw>1.2;                 // a Triple makes every effect stronger
   switch(mv.fx){
     case'bleed':for(const p of tg)if(p.hp>0)p.dot={d:it.fv,t:tri?3:2};break;
     case'drain':if(dealt){const h=Math.round(dealt*(tri?1:.5));mon.hp=Math.min(mon.max,mon.hp+h);ev('monFlinch',{uid:mon.uid,dmg:0,col:'#5fa596'});float(MX(),MY()-120,'+'+h,'#5fa596')}break;
     case'mend':mon.hp=Math.min(mon.max,mon.hp+it.fv);float(MX(),MY()-120,'+'+it.fv,'#5fa596');break;
-    case'lid':lid();if(tri)lid();break;
-    case'shield':if(mon.blocks&&mon.blocks.length){mon.blocks.forEach(w=>{w.on=true;w.hp=tri?3:2});G.boardVer++;mon.face=true}else{lid();if(tri)lid()}break;
+    case'lid':lid();if(tri)lid();if(mon.lidR2===G.round)mon.lidR=G.round;break;
+    case'shield':if(mon.blocks&&mon.blocks.length){if(G.round-(mon.lidR||-9)>=3){mon.lidR=G.round;mon.blocks.forEach(w=>{w.on=true;w.hp=tri?2:1});G.boardVer++;mon.face=true}}else{lid();if(tri)lid();if(mon.lidR2===G.round)mon.lidR=G.round}break;
     case'terr':if(mon.freeze)break;if(G.relics.includes('axle')&&Math.random()<.5){say('Steady Ground holds the course.');break}mon.terr={k:mv.terr,t:tri?4:3,spots:mkSpots(mv.terr),dir:Math.random()<.5?-1:1};G.terr=mon.terr;G.boardVer++;break;
     case'shrink':for(const p of tg)(p.deb=p.deb||{}).shrink=tri?2:1;break;
     case'hex':for(const p of tg)(p.deb=p.deb||{}).hex=tri?2:1;break;
@@ -496,8 +498,11 @@ function updateCombat(dt){
       const w=waiting();
       if(!w.length){if(G.practice)practiceRound();else beginMonsters()}
       else{G.turnT+=dt;const here=w.filter(p=>!p.away);
+        /* fighters take their shots one at a time, in party order: the shooter keeps the turn until their reels' marbles are all loosed */
+        let sh=G.players.find(p=>p.id===G.shooter);if(!sh||sh.fired||sh.hp<=0||(sh.away&&here.length)){const i0=sh?G.players.indexOf(sh):-1,ord=[...G.players.slice(i0+1),...G.players.slice(0,i0+1)];sh=ord.find(p=>w.includes(p)&&!p.away)||w[0];
+          if(sh.id!==G.shooter){G.shooter=sh.id;G.turnT=0;if(G.players.length>1)say(`${who(sh)}'s shot.`.replace(/^t/,'T'));ev('turn',{pl:sh})}}
         if(!here.length){if(G.turnT>6){w.forEach(p=>{p.fired=true});say('The fighters who have gone quiet lose the turn.')}}                 // a phone that dropped out does not hold up the round
-        else if(G.players.length>1&&!G.practice&&G.turnT>O.TURN){w.forEach(p=>{p.fired=true});say(w.length===1?`${who(w[0])} hesitates and loses the turn.`.replace(/^t/,'T'):'Those who hesitate lose the turn.')}}}
+        else if(G.players.length>1&&!G.practice&&G.turnT>O.TURN){sh.fired=true;say(`${who(sh)} hesitates and loses the turn.`.replace(/^t/,'T'))}}}
   }else if(G.phase==='boss'){
     const mon=G.mons[G.actor];if(!mon){endMonsters();return}
     G.bossT+=dt;mon.atk.t=G.bossT;
@@ -543,8 +548,8 @@ function updateCine(dt){
       if(a.pl.buff&&!a.ab.instant){a.mult*=1.5;a.pl.buff=false}
       const an=a.ang*DEG,mon=cm(),key=a.pl.id+'|'+a.ab.id,rep=!!G.seen[key];G.seen[key]=1;G.active=G.players.indexOf(a.pl);G.inspect=false;
       const md=mods(a.pl),aid=a.ab.id;let nm=(a.ab.fan||[0]).length*(a.ab.shots||1);if((aid==='volley'&&md.fourth)||(aid==='note'&&md.chorus)||(aid==='stream'&&md.surge)||(aid==='quick'&&md.twin)||(a.ab.m&&a.ab.m.split))nm=2;
-      G.cine={st:'cast',t:0,atk:a,dmg:0,mon:mon?mon.uid:0,dir:[Math.cos(an),Math.sin(an)],d0:[Math.cos(an),Math.sin(an)],fx:laneX(a.pl),fy:O.COURSE.TEE,close:false,idle:0,rep,multi:nm>1,castT:rep?.85:1.7,panT:rep?.6:.9,hitT:2};    // the full flourish the first time an attack is used in a fight, a brisk one after
-      say(`${who(a.pl)} uses ${a.ab.name}.`.replace(/^t/,'T'));ev('cast',{pl:a.pl,rep});break}
+      G.cine={st:'cast',t:0,atk:a,dmg:0,mon:mon?mon.uid:0,dir:[Math.cos(an),Math.sin(an)],d0:[Math.cos(an),Math.sin(an)],fx:launchX(a.pl),fy:O.COURSE.TEE,close:false,idle:0,rep,multi:nm>1,castT:rep?.85:1.7,panT:rep?.6:.9,hitT:2};    // the full flourish the first time an attack is used in a fight, a brisk one after
+      say(`${who(a.pl)} uses ${a.ab.name}.`.replace(/^t/,'T'));ev('cast',{pl:a.pl,rep});if(!a.ab.instant){launch(a);stage(G.cine,'flight')}break}
     return}
   C.t+=dt;const a=C.atk;
   if(C.st==='cast'){if(C.t>C.castT){if(a.ab.instant){applyInstant(a);stage(C,'out')}else stage(C,'pan')}}
@@ -598,7 +603,7 @@ const mask=a=>a.map(b=>b.on?1:0).join('');
 O.publicState=()=>{const act=G.players[G.active],fight=G.screen==='combat',aim=fight&&G.phase==='aim',left=aim&&!G.cine&&!G.queue.length&&G.players.length>1&&!G.practice?Math.ceil(O.TURN-G.turnT):99;
  return{role:'host',dn:DG().name,tier:G.tier,gd:G.gain,sc:G.screen,nd:G.node,ph:G.phase,rd:G.round,msg:G.msg.slice(0,140),res:G.result||'',tr:G.travel?1:0,pr:G.practice?1:0,pz:O.paused?1:0,fin:G.finale?1:0,
   sk:G.stash.unl.filter(u=>u.startsWith('sk:')).map(u=>u.slice(3)),
-  cu:G.cur,ac:act&&fight&&G.cine?act.id:'',cn:G.cine||G.queue.length?1:0,ins:G.inspect?1:0,tm:left<=20?Math.max(1,left):0,
+  cu:G.cur,ac:act&&fight&&G.cine?act.id:'',sh:aim&&G.players.length>1?G.shooter||'':'',cn:G.cine||G.queue.length?1:0,ins:G.inspect?1:0,tm:left<=20?Math.max(1,left):0,
   mo:G.mons.map(m=>({id:m.id,n:m.name,hp:Math.ceil(m.hp),mx:m.max,d:m.dead?1:0,st:m.stun?1:0,bn:m.burn?m.burn.d:0,it:m.intent&&!m.dead?[m.intent.t,m.intent.dmg,m.intent.x,m.intent.b?1:0,m.intent.mv,m.intent.reels?m.intent.reels.map(f=>f<0?'x':f).join(''):'',m.intent.pw||1,m.intent.t2||'',m.intent.fv||0,m.intent.seq||0,m.intent.n==null?2:m.intent.n]:null})),co:G.combo||0,aw:G.screen==='result'?O.awards():null,
   /* what has changed on each living monster's wheel; a phone rebuilds the rest from the monster's own layout */
   bs:aim?G.mons.map((m,i)=>m.dead?0:[m.course.mv&&m.course.mv.broken?1:0,m.holes.map(h=>Math.min(9,Math.max(0,h.armor))).join(''),mask(m.bumps),mask(m.sand),mask(m.blocks),m.terr?[m.terr.k,m.terr.t,m.terr.spots.map(q=>[q.x,q.y,q.r]),m.terr.dir]:0,m.wk>=0?m.wk:-1,m.sg>=0?m.sg:-1,(m.lk||0)+(m.coreT>0?4:0),m.freeze?1:0]):null,
@@ -618,5 +623,5 @@ function practiceRound(){
   if(cyc){m.terr={k:cyc,t:2,spots:mkSpots(cyc),dir:Math.random()<.5?-1:1};say(`The course is fouled: ${O.TERR[cyc].name.toLowerCase()}. ${O.TERR[cyc].note}`)}
   else{if(m.terr&&--m.terr.t<=0)m.terr=null;if(!m.terr)say('Take your shots. Try a chip or a lob, or more power.')}
   G.terr=m.terr||null;G.boardVer++;
-  for(const h of m.holes)if(h.armor<=0&&h.armor0>0&&G.round%4===0)h.armor=h.armor0;ev('round',{})}
+  if(G.round%5===0&&G.round-(m.lidR||-9)>=3){const h=m.holes.filter(h=>h.armor<=0&&h.armor0>0&&!(h.core&&m.coreT>0)).sort((p,q)=>q.dmg-p.dmg)[0];if(h){h.armor=h.armor0;m.lidR=G.round;G.boardVer++;const[x2,y2]=wpos(h.x,h.y);float(x2,y2-30,'a lid grows back','#d8cfba')}}ev('round',{})}
 })();

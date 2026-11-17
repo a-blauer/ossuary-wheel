@@ -86,13 +86,13 @@ function getView(){
     const h=ps.find(p=>!p.sameTab&&p.presence&&p.presence.role==='host');if(!h){if(!C.noHostT)C.noHostT=performance.now();return{err:'nohost'}}C.noHostT=0;s=h.presence;myId=PID}
   const list=Array.isArray(s.pl)?s.pl:[],m=list.find(x=>x&&x.id===myId),arr=a=>Array.isArray(a)?a:[];
   const dec=s.dec&&typeof s.dec==='object'?{id:num(s.dec.id),k:String(s.dec.k||''),opts:arr(s.dec.opts),t:String(s.dec.t||''),tl:arr(s.dec.tl).map(x=>arr(x).map(y=>String(y).slice(0,160)))}:null;
-  const mg=s.mg&&typeof s.mg==='object'&&O.MG[s.mg.k]?{id:num(s.mg.id),k:s.mg.k,st:String(s.mg.st||''),t:num(s.mg.t),dur:num(s.mg.dur,15),d:s.mg.d&&typeof s.mg.d==='object'?s.mg.d:{},won:s.mg.won?1:0,ok:s.mg.out&&typeof s.mg.out==='object'&&myId in s.mg.out?(s.mg.out[myId]?1:0):-1}:null;
+  const mg=s.mg&&typeof s.mg==='object'&&O.MG[s.mg.k]?{id:num(s.mg.id),k:s.mg.k,st:String(s.mg.st||''),t:num(s.mg.t),dur:num(s.mg.dur,15),d:s.mg.d&&typeof s.mg.d==='object'?s.mg.d:{},won:s.mg.won?1:0,go:s.mg.go===0?0:1,ok:s.mg.out&&typeof s.mg.out==='object'&&myId in s.mg.out?(s.mg.out[myId]?1:0):-1}:null;
   const mo=arr(s.mo).filter(x=>x&&MONSTERS[x.id]).map(x=>({id:x.id,n:String(x.n||MONSTERS[x.id].name).slice(0,40),hp:num(x.hp),mx:num(x.mx,1),d:x.d?1:0,st:x.st?1:0,bn:num(x.bn),it:Array.isArray(x.it)?[String(x.it[0]||''),Math.floor(num(x.it[1])),String(x.it[2]||''),x.it[3]?1:0,x.it[4]==null?null:clamp(Math.floor(num(x.it[4])),0,9),String(x.it[5]||'').slice(0,9),num(x.it[6],1),String(x.it[7]||''),Math.floor(num(x.it[8])),Math.floor(num(x.it[10],2))]:null})),act=list.find(x=>x&&x.id===s.ac);
   const tg=m?Math.floor(num(m.tg,-1)):-1,bd=m&&tg>=0&&mo.length===arr(s.mo).length?boardOf(mo,s.bs,tg):null,cu0=Math.floor(num(s.cu,-1)),bdc=cu0===tg?bd:cu0>=0&&mo.length===arr(s.mo).length?boardOf(mo,s.bs,cu0):null,
     lm=arr(s.lm).slice(0,10).filter(Array.isArray).map(q=>[num(q[0]),num(q[1]),num(q[2]),clamp(num(q[3],10),3,40),clamp(Math.floor(num(q[4])),0,3),num(q[5]),Math.floor(num(q[6]))]),aw=arr(s.aw).slice(0,8).map(a=>arr(a).slice(0,3).map(q=>String(q).slice(0,80))).filter(a=>a.length===3);
-  return{bd,bdc,lm,ck:num(s.ck),aw,co:Math.floor(num(s.co)),myId,dn:String(s.dn||'the dungeon').slice(0,60),gd:Math.floor(num(s.gd)),sc:String(s.sc||'lobby'),nd:num(s.nd),ph:String(s.ph||''),rd:num(s.rd),cu:Math.floor(num(s.cu,-1)),actCls:act&&CLASSES[act.c]?act.c:'',actMe:!!m&&s.ac===myId,cn:s.cn?1:0,ins:s.ins?1:0,
+  return{bd,bdc,lm,ck:num(s.ck),aw,co:Math.floor(num(s.co)),myId,dn:String(s.dn||'the dungeon').slice(0,60),gd:Math.floor(num(s.gd)),sc:String(s.sc||'lobby'),nd:num(s.nd),ph:String(s.ph||''),rd:num(s.rd),cu:Math.floor(num(s.cu,-1)),actCls:act&&CLASSES[act.c]?act.c:'',actMe:!!m&&s.ac===myId,sh:typeof s.sh==='string'?s.sh.slice(0,16):'',cn:s.cn?1:0,ins:s.ins?1:0,
     sk:arr(s.sk).filter(k=>O.SKINS[k]).slice(0,30),pr:s.pr?1:0,pz:s.pz?1:0,fin:s.fin?1:0,tm:clamp(Math.floor(num(s.tm)),0,99),left:list.filter(x=>x&&!x.f&&num(x.hp)>0&&!x.aw).length,mo,mg,it:arr(s.it).filter(x=>ITEMS[x]).slice(0,8),msg:String(s.msg||''),res:String(s.res||''),tr:!!s.tr,dec,
-    rel:arr(s.rel).filter(r=>RELICS[r]),full:!m&&list.length>=4,pa:list.filter(x=>x&&CLASSES[x.c]).slice(0,4).map(x=>({c:x.c,sl:clamp(Math.floor(num(x.sl)),0,3),hp:Math.max(0,num(x.hp)),mhp:num(x.mhp,1),f:x.f?1:0,aw:x.aw?1:0,me:x.id===myId})),
+    rel:arr(s.rel).filter(r=>RELICS[r]),full:!m&&list.length>=4,pa:list.filter(x=>x&&CLASSES[x.c]).slice(0,4).map(x=>({id:String(x.id||'').slice(0,16),c:x.c,sl:clamp(Math.floor(num(x.sl)),0,3),hp:Math.max(0,num(x.hp)),mhp:num(x.mhp,1),f:x.f?1:0,aw:x.aw?1:0,me:x.id===myId})),
     me:m?{c:CLASSES[m.c]?m.c:C.cls,x:num(m.x,500),sl:clamp(Math.floor(num(m.sl)),0,3),hp:num(m.hp),mhp:num(m.mhp,1),f:m.f?1:0,cd:arr(m.cd).map(v=>num(v)),bf:m.bf?1:0,lv:num(m.lv,1),up:arr(m.up).filter(u=>UPGRADES[u]),ow:arr(m.ow).map(v=>Math.floor(num(v))).filter(v=>v>=0&&v<12),fx:Math.floor(num(m.fx)),tg,bg:arr(m.bg).map(q=>Math.floor(num(q,-1))).filter(q=>q>=0&&q<12).slice(0,8),sw:Math.floor(num(m.sw,-1)),bn:Math.floor(num(m.bn)),ls:arr(m.ls).map(q=>Math.floor(num(q))),op:m.op?arr(m.op).filter(u=>O.upInfo(u,C.cls)):null,v:m.v?1:0,sn:Math.floor(num(m.sn)),ex:m.ex?1:0,k:String(m.k||''),g:String(m.g||'').replace(/[^0-9a-z]/g,'').slice(0,12),gn:Math.floor(num(m.gn))}:null};
 }
 function buildPick(){const g=$('classGrid');g.textContent='';
@@ -110,7 +110,7 @@ const rdKey=v=>v.nd+':'+v.mo.length+':'+v.rd;
 /* in a round every fighter who has not yet loosed may act, all at the same time. A launch is pending until the host's count of this fighter's attacks goes up. */
 const pending=v=>C.pendSn!=null&&!!v.me&&v.me.sn===C.pendSn&&performance.now()-(C.sentAt||0)<3500;
 const canAct=v=>!!v&&!v.err&&v.sc==='combat'&&v.ph==='aim'&&!!v.me&&!v.me.f&&v.me.hp>0&&!v.pz&&!pending(v);
-const canFire=v=>{if(!canAct(v)||!v.me.ow.includes(C.ab)||!v.me.bg.includes(C.ab))return false;const ab=CLASSES[C.cls].ab[C.ab],t=v.mo[v.me.tg];return(ab.instant&&!ab.foe)||(!!t&&!t.d)};
+const canFire=v=>{if(!canAct(v)||(v.sh&&v.sh!==v.myId)||!v.me.ow.includes(C.ab)||!v.me.bg.includes(C.ab))return false;const ab=CLASSES[C.cls].ab[C.ab],t=v.mo[v.me.tg];return(ab.instant&&!ab.foe)||(!!t&&!t.d)};
 function sendItem(i){if(isLocal())O.useItem('local',i);else{C.item={n:++C.iseq,i};pushCtrl()}C.key='';renderCtrl()}
 function sendMg(id,v){C.mgV=v;if(isLocal())O.mgInput('local',id,v);else{C.mg={id,v};pushCtrl()}C.key=''}
 function sendTarget(i){if(isLocal())O.setTarget('local',i);else{C.tgt={n:++C.tseq,i};pushCtrl()}C.key='';renderCtrl()}
@@ -173,6 +173,7 @@ function renderCtrl(){
   else if(v.ph==='boss')st='The monsters strike back.';
   else if(me.f||pend){const known=me.ls&&me.ls[0]===C.lsSeen&&C.lsRd===rdKey(v),r=known?(me.ls[1]>0?`Your attack sank ${me.ls[2]} marble${me.ls[2]===1?'':'s'} for ${me.ls[1]} damage. `:'Your attack missed. '):'';
     st=v.actMe?'Your attack is under way. Watch the big screen.':known?r+(v.left>0?`Waiting for ${v.left===1?'one more fighter':v.left+' more fighters'}.`:v.cn?'Watch the big screen.':''):'Loosed. Your attack plays out on the big screen in its turn.'}
+    else if(v.sh&&v.sh!==v.myId&&!me.f){const o=(v.pa||[]).find(q=>q.id===v.sh);st=`Wait for your turn: ${o?'the '+CLASSES[o.c].animal:'another fighter'} is shooting. Watch the big screen.`}
     else if(ab.instant)st=ab.foe&&!mon?'Tap a monster, then Cast.':'No aiming needed. Tap Cast.'+(me.sw===C.ab?` Or pick your ${cl.ab[me.ow[0]||0].name} to attack instead.`:'');
     else if(me.sw>=0&&C.ab===(me.ow[0]||0)&&!me.f&&!pend&&!C.ch&&!C.armed)st=`Your ${cl.ab[me.sw].name} or your basic marble: this one uses up ${cl.ab[me.sw].name} instead. Drag back on the pad to shoot.`;
   else st=(v.pr?'Practice: every shot is free, and while you pull back a ring on the big screen shows where the marble will stop. ':'')+(me.ex?'You have a second attack this round. ':'')+(me.bf?'War Anthem is on you: this attack hits 50% harder. ':'')+(C.ch?'Steer sideways. Let go to shoot.':v.cn?`${other.replace(/^t/,'T')} is attacking on the big screen. Line up your shot meanwhile.`:'Drag back on the pad. Your aim shows on the big screen.')+(v.tm?` ${v.tm} seconds left.`:'');
@@ -244,7 +245,9 @@ function renderCtrl(){
   $('marks').hidden=!marks||!marks.length;for(let i=0;i<3;i++){const e=$('mk'+i),d=marks&&marks[i];e.hidden=!d;if(d)e.style.left=O.powOf(v.bd.C.len,d)*100+'%'}
 }
 /* ---------- mini games on the phone: one control per game. Each sends a single growing value; the big screen shows the scene. ---------- */
-const mgNow=g=>{if(!g)return 0;if(C.mgTk!==g.id+':'+g.st+':'+g.t){C.mgTk=g.id+':'+g.st+':'+g.t;C.mgTR=performance.now();C.mgT0=g.t}return C.mgT0+(isLocal()?0:(performance.now()-C.mgTR)/1000)};
+const mgNow=g=>{if(!g)return 0;if(isLocal())return g.t;const now=performance.now(),k=g.id+':'+g.st;
+  if(C.mgTk!==k+':'+g.t){const fresh=C.mgTkB!==k;C.mgTk=k+':'+g.t;C.mgTkB=k;const est=fresh?g.t:C.mgT0+(now-C.mgTR)/1000,target=g.t+.05,d=target-est;C.mgT0=fresh||Math.abs(d)>.6?target:est+d*.12;C.mgTR=now}
+  return C.mgT0+(now-C.mgTR)/1000};
 function mgEl(){let x=$('mgX');if(!x){x=el('div');x.id='mgX';$('mgPad').insertBefore(x,$('mgBtn'))}return x}
 const G0n=()=>{const v=getView();return v&&v.pa?v.pa.filter(p=>!p.aw).length:1};
 /* the kit phone pads are built from (mg_*.js: def.pad(K)) */
@@ -268,10 +271,10 @@ function renderMg(g){
   if(C.mgId!==g.id){C.mgId=g.id;C.mgV='';C.mg=null;C.mgK='';C.mgSt='';C.mgS={};C.mgN=0;C.mgTaps=[];C.mgPicks=[];C.lkK=-1;C.mgPick=null;C.swN=0}
   const D=O.MG[g.k],d=g.d||{},x=mgEl(),t=mgNow(g),dots=$('mgDots');$('mgT').textContent=d.name||D.name;$('mgBtn').hidden=true;dots.hidden=true;
   const out=d.out&&d.out[sl]!=null,live=D.live||g.k==='lock'||g.k==='forge'||g.k==='pendulum';
-  const key=g.k+':'+g.st+':'+(g.st==='brief'?Math.ceil((O.MG_BRIEF||7)-t)+'r'+Object.keys(d.rdy||{}).join(''):g.st==='play'?(out?'out'+(d.swn&&d.swn[sl])+(d.sw&&d.sw[sl]):mgKeyOf(g,d,sl,t)):'')+':'+g.ok;if(key===C.mgK&&!(live&&g.st==='play'&&!out))return;C.mgK=key;
+  const key=g.k+':'+g.st+':'+(g.st==='brief'?(g.go?Math.ceil((O.MG_BRIEF||7)-t):'w')+'r'+Object.keys(d.rdy||{}).join(''):g.st==='play'?(out?'out'+(d.swn&&d.swn[sl])+(d.sw&&d.sw[sl]):mgKeyOf(g,d,sl,t)):'')+':'+g.ok;if(key===C.mgK&&!(live&&g.st==='play'&&!out))return;C.mgK=key;
   if(C.mgSt!==g.st+(out?'o':'')){C.mgSt=g.st+(out?'o':'');x.textContent=''}
-  if(g.st==='brief'){x.textContent='';const left=Math.ceil((O.MG_BRIEF||7)-t);x.appendChild(el('div','mgBig',D.kind==='trap'?'A trap!':'Get ready'));if(left<=3&&left>0)x.appendChild(el('div','mgCount',String(left)));
-    if(D.kind==='event'&&left>4){const rd=d.rdy||{},n=Math.max(0,G0n()-Object.keys(rd).length);if(!rd[sl])x.appendChild(mgBtn('I have read the rules: READY','go big',()=>{O.buzz(15);sendMg(g.id,'ready')}));else x.appendChild(el('p','mgNote',n?`Ready. Waiting for ${n} more…`:'Everyone is ready!'))}
+  if(g.st==='brief'){x.textContent='';const waitR=D.kind==='event'&&!g.go,left=waitR?9:Math.ceil((O.MG_BRIEF||7)-t);x.appendChild(el('div','mgBig',D.kind==='trap'?'A trap!':'Get ready'));if(left<=3&&left>0)x.appendChild(el('div','mgCount',String(left)));
+    if(waitR){const rd=d.rdy||{},n=Math.max(0,G0n()-Object.keys(rd).length);if(!rd[sl])x.appendChild(mgBtn('I have read the rules: READY','go big',()=>{O.buzz(15);sendMg(g.id,'ready')}));else x.appendChild(el('p','mgNote',n?`Ready. Waiting for ${n} more…`:'Everyone is ready!'))}
     if(D.ctl)x.appendChild(el('p','mgGoal',D.ctl));$('mgP').textContent=D.brief;return}
   if(g.st==='done'){x.textContent='';const ok=!!(d.pass||{})[sl];x.appendChild(el('div','mgBig '+(ok||D.kind!=='trap'?'ok':'bad'),D.kind==='trap'?(ok?'Through!':'Caught!'):'Done'));
     if(d.pr&&d.pr[sl])x.appendChild(el('p','mgNote',String(d.pr[sl])));$('mgP').textContent=(d.rw&&d.rw[sl])||'';return}
@@ -286,7 +289,7 @@ function mgKeyOf(g,d,sl,t){const D=O.MG[g.k],base=JSON.stringify([d.pr&&d.pr[sl]
 function mgHint(g,d,sl,t){switch(g.k){
   case'lock':return(d.set&&d.set[sl]>=3)?'All three set!':`Tumbler ${Math.min(3,((d.set||{})[sl]||0)+1)} of 3: press STOP in the gold band.`;
   case'shrine':return`Shot ${Math.min(3,((d.sh||{})[sl]||0)+(((d.b||[]).some(q=>q[2]===sl))?0:1))} of 3. Pick putt, chip or lob, drag back, aim on the big screen.`;
-  case'forge':return'Strike on every beat, as the ring closes. Stray strikes cost you.';
+  case'forge':return'Tap STRIKE as each ember touches the gold line. The beat stays steady, then changes after a warning.';
   case'tome':return d.who===sl?`Your turn: ${Math.max(0,Math.ceil(7-(t-(d.tt||0))))}s. Turn over two pages.`:'Watch and remember. Wait for your turn.';
   case'gamble':return t<d.bt?'Place your bet from the party’s purse.':t<d.se?'Watch the cups on the big screen!':'Which cup hides the marble?';}return''}
 const mgBtn=(label,cls,fn,hold)=>{const b=el('button','btn mgB '+(cls||''),label);if(hold){b.addEventListener('pointerdown',e=>{fn(1);e.preventDefault()});const up=e=>{fn(0);e.preventDefault()};b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('pointerleave',up)}else b.addEventListener('pointerdown',e=>{fn();e.preventDefault()});return b};
@@ -303,12 +306,13 @@ function mgControl(g,d,sl,t,x0){const send=v=>{sendMg(g.id,v);C.mgK=''},V=C.mgV|
       const rr=el('div','mgRamps');O.RAMPS.forEach((r,i)=>{const b=el('button','btn',r.short);b.setAttribute('aria-pressed',i===C.rp);b.onclick=()=>{C.rp=i;rr.querySelectorAll('button').forEach((q,j)=>q.setAttribute('aria-pressed',j===i));pushCtrl()};rr.appendChild(b)});x.appendChild(rr);
       const can=()=>{const gv=getView().mg,dd=gv&&gv.d||{};return((dd.sh||{})[sl]||0)<3&&!(dd.b||[]).some(q=>q[2]===sl)&&C.mgShot!==((dd.sh||{})[sl]||0)+1};
       cv.addEventListener('pointerdown',e=>{if(!can())return;C.mgPull={x:e.clientX,y:e.clientY,a:90,p:0};C.ch=true;C.pw=0;C.aim=90;pushCtrl();try{cv.setPointerCapture(e.pointerId)}catch(q){}e.preventDefault()});
-      cv.addEventListener('pointermove',e=>{const p=C.mgPull;if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y,L=Math.hypot(dx,dy);if(dy>0&&L>10)p.a=clamp(Math.atan2(dy,-dx)/DEG,30,150);p.p=dy>0?clamp((L-10)/130,0,1):0;C.aim=p.a;C.pw=p.p;const now=performance.now();if(now-(C.pushT||0)>110){C.pushT=now;pushCtrl()}drawShrine(getView().mg)});
+      cv.addEventListener('pointermove',e=>{const p=C.mgPull;if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y,L=Math.hypot(dx,dy);p.a=clamp(steer(dx),30,150);p.p=dy>0?clamp((dy-10)/130,0,1):0;C.aim=p.a;C.pw=p.p;const now=performance.now();if(now-(C.pushT||0)>110){C.pushT=now;pushCtrl()}drawShrine(getView().mg)});
       const up=()=>{const p=C.mgPull;C.mgPull=null;C.ch=false;C.pw=0;pushCtrl();if(p&&p.p>.05){const gv=getView().mg,n=(((gv&&gv.d.sh)||{})[sl]||0)+1;C.mgShot=n;O.buzz(25);send(n+':'+p.a.toFixed(1)+','+p.p.toFixed(3)+','+(C.rp||0))}drawShrine(getView().mg)};
       cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up)}
     drawShrine(g)}
-  else if(g.k==='forge'){if(!x.querySelector('#mgRing')){x.textContent='';const r=el('div','mgRing');r.id='mgRing';r.appendChild(el('i'));x.append(r,mgBtn('STRIKE','go big',()=>{O.buzz(18);const tt=mgNow(getView().mg);C.mgTaps.push(+tt.toFixed(2));send(C.mgTaps.slice(-8).join(','))}))}
-    const bi=(d.beats||[]).findIndex(b=>b>t-.15),nb=bi>=0?d.beats[bi]:null,iv=bi>0?d.beats[bi]-d.beats[bi-1]:.78,u=nb!=null?clamp((nb-t)/iv,0,1):1;$('mgRing').firstChild.style.transform='scale('+(.35+u*1.4)+')';$('mgRing').classList.toggle('hot',u<.12)}
+  else if(g.k==='forge'){if(!x.querySelector('#mgLane')){x.textContent='';const cv=document.createElement('canvas');cv.id='mgLane';cv.className='mgLane';
+      x.append(cv,mgBtn('STRIKE','go big wide',()=>{O.buzz(18);const gv=getView().mg;if(!gv)return;const tt=mgNow(gv);C.mgTaps.push(+tt.toFixed(2));send(C.mgTaps.slice(-8).join(','));let best=9;for(const b of gv.d.beats||[])best=Math.min(best,Math.abs(b-tt));C.mgFb={t:performance.now(),r:best<.1?'Perfect!':best<.2?'Good':'Off the beat',ok:best<.2}}));
+      const loop=()=>{if(!cv.isConnected)return;drawForge(cv,getView().mg);requestAnimationFrame(loop)};requestAnimationFrame(loop)}}
   else if(g.k==='tome'){x.textContent='';const gr=el('div','mgCards'),mine=d.who===sl,pk=d.peek;
     for(let i=0;i<12;i++){const up=d.up[i]>=0?d.up[i]:pk&&(pk[0]===i||pk[1]===i)?(pk[0]===i?pk[2]:pk[3]):-1,own=d.own&&d.own[i]>=0?d.own[i]:-1,b=el('button','btn '+(up>=0?'up':C.mgPick===i?'sel':''));if(up>=0)b.appendChild(glyphEl((d.sym||O.DSYM[0])[up],40));if(own>=0)b.style.borderColor=LANES[own];
       b.onclick=()=>{if(!mine||d.peek||up>=0)return;if(C.mgPick==null||C.mgPick===i){C.mgPick=C.mgPick===i?null:i;C.mgK='';renderCtrl();return}O.buzz(15);send(d.turn+':'+C.mgPick+','+i);C.mgPick=null};gr.appendChild(b)}
@@ -318,6 +322,17 @@ function mgControl(g,d,sl,t,x0){const send=v=>{sendMg(g.id,v);C.mgK=''},V=C.mgV|
     else if(t<d.se)x.appendChild(el('div','mgBig','Watch the cups!'));
     else if(!bet)x.appendChild(el('div','mgBig','No bet this time.'));
     else{const r=el('div','mgRow three');[0,1,2].forEach(i=>r.appendChild(mgBtn('Cup '+(i+1),cup===i?'on':'',()=>{if(cup>=0)return;O.buzz(20);send(bet+':'+i)})));x.appendChild(r)}}}
+/* the smithy on the phone: embers fall down a lane and reach the anvil line exactly on the beat */
+function drawForge(cv,g){if(!g||!g.d)return;const w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;const dpr=Math.min(2,devicePixelRatio||1);if(cv.width!==Math.round(w*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr)}
+  const x=cv.getContext('2d'),t=mgNow(g),bs=g.d.beats||[],secs=g.d.secs||[],labs=g.d.sl||[],LEAD=1.5,hitY=h*.78,lx=w/2;x.setTransform(dpr,0,0,dpr,0,0);
+  x.fillStyle='#120b08';x.fillRect(0,0,w,h);const lg=x.createLinearGradient(0,0,0,h);lg.addColorStop(0,'rgba(255,120,40,0)');lg.addColorStop(1,'rgba(255,120,40,.18)');x.fillStyle=lg;x.fillRect(lx-w*.17,0,w*.34,h);
+  x.fillStyle='#5a4a3a';x.fillRect(lx-w*.22,hitY-3,w*.44,6);x.fillStyle='#e8c05a';x.fillRect(lx-w*.22,hitY-1,w*.44,2);x.fillStyle='#3a2e26';x.fillRect(lx-w*.14,hitY+6,w*.28,h-hitY-6);
+  for(const b of bs){const d=b-t;if(d<-.3||d>LEAD)continue;const y=hitY-(d/LEAD)*(hitY-14),near=Math.abs(d)<.1,past=d<-.1;x.globalAlpha=past?Math.max(0,1+(d+.1)*5):1;
+    x.fillStyle=near?'#fff4d0':'#ff8a3a';x.shadowColor='#ff6a1a';x.shadowBlur=near?18:8;x.beginPath();x.arc(lx,y,near?17:14,0,7);x.fill();x.shadowBlur=0;x.globalAlpha=1}
+  x.textAlign='center';const nx=secs.findIndex(s0=>s0>t);let lab='';if(nx>0&&secs[nx]-t<1.8)lab=labs[nx];else{let i=-1;secs.forEach((s0,k)=>{if(t>=s0)i=k});if(i>=0&&t-secs[i]<1.6)lab=labs[i]}
+  if(lab){x.fillStyle='#ffd27a';x.font=`800 ${Math.round(Math.min(30,w/11))}px system-ui`;x.fillText(lab,lx,32)}
+  const fb=C.mgFb;if(fb&&performance.now()-fb.t<550){x.fillStyle=fb.ok?'#9dffb0':'#ff7a6a';x.font=`800 ${Math.round(Math.min(26,w/13))}px system-ui`;x.fillText(fb.r,lx,hitY+34)}
+}
 const pinH=()=>{const per=C.pinPer||1.5,u=((performance.now()-C.pinT)/1000/per)%2;return u<1?u:2-u};
 function drawShrine(g){const cv=$('mgCv');if(!cv)return;const d=(g&&g.d)||{},me=C.view&&C.view.me,sl=me?me.sl:0,shots=(d.sh||{})[sl]||0,flying=(d.b||[]).some(q=>q[2]===sl),p=C.mgPull,ready=shots<3&&!flying;
   slingDraw(cv,{ch:!!p,pw:p?p.p:0,aim:p?p.a:90,lane:LANES[sl]||'#e9dfc6',col:'#e8e0c8',ready,msg:ready?`Shot ${shots+1} of 3 · ${(d.sk||{})[sl]||0} sunk`:shots>=3?`All three shots taken · ${(d.sk||{})[sl]||0} sunk`:'Watch your marble on the big screen',sub:'Drag down, aim on the big screen, let go'})}
@@ -364,10 +379,11 @@ function slingDraw(cv,o){const wrap=cv.parentNode,fill=cv.id==='scope',bw=fill?w
   x.strokeStyle='rgba(236,226,200,.35)';x.lineWidth=1;x.strokeRect(bx+.5,by+.5,bwid-1,bhh-1);for(let k=1;k<10;k++){x.fillStyle='rgba(0,0,0,.45)';x.fillRect(bx+bwid*k/10-1,by,2,bhh)}
   x.textAlign='center';x.fillStyle='#efe4cc';
   if(o.ch){x.font=`800 ${Math.round(46*S)}px ${getComputedStyle(document.body).getPropertyValue('--display')||'serif'}`;x.fillText(pw<.05?'Pull further':Math.round(pw*100)+'%',ax,by-14*S);x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText(pw<.05?'Let go here to cancel':'Let go to shoot · slide back up to cancel',ax,bh-48*S)}
-  else if(o.ready){x.font=`700 ${Math.round(19*S)}px system-ui`;x.fillText(o.msg||'Drag down anywhere to pull back',ax,by-16*S);x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText(o.sub||'Aim on the big screen, then let go',ax,bh-48*S)}
-  else if(o.msg){x.font=`700 ${Math.round(18*S)}px system-ui`;x.fillText(o.msg,ax,by-16*S)}}
+  else if(o.ready){x.font=`700 ${Math.round(19*S)}px system-ui`;x.fillText(o.msg||'Drag down anywhere to pull back',ax,by-16*S);x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText(o.sub||'Slide sideways to steer, down for power',ax,bh-48*S)}
+  else if(o.msg){x.font=`700 ${Math.round(18*S)}px system-ui`;x.fillText(o.msg,ax,by-16*S);if(o.sub){x.font=`${Math.round(15*S)}px system-ui`;x.fillStyle='#bfb29a';x.fillText(o.sub,ax,bh-48*S)}}}
 function drawSling(){const v=C.view,cv=$('scope');if(!v||!v.me||cv.hidden)return;const me=v.me,cl=CLASSES[C.cls],ab=cl.ab[C.ab];
-  slingDraw(cv,{ch:C.ch,pw:C.pw,aim:C.aim,lane:LANES[me.sl]||'#e9dfc6',col:cl.col,ready:C.spun===2&&canFire(v)&&!ab.instant})}
+  const other=v.sh&&v.sh!==v.myId?(v.pa||[]).find(q=>q.id===v.sh):null;
+  slingDraw(cv,{ch:C.ch,pw:C.pw,aim:C.aim,lane:LANES[me.sl]||'#e9dfc6',col:cl.col,ready:C.spun===2&&canFire(v)&&!ab.instant,msg:other?`Wait: the ${CLASSES[other.c].animal} is shooting`:'',sub:other?'Your turn comes next. Spin your reels meanwhile.':''})}
 function drawScope(live){if(!live)return drawSling();
   const v=C.view,cv=$(live?'live':'scope');if(!v||!v.me||cv.hidden)return;const bd=live?v.bdc:v.bd;if(!bd)return;const Cc=bd.C,wrap=cv.parentNode,bw=wrap.clientWidth,bh=wrap.clientHeight;if(!bw||!bh)return;
   const dpr=Math.min(2,window.devicePixelRatio||1),X0=-320,X1=320,Y0=-90,Y1=Cc.len+30,k=Math.min(bw/(X1-X0),bh/(Y1-Y0)),ox=bw/2,oy=bh/2+k*(Y0+Y1)/2,S=(px,py)=>[ox+px*k,oy-py*k],R=r=>r*k;
@@ -418,9 +434,12 @@ function drawScope(live){if(!live)return drawSling();
    so dragging down and to the left aims up and to the right. The length of the pull is the power. Let go to launch; slide back to where you started to cancel. */
 function pullStart(e){const v=getView();if($('scope').hidden||!C.cls||C.pull)return false;if(CLASSES[C.cls].ab[C.ab].instant||!canFire(v)||C.spun!==2)return false;C.pull={x:e.clientX,y:e.clientY,step:0,key:!e.clientX&&!e.clientY};C.ch=true;C.pw=0;C.tip=null;C.key='';pushCtrl();renderCtrl();return true}
 function pullMove(e){const p=C.pull;if(!p||p.key)return;const r=$('scope').getBoundingClientRect(),dx=e.clientX-p.x,dy=e.clientY-p.y,len=Math.hypot(dx,dy),cl=CLASSES[C.cls],max=clamp(r.height*.3,80,150)*clamp(cl.period/1.6,.82,1.45)*clamp(cl.ab[C.ab].slow||1,.7,1.3)*C.steady;        // each fighter draws differently: the archer's pull is long and fine, the warrior's short
-  if(len>22&&dy>0)C.aim=clamp(Math.atan2(dy,-dx)/DEG,8,172);C.pw=dy>0?clamp((len-14)/max,0,1):0;pullShow()}
-function pullShow(){const p=C.pull;if(!p)return;const st=Math.floor(C.pw*10);if(st!==p.step){p.step=st;O.buzz(st>=10?16:5)}$('pwFill').style.width=(C.pw*100)+'%';setNeedle();const now=performance.now();if(now-C.pushT>110){C.pushT=now;pushCtrl()}if(!$('scope').hidden)drawScope()}
-function pullEnd(cancel){const p=C.pull;if(!p)return;C.pull=null;const pw=C.pw;C.ch=false;if(!cancel&&pw>=.05){C.lastPull={aim:C.aim,pw};doFire(pw)}else pushCtrl();C.pw=0;setTimeout(()=>{if(!C.ch)$('pwFill').style.width='0'},400);C.key='';renderCtrl()}
+  C.aim=steer(dx);C.pw=dy>0?clamp((dy-14)/max,0,1):0;(p.hist=p.hist||[]).push([performance.now(),C.aim,C.pw]);if(p.hist.length>12)p.hist.shift();pullShow()}
+/* aim and power apart: sideways steers (finely near the middle, faster further out), downward is power. Release takes the hand's position a moment before the finger lifts. */
+function steer(dx){const a=Math.abs(dx),o=Math.min(a,90)*.32+Math.max(0,a-90)*.65;return clamp(90+Math.sign(dx)*o,8,172)}
+function settled(p){const h=p&&p.hist;if(!h||!h.length)return null;const t=performance.now()-70;for(let i=h.length-1;i>=0;i--)if(h[i][0]<=t)return h[i];return h[0]}
+function pullShow(){const p=C.pull;if(!p)return;const st=Math.floor(C.pw*10);if(st!==p.step){p.step=st;O.buzz(st>=10?16:5)}$('pwFill').style.width=(C.pw*100)+'%';setNeedle();const now=performance.now();if(now-C.pushT>60){C.pushT=now;pushCtrl()}if(!$('scope').hidden)drawScope()}
+function pullEnd(cancel){const p=C.pull;if(!p)return;C.pull=null;{const q=settled(p);if(q&&C.pw>=.05){C.aim=q[1];C.pw=Math.max(.05,q[2])}}const pw=C.pw;C.ch=false;if(!cancel&&pw>=.05){C.lastPull={aim:C.aim,pw};doFire(pw)}else pushCtrl();C.pw=0;setTimeout(()=>{if(!C.ch)$('pwFill').style.width='0'},400);C.key='';renderCtrl()}
 function showBox(id){const o=O.lockInfo(id),ov=$('boxOv');if(!o)return;O.sfx('box');ov.textContent='';const ch=el('div','chest'),cd=el('div','card');cd.append(O.ico(id,null,'big'),el('small',null,'New '+o.kind),el('b',null,o.name),el('p',null,o.desc),el('i',null,'It can now turn up in every run. Press to close.'));ov.append(ch,cd);ov.hidden=false;ov.onclick=()=>{ov.hidden=true}}
 function doFire(pow){const v=getView();if(!canFire(v))return;C.pendSn=v.me.sn;C.sentAt=performance.now();C.trailNew=true;O.buzz(25);
   if(isLocal()){const pl=G.players.find(p=>p.id==='local');if(pl)O.fire(pl,C.ab,C.aim,pow,C.rp)}else C.shot={n:++C.seq,ab:C.ab,rp:C.rp,ang:Math.round(C.aim*10)/10,pow:Math.round(pow*1000)/1000};C.armed=false;
@@ -588,7 +607,7 @@ function hostPanels(){
   }
   const sk=JSON.stringify([G.players.map(p=>[p.id,p.cls,p.hp,p.mhp,p.lv,p.fired,p.away,p.ups.length,p.owned.length,p.rp||0,p.ab||0,p.tgt,p.ch?Math.round((p.pw||0)*20):-1]),G.cur,G.active,G.items,G.relics,G.log[0],G.screen,G.phase,O.inspect,code,G.dec&&G.dec.k]);
   if(sk!==sideKey){sideKey=sk;const ul=$('party');ul.textContent='';const aim=G.screen==='combat'&&G.phase==='aim';
-    const state=p=>p.hp<=0?'down':p.away?'away':aim?(G.players[G.active]===p?'attacking':p.fired?'done':p.ch?`aiming ${Math.round((p.pw||0)*100)}%`:p.tgt>=0&&!CLASSES[p.cls].ab[p.ab||0].instant?O.RAMPS[p.rp||0].short.toLowerCase()+' ready':'choosing'):'';
+    const state=p=>p.hp<=0?'down':p.away?'away':aim?(G.players[G.active]===p?'attacking':p.fired?'done':G.players.length>1&&G.shooter&&G.shooter!==p.id?'waiting':p.ch?`aiming ${Math.round((p.pw||0)*100)}%`:p.tgt>=0&&!CLASSES[p.cls].ab[p.ab||0].instant?O.RAMPS[p.rp||0].short.toLowerCase()+' ready':'choosing'):'';
     for(const p of G.players){const cl=CLASSES[p.cls],li=el('li');li.tabIndex=0;li.setAttribute('role','button');li.setAttribute('aria-pressed',O.inspect===p.id);
       const dd=el('div'),nm=el('div','nm');nm.append(el('span',null,`${cl.animal} ${cl.name}`),el('small',null,state(p)||'Lv '+p.lv));
       const bar=el('div','bar'),i=el('i');i.style.width=(100*p.hp/p.mhp)+'%';bar.appendChild(i);dd.append(nm,bar);li.append(headCanvas(p.cls,44,LANES[p.slot]),dd);
