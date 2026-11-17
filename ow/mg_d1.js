@@ -233,7 +233,7 @@ O.addMg({id:'eyes',dun:4,name:'Eyes in the Dark',hearts:true,ctl:'Phone: four di
  prog:g=>`${g.res}/${g.d.e.length}`,key:(g,d,sl)=>d.dir[sl],
  tv(K,g){const G2=K.room({w:7,d:6,sides:true}),T=K.T,pos=[[0,1.3,-2.6],[3.2,1.2,0],[0,1.1,3.2],[-3.2,1.2,0]],eyes=pos.map(q=>{const e=new T.Group();for(const s0 of[-1,1]){const m=K.glow(.14,.08,.04,'#ff3a1a');m.position.x=s0*.13;e.add(m)}e.position.set(...q);e.visible=false;G2.add(e);return e});
    const dark=new T.Mesh(new T.PlaneGeometry(30,30),new T.MeshBasicMaterial({color:'#000',transparent:true,opacity:.55}));dark.rotation.x=-Math.PI/2;dark.position.y=.02;G2.add(dark);
-   return{g:G2,cam:[[0,4.4,4.2],[0,.5,-.2]],spot:(p,i,n)=>{const a=[Math.PI,-Math.PI/2,0,Math.PI/2][g.d.dir[p.slot]||0];return[slotX(i,n,.6),0,0,a]},
+   return{g:G2,cam:[[0,4.4,4.2],[0,.5,-.2]],spot:(p,i,n)=>{const a=[Math.PI,Math.PI/2,0,-Math.PI/2][g.d.dir[p.slot]||0];/* +90° faces +x, the right of the screen */return[slotX(i,n,.6),0,0,a]},
    update(m){const t=m.st==='play'?m.t:-9,e=m.d.e[m.res];eyes.forEach((q,k)=>{q.visible=false});if(e&&t>=e[0]){const k=e[2],lunge=clamp((t-e[0])/(e[1]-e[0]),0,1);eyes[k].visible=true;eyes[k].scale.setScalar(.9+lunge*.6);eyes[k].children.forEach(c=>c.material.color.set('#ff3a1a'));
        if(e[3]>=0){eyes[e[3]].visible=true;eyes[e[3]].scale.setScalar(.8);eyes[e[3]].children.forEach(c=>c.material.color.set('#5a1a10'))}}}}},
  pad(K){if(K.first){const pad=K.el('div','dirPad');DIRS.forEach((n,k)=>{const b=K.btn(['▲','▶','▼','◀'][k],'dir d'+k,()=>{K.buzz(10);K.send(String(k))});pad.appendChild(b)});K.x.appendChild(pad)}
