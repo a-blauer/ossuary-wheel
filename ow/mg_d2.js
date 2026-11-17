@@ -75,11 +75,13 @@ O.addMg({id:'miasma',dun:6,name:'Miasma',hearts:true,ctl:'Phone: hold to hold yo
    return{g:G2,cam:[[2.4,2.2,4.6],[0,.8,-1.4]],spot:(p,i,n)=>[slotX(i,n,.8),0,1.2,Math.PI],
    update(m){const t=m.st==='play'?m.t:-9;m.d.cl.forEach((q,i)=>{const zf=(q[0]-t)*2.2+1.2,zb=(q[1]-t)*2.2+1.2;cl[i].visible=zb>-4&&zf<9;cl[i].position.set(0,.9,-(zf+zb)/2+2.4);cl[i].material.opacity=.28+.06*Math.sin(K.now()*3+i)})}}},
  hud(x,w,h,g,HK){const ps=HK.players();ps.forEach((p,i)=>{const X=w/2+(i-(ps.length-1)/2)*Math.min(w*.2,240);HK.txt(x,'LUNGS',X,h*.09,14);HK.bar(x,X-50,h*.12,100,10,g.d.lung[p.slot]||0,(g.d.lung[p.slot]||0)<.3?'#ff5a4a':'#e8e8f8')});
-   const on=g.d.cl.some(q=>g.t>=q[0]&&g.t<q[1]);if(on)HK.txt(x,'HOLD YOUR BREATH!',w/2,h*.2,Math.max(22,h*.05),'#a0e040')},
- pad(K){const d=K.d,sl=K.sl,s=K.s;if(K.first){s.m=K.meter('lung');s.cv=K.canvas(110);K.x.append(s.m,s.cv,K.btn('HOLD BREATH','go big',v=>{K.buzz(v?10:0);K.send((K.live().d.hold?'':'')+(v?'1':'0'))},true))}
-   s.m.set(d.lung[sl]||0);const[x,w,h]=K.fit(s.cv),t=K.now();x.fillStyle='#14180c';x.fillRect(0,0,w,h);x.fillStyle='#e8d8c0';x.fillRect(18,h/2-14,10,28);
-   for(const q of d.cl){const a=18+(q[0]-t)*70,b=18+(q[1]-t)*70;if(b<0||a>w)continue;x.fillStyle='rgba(138,208,64,.55)';x.fillRect(Math.max(0,a),10,Math.min(w,b)-Math.max(0,a),h-20)}},
- hint:()=>'Hold while a green cloud is on you. Let go to breathe between clouds.'});
+   /* the tunnel as a lane: clouds slide in from the right to the mouth on the left */
+   const t=g.t,LX=w*.12,LW=w*.76,LY=h*.2,LH=Math.max(44,h*.09),px=LX+LW*.08,sc=LW/6;HK.panel(x,LX,LY,LW,LH,.8);
+   for(const q of g.d.cl){const a=px+(q[0]-t)*sc,b=px+(q[1]-t)*sc;if(b<LX||a>LX+LW)continue;x.fillStyle='rgba(138,208,64,.6)';x.fillRect(Math.max(LX,a),LY+6,Math.min(LX+LW,b)-Math.max(LX,a),LH-12)}
+   x.fillStyle='#e8d8c0';x.fillRect(px-5,LY-6,10,LH+12);const on=g.d.cl.some(q=>t>=q[0]&&t<q[1]);HK.txt(x,on?'HOLD YOUR BREATH!':'breathe…',w/2,LY+LH+Math.max(24,h*.045),Math.max(20,h*.045),on?'#a0e040':'#bfb29a')},
+ pad(K){const d=K.d,sl=K.sl,s=K.s;if(K.first){s.m=K.meter('lung');K.x.append(s.m,K.el('p','mgNote watchTv','👀 Watch the clouds on the big screen'),K.btn('HOLD BREATH','go big',v=>{K.buzz(v?10:0);K.send((K.live().d.hold?'':'')+(v?'1':'0'))},true))}
+   s.m.set(d.lung[sl]||0)},
+ hint:()=>'Watch the big screen. Hold while a green cloud is on you; let go to breathe between clouds.'});
 
 /* ===== 15 · The Sunken Temple · Offering Scales: lay offerings to match the idol's weight exactly ===== */
 const WTS=[1,2,3,5];
@@ -112,10 +114,13 @@ O.addMg({id:'gaze',dun:7,name:'Gaze of the Drowned God',hearts:true,ctl:'Phone: 
    beam.rotation.x=Math.PI/2;beam.position.z=R*.6;const bw=new K.T.Group();bw.add(beam);eye.add(bw);eye.position.y=.7;G2.add(eye);
    return{g:G2,cam:[[0,6.4,4.2],[0,0,0]],spot:(p,i,n)=>{const a=(g.d.at[p.slot]||0)/8*Math.PI*2,mates=here().filter(q=>g.d.at[q.slot]===g.d.at[p.slot]),j=mates.indexOf(p);return[Math.sin(a)*(R-.25-j*.3),0,Math.cos(a)*(R-.25-j*.3),a+Math.PI]},
    update(m){const want=m.d.beam/8*Math.PI*2;let dr=want-bw.rotation.y;dr=Math.atan2(Math.sin(dr),Math.cos(dr));bw.rotation.y+=dr*.35;core.material.color.set(m.d.warn?'#ffd27a':'#70ffa0');beam.material.color.set(m.d.warn?'#ffd27a':'#70ffa0')}}},
- pad(K){const d=K.d,s=K.s;if(K.first){s.cv=K.canvas(220);const mv=dl=>()=>{K.buzz(10);K.send(String(((K.live().d.at[K.sl]??0)+dl+8)%8))};K.x.append(s.cv,K.row(2,K.btn('◀','go big',mv(-1)),K.btn('▶','go big',mv(1))))}
-   const[x,w,h]=K.fit(s.cv),cx=w/2,cy=h/2,R=Math.min(w,h)*.38;x.fillStyle='#0c1a14';x.fillRect(0,0,w,h);for(let k=0;k<8;k++){const a=k/8*Math.PI*2-Math.PI/2,dd=Math.min((k-d.beam+8)%8,(d.beam-k+8)%8);x.fillStyle=dd<=1?(d.warn?'#ffd27a':'#70ffa0'):'#3a5a48';x.beginPath();x.arc(cx+Math.cos(a)*R,cy+Math.sin(a)*R,14,0,7);x.fill()}
-   const a=(d.at[K.sl]||0)/8*Math.PI*2-Math.PI/2;x.strokeStyle=K.LANES[K.sl];x.lineWidth=5;x.beginPath();x.arc(cx+Math.cos(a)*R,cy+Math.sin(a)*R,20,0,7);x.stroke()},
- hint:(g,d)=>d.warn?'It is about to REVERSE!':'Keep out of the green stare.'});
+ pad(K){const d=K.d,s=K.s;if(K.first){const mv=dl=>()=>{K.buzz(10);K.send(String(((K.live().d.at[K.sl]??0)+dl+8)%8))};K.x.append(K.el('p','mgNote watchTv','👀 Watch the ring on the big screen'),K.row(2,K.btn('◀','go big',mv(-1)),K.btn('▶','go big',mv(1))))}
+   },
+ hud(x,w,h,g,HK){const R=Math.min(w*.13,h*.26),cx=w-R-Math.max(30,w*.04),cy=h*.42,b=g.d.beam;HK.panel(x,cx-R-26,cy-R-26,R*2+52,R*2+52,.8);
+   for(let k=0;k<8;k++){const a=k/8*Math.PI*2-Math.PI/2,dd=Math.min((k-b+8)%8,(b-k+8)%8);x.fillStyle=dd<=1?(g.d.warn?'#ffd27a':'#70ffa0'):'#3a5a48';x.beginPath();x.arc(cx+Math.cos(a)*R,cy+Math.sin(a)*R,R*.15,0,7);x.fill()}
+   const ps=HK.players();ps.forEach((p,i)=>{const k=g.d.at[p.slot]||0,mates=ps.filter(q=>g.d.at[q.slot]===k),j=mates.indexOf(p),a=k/8*Math.PI*2-Math.PI/2;x.strokeStyle=HK.LANES[p.slot];x.lineWidth=4;x.beginPath();x.arc(cx+Math.cos(a)*R,cy+Math.sin(a)*R,R*.2+j*5,0,7);x.stroke()});
+   if(g.d.warn)HK.txt(x,'REVERSING!',cx,cy,Math.max(16,R*.22),'#ffd27a')},
+ hint:(g,d)=>d.warn?'It is about to REVERSE!':'Watch the big screen and keep out of the green stare.'});
 
 /* ===== 17 · The Bone Desert · Quicksand: climb only as the sand breathes out ===== */
 O.addMg({id:'quicksand',dun:8,name:'Quicksand',ctl:'Phone: CLIMB',live:true,

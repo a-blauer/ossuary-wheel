@@ -120,11 +120,13 @@ O.addMg({id:'tide',dun:2,name:'Rising Tide',hearts:1,ctl:'Phone: GULP',live:true
    update(m){const t=m.st==='play'?m.t:-9,ps=here();ps.forEach((p,i)=>{const arr=m.d.b[p.slot]||[];let pool=balls[p.slot]||(balls[p.slot]=[]);let k=0;for(let j=0;j<arr.length;j++){const dt=arr[j][0]-t;if(dt<-.15||dt>1.4||(m.used&&m.used[p.slot]&&m.used[p.slot][j]))continue;
        let b=pool[k];if(!b){b=new T.Mesh(new T.SphereGeometry(.09,10,8),new T.MeshBasicMaterial({color:'#bff4ff',transparent:true,opacity:.85,toneMapped:false}));G2.add(b);pool.push(b)}b.visible=true;b.material.color.set(arr[j][1]?'#ff8ad8':'#bff4ff');b.scale.setScalar(arr[j][1]?1.5:1);b.position.set(sp(i,ps.length)+.05,1.35-dt*1.2,.35);k++}
        for(;k<pool.length;k++)pool[k].visible=false})}}},
- hud(x,w,h,g,HK){const ps=HK.players();ps.forEach((p,i)=>{const X=w/2+(i-(ps.length-1)/2)*Math.min(w*.2,240);HK.bar(x,X-50,h*.12,100,10,(g.d.air[p.slot]||0)/100,(g.d.air[p.slot]||0)<30?'#ff5a4a':'#7fe0ff');HK.txt(x,'AIR',X,h*.09,14)})},
- pad(K){const d=K.d,sl=K.sl,s=K.s;if(K.first){s.cv=K.canvas(260);s.m=K.meter('air');K.x.append(s.m,s.cv,K.btn('GULP','go big',()=>{K.buzz(15);s.n=(s.n||0)+1;K.send(String(s.n))}))}
-   s.m.set((d.air[sl]||0)/100);const[x,w,h]=K.fit(s.cv),t=K.now();x.fillStyle='#0a2024';x.fillRect(0,0,w,h);x.fillStyle='rgba(127,224,255,.25)';x.fillRect(0,h*.18-14,w,28);
-   x.fillStyle='#e8d8c0';x.beginPath();x.arc(w/2,h*.18,16,0,7);x.fill();for(const q of d.b[sl]||[]){const dt=q[0]-t;if(dt<-.2||dt>1.4)continue;x.fillStyle=q[1]?'#ff8ad8':'#bff4ff';x.beginPath();x.arc(w/2,h*.18+dt/1.4*(h*.8),q[1]?14:10,0,7);x.fill()}},
- hint:()=>'Press GULP as a blue bubble reaches you. Let pink ones pass.'});
+ /* each fighter's bubbles rise to their mouth in their own view */
+ hud(x,w,h,g,HK){const t=g.t;HK.split(x,w,h,(x,X,Y,W,H,p)=>{const air=(g.d.air[p.slot]||0)/100,my=Y+H*.22,R=Math.max(12,Math.min(W,H)*.06);HK.txt(x,'AIR',X+W*.1,Y+H*.06,Math.max(12,H*.05));HK.bar(x,X+W*.2,Y+H*.035,W*.74,Math.max(8,H*.035),air,air<.3?'#ff5a4a':'#7fe0ff');
+   x.fillStyle='rgba(10,32,36,.9)';x.fillRect(X,Y+H*.11,W,H*.89);x.fillStyle='rgba(127,224,255,.25)';x.fillRect(X,my-R*1.2,W,R*2.4);x.fillStyle='#e8d8c0';x.beginPath();x.arc(X+W/2,my,R,0,7);x.fill();
+   const used=g.used&&g.used[p.slot];(g.d.b[p.slot]||[]).forEach((q,j)=>{const dt=q[0]-t;if(dt<-.2||dt>1.4||(used&&used[j]))return;x.fillStyle=q[1]?'#ff8ad8':'#bff4ff';x.beginPath();x.arc(X+W/2,my+dt/1.4*(H*.74),q[1]?R*1.05:R*.75,0,7);x.fill()})},{maxW:w*.24})},
+ pad(K){const d=K.d,sl=K.sl,s=K.s;if(K.first){s.m=K.meter('air');K.x.append(s.m,K.el('p','mgNote watchTv','👀 Watch your bubbles on the big screen'),K.btn('GULP','go big',()=>{K.buzz(15);s.n=(s.n||0)+1;K.send(String(s.n))}))}
+   s.m.set((d.air[sl]||0)/100)},
+ hint:()=>'Watch the big screen. Press GULP as a blue bubble reaches you; let pink ones pass.'});
 
 /* ===== 6 · The Drowned Vaults · Springing Leaks: hold a crack to plug it; one hand each; keep the water down together ===== */
 O.addMg({id:'leaks',dun:2,name:'Springing Leaks',ctl:'Phone: press and hold a crack',live:true,
@@ -168,27 +170,34 @@ O.addMg({id:'hotfloor',dun:3,name:'Hot Floor',hearts:true,ctl:'Phone: ◀ ▶',l
  hint:()=>'Keep moving to cooler plates. Flaring plates glow gold first.'});
 
 /* ===== 8 · Emberforge · The Crucible Pour: hold to pour; it keeps flowing a moment after; hit the line ===== */
-O.addMg({id:'pour',dun:3,name:'The Crucible Pour',ctl:'Phone: hold to pour, or tip the phone',live:true,motion:1,mo:'Tip your phone sideways like a ladle: the further you tip, the faster it pours. Tip back to stop, and the iron slows rather than stopping dead.',
- brief:'Fill three moulds with molten iron, right to the line. Hold to pour, let go to stop, but the iron keeps flowing a moment after you let go, and each mould fills faster than the last. Overfill and it splashes; underfill and it cracks. Get all three right.',
- setup(g){g.dur=36;g.d.res={};g.d.lv={};g.d.mo={}},
- input(g,p,v){const[r,m,l]=String(v).split(';');g.d.res[p.slot]=String(r||'').split('').map(Number).slice(0,3);g.d.mo[p.slot]=num(+m);g.d.lv[p.slot]=num(+l);if(here().every(q=>(g.d.res[q.slot]||[]).length>=3))g.end=1},
+O.addMg({id:'pour',dun:3,name:'The Crucible Pour',ctl:'Phone: hold to pour, or tip the phone',live:true,motion:1,mo:'Tip your phone to the RIGHT like a ladle: the further you tip, the faster it pours. Tip back level to stop, and the iron slows rather than stopping dead. Watch your mould on the big screen.',
+ brief:'Fill three moulds with molten iron, right to the line. Hold to pour, let go to stop, but the iron keeps flowing a moment after you let go, and each mould fills faster than the last. Overfill and it splashes; underfill and it cracks. Get all three right. Your mould is on the big screen.',
+ setup(g){g.dur=36;g.d.res={};g.d.lv={};g.d.mo={};g.d.fl={};g.rcv={}},
+ input(g,p,v){const[r,m,l,f]=String(v).split(';');g.d.res[p.slot]=String(r||'').split('').map(Number).slice(0,3);g.d.mo[p.slot]=num(+m);g.d.lv[p.slot]=num(+l);g.d.fl[p.slot]=num(+f);g.rcv[p.slot]=g.t;if(here().every(q=>(g.d.res[q.slot]||[]).length>=3))g.end=1},
  pass:(g,p)=>{const r=g.d.res[p.slot]||[];return r.length>=3&&r.every(Boolean)},prog:(g,p)=>`${(g.d.res[p.slot]||[]).filter(Boolean).length} good of ${(g.d.res[p.slot]||[]).length}`,
  tv(K,g){const G2=K.room({w:6,d:4}),T=K.T,cr=K.vb(P2=>{for(let x=-4;x<4;x++)for(let y=0;y<7;y++)for(let z=-4;z<4;z++)if(Math.hypot(x+.5,z+.5)<4&&(Math.hypot(x+.5,z+.5)>3||y===0))P2.set(x,y,z,'i');for(let x=-3;x<3;x++)for(let z=-3;z<3;z++)P2.set(x,6,z,'f')},.12,K.pal());cr.position.set(0,1.6,-1.2);cr.rotation.z=.5;G2.add(cr);
    K.light(G2,0,1.6,0,'#ff7a20',3);return{g:G2,cam:[[0,2,5],[0,1,-.5]],spot:(p,i,n)=>[slotX(i,n,.9),0,.8,Math.PI],update(){cr.rotation.z=.4+Math.sin(K.now()*1.3)*.1}}},
- hud(x,w,h,g,HK){const ps=HK.players();ps.forEach((p,i)=>{const X=w/2+(i-(ps.length-1)/2)*Math.min(w*.2,220),r=g.d.res[p.slot]||[];for(let k=0;k<3;k++){const Y=h*.12,cx=X+(k-1)*34;x.fillStyle='#2a2226';x.fillRect(cx-12,Y,24,40);
-     const lv=k<r.length?(r[k]?.82:.5):k===r.length?(g.d.lv[p.slot]||0):0;x.fillStyle='#ff8a2a';x.fillRect(cx-12,Y+40*(1-lv),24,40*lv);x.fillStyle='#fff';x.fillRect(cx-14,Y+40*(1-.82),28,2);if(k<r.length)HK.txt(x,r[k]?'✓':'✗',cx,Y+52,16,r[k]?'#9dffb0':'#ff7a6a')}})},
- pad(K){const s=K.s;if(K.first){s.res=[];s.lv=0;s.flow=0;s.hold=0;s.cv=K.canvas(300);s.btn=K.btn(O.motionOn&&O.motionOn()?'Tip to pour (or hold)':'Hold to pour','go big',v=>{s.hold=v;if(v)K.buzz(10)},true);K.x.append(s.cv,s.btn);s.last=performance.now();s.mo=O.motionOn&&O.motionOn();if(s.mo)O.motion.calibrate();s.tip=0;s.calm=0}
+ /* each fighter's mould, big, in their own view; the level runs on smoothly between the phone's reports */
+ hud(x,w,h,g,HK){HK.split(x,w,h,(x,X,Y,W,H,p)=>{const r=g.d.res[p.slot]||[],k=r.length,fl=g.d.fl[p.slot]||0,lv=k<3?Math.min(1.05,(g.d.lv[p.slot]||0)+fl*Math.min(.25,g.t-(g.rcv[p.slot]||g.t)+.08)):0;
+     const mw=W*.42,mx=X+W/2-mw/2,my=Y+H*.18,mh=H*.66;x.fillStyle='#2a2226';x.fillRect(mx,my,mw,mh);x.fillStyle='#ff8a2a';x.fillRect(mx,my+mh*(1-Math.min(1,lv)),mw,mh*Math.min(1,lv));
+     x.fillStyle='rgba(157,255,176,.25)';x.fillRect(mx-12,my+mh*(1-.88),mw+24,mh*.12);x.fillStyle='#fff';x.fillRect(mx-12,my+mh*(1-.82)-2,mw+24,4);
+     if(fl>.01){x.fillStyle='#ffb04a';x.fillRect(X+W/2-5,Y,10,my+mh*(1-Math.min(1,lv))-Y)}
+     HK.txt(x,k<3?`Mould ${k+1} of 3`:'Done!',X+W/2,Y+H*.08,Math.max(14,H*.06));for(let i=0;i<3;i++){const ok=r[i];HK.txt(x,i<k?(ok?'✓':'✗'):'·',X+W/2+(i-1)*W*.16,Y+H*.92,Math.max(16,H*.07),i<k?(ok?'#9dffb0':'#ff7a6a'):'#6a5a4a')}},{maxW:w*.3})},
+ pad(K){const s=K.s;if(K.first){s.res=[];s.lv=0;s.flow=0;s.hold=0;s.cv=K.canvas(150);s.btn=K.btn(O.motionOn&&O.motionOn()?'Tip right to pour (or hold)':'Hold to pour','go big',v=>{s.hold=v;if(v)K.buzz(10)},true);K.x.append(s.cv,s.btn);s.last=performance.now();s.mo=O.motionOn&&O.motionOn();if(s.mo)O.motion.calibrate();s.tip=0;s.calm=0}
    const now=performance.now(),dt=Math.min(.05,(now-s.last)/1000);s.last=now;const k=s.res.length,rate=[.3,.38,.47][Math.min(2,k)];
    /* tipping: the flow follows the tip angle, with the same lag as letting go of the button */
-   if(s.mo){const tl=O.motion.tilt();s.tip=clamp((Math.abs(tl.x)-.14)/.62,0,1.25)}
+   if(s.mo){const tl=O.motion.tilt();s.tip=clamp((tl.x-.14)/.62,0,1.25)}                 // only a tip to the right pours
    if(k<3){if(s.hold)s.flow=rate;else if(s.mo&&s.tip>0){s.flow+=(rate*s.tip*1.15-s.flow)*Math.min(1,dt/.22)}else s.flow=Math.max(0,s.flow-rate*dt/.28);s.lv+=s.flow*dt;s.calm=(s.tip>0||s.hold)?0:s.calm+dt;
      if(s.lv>1.02||(!s.hold&&s.flow<=0&&s.lv>.05&&(!s.mo||s.calm>.12))){const ok=Math.abs(s.lv-.82)<=.06;s.res.push(ok?1:0);K.buzz(ok?[20,30,20]:80);O.sfx(ok?'mgGood':'mgBad');s.lv=0;s.flow=0;s.hold=0}
-     if(!s.tx||now-s.tx>150){s.tx=now;K.send(s.res.join('')+';'+s.res.length+';'+s.lv.toFixed(2))}}
-   const[x,w,h]=K.fit(s.cv);x.fillStyle='#120a08';x.fillRect(0,0,w,h);const mw=w*.4,mx=w/2-mw/2,my=h*.18,mh=h*.72;x.fillStyle='#2a2226';x.fillRect(mx,my,mw,mh);x.fillStyle='#ff8a2a';const lv=Math.min(1,s.lv);x.fillRect(mx,my+mh*(1-lv),mw,mh*lv);
-   x.fillStyle='#fff';x.fillRect(mx-10,my+mh*(1-.82)-1,mw+20,3);x.fillStyle='rgba(157,255,176,.25)';x.fillRect(mx-10,my+mh*(1-.88),mw+20,mh*.12);if(s.flow>0){x.fillStyle='#ffb04a';x.fillRect(w/2-4,h*.1,8,my+mh*(1-lv)-h*.1)}
-   if(s.mo){x.save();x.translate(w/2+20,h*.1+14);x.rotate(-Math.min(1.2,s.tip)*.9);x.fillStyle='#4a3a30';x.fillRect(-20,-14,46,22);x.fillStyle='#ff8a2a';x.fillRect(-16,-12,38,8);x.fillStyle='#6a5a4a';x.fillRect(26,-4,26,6);x.restore()}
-   x.fillStyle='#e8d8c0';x.font='800 16px system-ui';x.textAlign='center';x.fillText(k<3?`Mould ${k+1} of 3`:'Done!',w/2,20);s.res.forEach((r,i)=>{x.fillStyle=r?'#9dffb0':'#ff7a6a';x.fillText(r?'✓':'✗',w/2+(i-1)*26,h-6)})},
- hint:()=>O.motionOn&&O.motionOn()?'Tip to pour. Tip back early: it keeps flowing. Stop on the white line.':'Hold to pour. Let go early: it keeps flowing. Stop on the white line.'});
+     if(!s.tx||now-s.tx>60){s.tx=now;K.send(s.res.join('')+';'+s.res.length+';'+s.lv.toFixed(3)+';'+s.flow.toFixed(3))}}
+   /* the phone shows the ladle and how far it is tipped; the mould itself is on the big screen */
+   const[x,w,h]=K.fit(s.cv);x.fillStyle='#120a08';x.fillRect(0,0,w,h);x.textAlign='center';
+   x.save();x.translate(w*.32,h*.55);x.rotate(-(s.mo?Math.min(1.2,s.tip):(s.hold?.9:0))*.9);x.fillStyle='#4a3a30';x.fillRect(-34,-20,64,32);x.fillStyle='#ff8a2a';x.fillRect(-28,-17,52,10);x.fillStyle='#6a5a4a';x.fillRect(30,-6,40,9);x.restore();
+   if(s.flow>0){x.fillStyle='#ffb04a';x.fillRect(w*.32-38,h*.62,8,h*.38)}
+   x.fillStyle='#e8d8c0';x.font='800 17px system-ui';x.fillText(k<3?`Mould ${k+1} of 3`:'Done!',w*.72,h*.36);x.fillStyle='#bfb29a';x.font='600 13px system-ui';x.fillText('Watch the big screen',w*.72,h*.36+22);
+   if(s.mo){x.fillStyle='#2a2226';x.fillRect(w*.52,h*.78,w*.4,10);x.fillStyle=s.tip>0?'#ffb04a':'#6a5a4a';x.fillRect(w*.52,h*.78,w*.4*Math.min(1,s.tip),10);x.fillStyle='#bfb29a';x.font='600 12px system-ui';x.fillText('tip →',w*.72,h*.78-6)}
+   s.res.forEach((r,i)=>{x.fillStyle=r?'#9dffb0':'#ff7a6a';x.font='800 18px system-ui';x.fillText(r?'✓':'✗',w*.62+i*24,h-10)})},
+ hint:()=>O.motionOn&&O.motionOn()?'Tip right to pour, level to stop. It keeps flowing a moment. Watch your mould on the big screen.':'Hold to pour. Let go early: it keeps flowing. Watch your mould on the big screen and stop on the white line.'});
 
 /* ===== 9 · The Webbed Deep · Caught in Silk: tear the strand the silk glows on; the buttons shuffle; the spider descends ===== */
 const SILK=['spider','web','egg','fang'];

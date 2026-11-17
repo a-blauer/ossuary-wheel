@@ -140,10 +140,20 @@ const EV={
   setup(g){const r=rng(g.seed),b=[],P=[['Steady',8,.82,0],['Faster!',8,.64,0],['Double strikes!',8,.86,1],['Fastest!',10,.54,0]];g.d.secs=[];g.d.sl=[];let t=2.6;
     for(const[lab,n,iv0,dbl]of P){const iv=+(iv0+(r()-.5)*.04).toFixed(3);g.d.secs.push(+t.toFixed(2));g.d.sl.push(lab);for(let i=0;i<n;i++){b.push(+t.toFixed(2));if(dbl&&i%2===1)b.push(+(t+iv/2).toFixed(2));t+=iv}t+=1.1}
     g.d.beats=b;g.dur=t+.6;g.d.sc={};g.taps={}},
-  input(g,p,v){const set=g.taps[p.slot]=g.taps[p.slot]||new Set();for(const t of String(v).split(',').map(Number).filter(isFinite))set.add(+t.toFixed(2));
+  input(g,p,v){const set=g.taps[p.slot]=g.taps[p.slot]||new Set(),nw=String(v).split(',').map(Number).filter(isFinite);for(const t of nw)set.add(+t.toFixed(2));
+    {const t=Math.max(...nw);if(isFinite(t)){let best=9;for(const b of g.d.beats)best=Math.min(best,Math.abs(b-t));(g.d.lt=g.d.lt||{})[p.slot]=[+g.t.toFixed(2),best<.1?2:best<.2?1:0]}}
     const taps=[...set].sort((a,b)=>a-b);let s=0;const used=new Set();for(const b of g.d.beats){let best=null;for(const t of taps){if(used.has(t))continue;const dd=Math.abs(t-b);if(dd<.2&&(!best||dd<best[0]))best=[dd,t]}if(best){used.add(best[1]);s+=best[0]<.1?1:.6}}
     const stray=taps.length-used.size;g.d.sc[p.slot]=Math.max(0,Math.round((s-.3*stray)/g.d.beats.length*100))},
   prog:(g,p)=>(g.d.sc[p.slot]||0)+'%',pass:(g,p)=>(g.d.sc[p.slot]||0)>=50,
+  /* the beat on the big screen: embers fall down one lane to the anvil line; each fighter's last strike shows beneath in their colour */
+  hud(x,w,h,g,HK){const t=g.t,bs=g.d.beats,LEAD=1.6,lw=Math.min(w*.2,200),lx=w/2,top=h*.13,hitY=h*.72;
+    x.fillStyle='rgba(10,6,4,.78)';x.fillRect(lx-lw/2,top,lw,hitY-top+30);const gr=x.createLinearGradient(0,top,0,hitY);gr.addColorStop(0,'rgba(255,120,40,0)');gr.addColorStop(1,'rgba(255,120,40,.22)');x.fillStyle=gr;x.fillRect(lx-lw/2,top,lw,hitY-top);
+    x.fillStyle='#e8c05a';x.fillRect(lx-lw*.7,hitY-2,lw*1.4,5);
+    for(const b of bs){const d=b-t;if(d<-.25||d>LEAD)continue;const y=hitY-(d/LEAD)*(hitY-top-10),near=Math.abs(d)<.1;x.globalAlpha=d<-.1?Math.max(0,1+(d+.1)*6):1;x.fillStyle=near?'#fff4d0':'#ff8a3a';x.shadowColor='#ff6a1a';x.shadowBlur=near?24:10;x.beginPath();x.arc(lx,y,near?Math.max(14,lw*.11):Math.max(11,lw*.085),0,7);x.fill();x.shadowBlur=0;x.globalAlpha=1}
+    const secs=g.d.secs||[],labs=g.d.sl||[];let lab='';const nx=secs.findIndex(s0=>s0>t);if(nx>0&&secs[nx]-t<1.8)lab='Next: '+labs[nx];else{let i=-1;secs.forEach((s0,k)=>{if(t>=s0)i=k});if(i>=0&&t-secs[i]<1.6)lab=labs[i]}
+    if(lab)HK.txt(x,lab,lx,top-18,Math.max(22,h*.045),'#ffd27a');
+    const ps=HK.players(),n=ps.length,lt=g.d.lt||{};ps.forEach((p,i)=>{const X=lx+(i-(n-1)/2)*Math.min(150,w*.16),q=lt[p.slot],fresh=q&&g.t-q[0]<.6;HK.txt(x,O.CLASSES[p.cls].animal,X,hitY+52,Math.max(14,h*.026),HK.LANES[p.slot]);
+      if(fresh)HK.txt(x,['Off','Good','Perfect!'][q[1]],X,hitY+80,Math.max(18,h*.034),['#ff7a6a','#e8d8a0','#9dffb0'][q[1]]);HK.txt(x,(g.d.sc[p.slot]||0)+'%',X,hitY+108,Math.max(14,h*.026),'#bfb29a')})},
   finish(g){for(const p of here()){const s=g.d.sc[p.slot]||0;p.mgN=2+(s>=70?1:0)+(s>=88?1:0);p.mgAb=s>=88?1:0;g.d.rw[p.slot]=`Your timing: ${s}%. Your work offers ${p.mgN} choices${p.mgAb?', one of them a new ability':''}.`}
     return()=>{S().say('The smithy rings again. Everyone chooses from their work.');S().offerUpgrades('forge');return true}}},
  tome:{name:'The Drowned Library',brief:'Twelve pages, six pairs, and the party shares the turns. On your turn, turn over two: a pair stays face up and you go again, a miss passes the turn. Every pair the party finds teaches everyone more.',

@@ -314,7 +314,7 @@ function mgControl(g,d,sl,t,x0){const send=v=>{sendMg(g.id,v);C.mgK=''},V=C.mgV|
       cv.addEventListener('pointerdown',e=>{e.preventDefault();const gv=getView().mg;if(!gv||gv.st!=='play')return;const r=cv.getBoundingClientRect(),k=Math.max(0,Math.min(2,Math.floor((e.clientX-r.left)/r.width*3))),c=(gv.d.c||{})[sl]||[],bz=(gv.d.bz||{})[sl]||0,t=mgNow(gv);
         if(c[k]===2)return;if(t<bz){O.buzz(60);return}send(String(k));if(c[k]===1){O.buzz([20,30,40]);mgFlash('Shielded!',true);C.vg.fl={k,t:performance.now(),ok:1}}else{O.buzz(160);mgFlash('Hands full!',false);C.vg.fl={k,t:performance.now(),ok:0}}});
       const loop=()=>{if(!cv.isConnected)return;drawVigil(cv,getView().mg,sl);requestAnimationFrame(loop)};requestAnimationFrame(loop)}}
-  else if(g.k==='forge'){if(!x.querySelector('#mgLane')){x.textContent='';const cv=document.createElement('canvas');cv.id='mgLane';cv.className='mgLane';
+  else if(g.k==='forge'){if(!x.querySelector('#mgLane')){x.textContent='';const cv=document.createElement('canvas');cv.id='mgLane';cv.className='mgLane small';
       /* a strike: from the button, or from a swing of the phone (the jolt comes a moment after the swing's peak, so it is taken a touch earlier) */
       const strike=lag=>{O.buzz(18);const gv=getView().mg;if(!gv||gv.st!=='play')return;const tt=mgNow(gv)-(lag||0);C.mgTaps.push(+tt.toFixed(2));send(C.mgTaps.slice(-8).join(','));let best=9;for(const b of gv.d.beats||[])best=Math.min(best,Math.abs(b-tt));C.mgFb={t:performance.now(),r:best<.1?'Perfect!':best<.2?'Good':'Off the beat',ok:best<.2}};
       const mo=MO.use();if(mo)MO.onSwing=()=>{if(!cv.isConnected){MO.onSwing=null;return}strike(.03)};
@@ -330,16 +330,11 @@ function mgControl(g,d,sl,t,x0){const send=v=>{sendMg(g.id,v);C.mgK=''},V=C.mgV|
     else if(!bet)x.appendChild(el('div','mgBig','No bet this time.'));
     else{const r=el('div','mgRow three');[0,1,2].forEach(i=>r.appendChild(mgBtn('Cup '+(i+1),cup===i?'on':'',()=>{if(cup>=0)return;O.buzz(20);send(bet+':'+i)})));x.appendChild(r)}}}
 /* the smithy on the phone: embers fall down a lane and reach the anvil line exactly on the beat */
+/* the smithy on the phone is only the hammer: the beat is on the big screen. It shows how your last strike landed. */
 function drawForge(cv,g){if(!g||!g.d)return;const w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;const dpr=Math.min(2,devicePixelRatio||1);if(cv.width!==Math.round(w*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr)}
-  const x=cv.getContext('2d'),t=mgNow(g),bs=g.d.beats||[],secs=g.d.secs||[],labs=g.d.sl||[],LEAD=1.5,hitY=h*.78,lx=w/2;x.setTransform(dpr,0,0,dpr,0,0);
-  x.fillStyle='#120b08';x.fillRect(0,0,w,h);const lg=x.createLinearGradient(0,0,0,h);lg.addColorStop(0,'rgba(255,120,40,0)');lg.addColorStop(1,'rgba(255,120,40,.18)');x.fillStyle=lg;x.fillRect(lx-w*.17,0,w*.34,h);
-  x.fillStyle='#5a4a3a';x.fillRect(lx-w*.22,hitY-3,w*.44,6);x.fillStyle='#e8c05a';x.fillRect(lx-w*.22,hitY-1,w*.44,2);x.fillStyle='#3a2e26';x.fillRect(lx-w*.14,hitY+6,w*.28,h-hitY-6);
-  for(const b of bs){const d=b-t;if(d<-.3||d>LEAD)continue;const y=hitY-(d/LEAD)*(hitY-14),near=Math.abs(d)<.1,past=d<-.1;x.globalAlpha=past?Math.max(0,1+(d+.1)*5):1;
-    x.fillStyle=near?'#fff4d0':'#ff8a3a';x.shadowColor='#ff6a1a';x.shadowBlur=near?18:8;x.beginPath();x.arc(lx,y,near?17:14,0,7);x.fill();x.shadowBlur=0;x.globalAlpha=1}
-  x.textAlign='center';const nx=secs.findIndex(s0=>s0>t);let lab='';if(nx>0&&secs[nx]-t<1.8)lab=labs[nx];else{let i=-1;secs.forEach((s0,k)=>{if(t>=s0)i=k});if(i>=0&&t-secs[i]<1.6)lab=labs[i]}
-  if(lab){x.fillStyle='#ffd27a';x.font=`800 ${Math.round(Math.min(30,w/11))}px system-ui`;x.fillText(lab,lx,32)}
-  const fb=C.mgFb;if(fb&&performance.now()-fb.t<550){x.fillStyle=fb.ok?'#9dffb0':'#ff7a6a';x.font=`800 ${Math.round(Math.min(26,w/13))}px system-ui`;x.fillText(fb.r,lx,hitY+34)}
-}
+  const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle='#120b08';x.fillRect(0,0,w,h);x.textAlign='center';
+  const fb=C.mgFb,now=performance.now();if(fb&&now-fb.t<650){x.fillStyle=fb.ok?'#9dffb0':'#ff7a6a';x.font=`800 ${Math.round(Math.min(40,w/8))}px system-ui`;x.fillText(fb.r,w/2,h*.5)}
+  else{x.fillStyle='#e8c05a';x.font=`800 ${Math.round(Math.min(24,w/14))}px system-ui`;x.fillText('Watch the big screen',w/2,h*.42);x.fillStyle='#bfb29a';x.font='600 14px system-ui';x.fillText(MO.use()?'Swing as each ember reaches the gold line':'Tap as each ember reaches the gold line',w/2,h*.42+26)}}
 if(window.CanvasRenderingContext2D&&!CanvasRenderingContext2D.prototype.roundRect)CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h){this.rect(x,y,w,h)};
 function lockPin(){const L=C.lk,gv=getView().mg,per=((gv&&gv.d.per)||[1.5,1.05,.72])[Math.min(2,L.k)],u=((performance.now()-L.t0)/1000/per)%2;return u<1?u:2-u}
 O.lkDbg=()=>({k:C.lk?C.lk.k:-1,pin:C.lk?lockPin():0});          // for tests
@@ -356,8 +351,13 @@ MO.enable=async()=>{try{if(window.DeviceOrientationEvent&&typeof DeviceOrientati
   return new Promise(res=>setTimeout(()=>{MO.ok=MO.t>0;if(MO.ok){MO.pref=true;try{localStorage.setItem('ow_motion','1')}catch(q){}}res(MO.ok)},900))};
 MO.off=()=>{MO.pref=false;try{localStorage.setItem('ow_motion','0')}catch(q){}};
 MO.use=()=>MO.on&&MO.ok&&MO.pref;O.motionOn=MO.use;
-MO.calibrate=()=>{MO.b0=MO.b;MO.g0=MO.g};
-MO.tilt=()=>({x:clamp((MO.g-MO.g0)/30,-1.5,1.5),y:clamp((MO.b-MO.b0)/30,-1.5,1.5)});
+/* tilt in the screen's own directions, whichever way up the phone is turned. Worked from where 'up' points in the phone's own frame,
+   so it stays steady even with the phone held near upright, where the raw roll angle swings wildly. x: right edge down is +, y: top edge up is +. */
+MO.raw=()=>{const an=window.screen&&screen.orientation&&typeof screen.orientation.angle==='number'?screen.orientation.angle:(typeof window.orientation==='number'?window.orientation:0),R=Math.PI/180,
+  b=MO.b*R,g=MO.g*R,ux=-Math.sin(g)*Math.cos(b),uy=Math.sin(b),a=(((an%360)+360)%360)*R,sx=ux*Math.cos(a)-uy*Math.sin(a),sy=ux*Math.sin(a)+uy*Math.cos(a);
+  return[Math.asin(clamp(-sx,-1,1))/R,Math.asin(clamp(sy,-1,1))/R]};
+MO.calibrate=()=>{const r=MO.raw();MO.x0=r[0];MO.y0=r[1]};MO.x0=0;MO.y0=0;
+MO.tilt=()=>{const r=MO.raw();return{x:clamp((r[0]-MO.x0)/30,-1.5,1.5),y:clamp((r[1]-MO.y0)/30,-1.5,1.5)}};
 /* the switch on a motion game's rules screen */
 function motionRow(D){const w=el('div','moRow');if(!MO.supported()){return null}
   if(MO.use()){const b=el('button','btn moBtn on','📱 Motion controls: ON');b.onclick=()=>{MO.off();C.mgK=''};w.append(b,el('small',null,D.mo||'Hold your phone comfortably when the game starts: that is taken as level.'))}

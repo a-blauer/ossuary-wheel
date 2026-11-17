@@ -490,7 +490,11 @@ const HK={LANES,
   bar(x,X,Y,w,h,f,col,bg){x.fillStyle=bg||'rgba(0,0,0,.6)';x.fillRect(X,Y,w,h);x.fillStyle=col||'#d5a640';x.fillRect(X,Y,w*clamp(f,0,1),h)},
   txt(x,s,X,Y,sz,col,al,font){x.font=`${font||'800'} ${sz}px "Alegreya Sans",system-ui,sans-serif`;x.textAlign=al||'center';x.textBaseline='middle';x.lineWidth=Math.max(2,sz/7);x.strokeStyle='rgba(0,0,0,.85)';x.strokeText(s,X,Y);x.fillStyle=col||'#fff4d6';x.fillText(s,X,Y)},
   hearts(x,X,Y,n,max,s){for(let i=0;i<(max||3);i++){x.save();x.globalAlpha=i<n?1:.25;HK.glyph(x,'heart',X+i*s*1.05,Y,s,i<n?'#ff4a4a':'#666');x.restore()}},
-  players:()=>G.players.filter(p=>!p.away)};
+  players:()=>G.players.filter(p=>!p.away),
+  /* the screen split into one framed view per fighter, side by side above the strip; fn draws inside each */
+  split(x,w,h,fn,o){o=o||{};const ps=HK.players(),n=Math.max(1,ps.length),gap=12,top=h*(o.top||.2),bot=h-Math.max(34,h*.06)-22,PH=Math.min(bot-top,o.maxH||h*.62),PW=Math.min(o.maxW||w*.42,(w-gap*(n+1))/n),y=top+(bot-top-PH)/2;
+    ps.forEach((p,i)=>{const X=w/2+(i-(n-1)/2)*(PW+gap)-PW/2;HK.panel(x,X,y,PW,PH,.86);x.fillStyle=LANES[p.slot];x.fillRect(X+8,y+6,PW-16,4);const hh=Math.max(16,PH*.075);HK.txt(x,O.CLASSES[p.cls].animal,X+PW/2,y+8+hh*.7,hh,LANES[p.slot]);
+      x.save();x.beginPath();x.rect(X+6,y+12+hh*1.3,PW-12,PH-18-hh*1.3);x.clip();try{fn(x,X+6,y+12+hh*1.3,PW-12,PH-18-hh*1.3,p,i)}catch(e){console.warn(e)}x.restore()})}};
 let hudCv=null;
 function drawHud(m){if(!hudCv){hudCv=document.createElement('canvas');hudCv.id='mgHud';canvas.parentNode.insertBefore(hudCv,canvas.nextSibling)}
   const on=!!m&&G.screen==='map',def=on&&O.MG[m.k];hudCv.hidden=!on;if(!on)return;const w=canvas.clientWidth,h=canvas.clientHeight,dpr=Math.min(2,window.devicePixelRatio||1);

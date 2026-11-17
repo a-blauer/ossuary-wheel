@@ -58,25 +58,32 @@ function maze(seed){const r=H.rng(seed),W=Array(MZ*MZ).fill(15),seen=new Set([0]
   if(!nb.length){st.pop();continue}const[a,b,w1,w2]=nb[Math.floor(r()*nb.length)],n=b*MZ+a;W[c]&=~(1<<w1);W[n]&=~(1<<w2);seen.add(n);st.push(n)}return W}
 function bfs(W,from){const D=Array(MZ*MZ).fill(1e9);D[from]=0;const q=[from];while(q.length){const c=q.shift(),x=c%MZ,y=Math.floor(c/MZ);[[0,x,y-1],[1,x+1,y],[2,x,y+1],[3,x-1,y]].forEach(([w,a,b])=>{if(W[c]&(1<<w))return;const n=b*MZ+a;if(D[n]>D[c]+1){D[n]=D[c]+1;q.push(n)}})}return D}
 O.addMg({id:'maze',dun:11,name:'Mycelium Maze',ctl:'Phone: arrows, or tilt the phone',live:true,motion:1,mo:'Tilt your phone to roll through the maze, one step at a time. Hold it comfortably when the game starts: that is level.',
- brief:'A maze of glowing threads on your phone, and the fungus is growing after you from the entrance. Find the exit in the far corner before it catches you.',
+ brief:'Each of you has a maze of glowing threads on the big screen, and the fungus is growing after you from the entrance. Find the exit in the far corner before it catches you.',
  setup(g){g.dur=40;g.d.pos={};g.d.res={};g.d.seed=(g.seed%100000)+7},
- input(g,p,v){const[pos,res]=String(v).split(':').map(Number);g.d.pos[p.slot]=pos;if(res)g.d.res[p.slot]=res;if(here().every(q=>g.d.res[q.slot]))g.end=1},
+ input(g,p,v){const[pos,res,cell]=String(v).split(':').map(Number);g.d.pos[p.slot]=pos;if(isFinite(cell))(g.d.cell=g.d.cell||{})[p.slot]=clamp(Math.floor(cell),0,MZ*MZ-1);if(res)g.d.res[p.slot]=res;if(here().every(q=>g.d.res[q.slot]))g.end=1},
  pass:(g,p)=>g.d.res[p.slot]===1,prog:(g,p)=>g.d.res[p.slot]===1?'out!':g.d.res[p.slot]===2?'caught':`${g.d.pos[p.slot]||0}% of the way`,
  tv(K,g){const G2=K.room({w:7,d:5}),T=K.T;const vine=[];for(let k=0;k<20;k++){const v=K.vb(P2=>{for(let y=0;y<10+(k*7)%8;y++)P2.set((y*3+k)%3-1,y,0,'a')},.1,K.pal());v.position.set(-3.2+k*.34,0,-2.2);G2.add(v);vine.push(v)}
    return{g:G2,cam:[[0,1.8,5],[0,1,-1]],walk:1,spot:(p,i,n)=>[slotX(i,n,1),0,.6-(g.d.pos[p.slot]||0)/100*2.2,Math.PI],update(m){vine.forEach((v,k)=>v.scale.y=.5+Math.min(1,m.t/30)*.8+Math.sin(K.now()*2+k)*.05)}}},
- hud(x,w,h,g,HK){HK.txt(x,'Find the way out on your phone!',w/2,h*.1,Math.max(20,h*.045),'#e080ff')},
- pad(K){const s=K.s;if(K.first){s.W=maze(K.d.seed);s.D=bfs(s.W,MZ*MZ-1);s.F=bfs(s.W,0);s.at=0;s.res=0;s.cv=K.canvas(340);
+ /* every fighter's maze in their own view: the threads, the fungus creeping from the entrance, the exit, and where they are */
+ hud(x,w,h,g,HK){if(!g.mz)g.mz={W:maze(g.d.seed),F:null};if(!g.mz.F)g.mz.F=bfs(g.mz.W,0);const W=g.mz.W,F=g.mz.F,creep=(g.t-4);
+   HK.split(x,w,h,(x,X,Y,PW,PH,p)=>{const c=Math.min(PW,PH)/MZ,ox=X+(PW-c*MZ)/2,oy=Y+(PH-c*MZ)/2;x.fillStyle='#140c14';x.fillRect(ox,oy,c*MZ,c*MZ);
+     for(let i=0;i<MZ*MZ;i++){const a=i%MZ,b=Math.floor(i/MZ),Xa=ox+a*c,Yb=oy+b*c;if(F[i]<creep){x.fillStyle='rgba(224,128,255,.45)';x.fillRect(Xa,Yb,c,c)}x.strokeStyle='#e080ff';x.lineWidth=Math.max(1.5,c*.08);x.beginPath();if(W[i]&1){x.moveTo(Xa,Yb);x.lineTo(Xa+c,Yb)}if(W[i]&2){x.moveTo(Xa+c,Yb);x.lineTo(Xa+c,Yb+c)}if(W[i]&4){x.moveTo(Xa,Yb+c);x.lineTo(Xa+c,Yb+c)}if(W[i]&8){x.moveTo(Xa,Yb);x.lineTo(Xa,Yb+c)}x.stroke()}
+     x.fillStyle='#9dffb0';x.fillRect(ox+(MZ-1)*c+c*.2,oy+(MZ-1)*c+c*.2,c*.6,c*.6);const at=(g.d.cell||{})[p.slot]||0,r=g.d.res[p.slot];x.fillStyle=HK.LANES[p.slot];x.beginPath();x.arc(ox+(at%MZ+.5)*c,oy+(Math.floor(at/MZ)+.5)*c,c*.34,0,7);x.fill();
+     if(r)HK.txt(x,r===1?'Out!':'Caught!',X+PW/2,Y+PH/2,Math.max(22,PH*.12),r===1?'#9dffb0':'#ff7a6a')},{maxW:w*.36,top:.14,maxH:h*.7})},
+ pad(K){const s=K.s;if(K.first){s.W=maze(K.d.seed);s.D=bfs(s.W,MZ*MZ-1);s.F=bfs(s.W,0);s.at=0;s.res=0;s.cv=K.canvas(110);
      const mv=w=>()=>{if(s.res)return;const c=s.at,x=c%MZ,y=Math.floor(c/MZ);if(s.W[c]&(1<<w)){K.buzz(40);return}s.at=[c-MZ,c+1,c+MZ,c-1][w];K.buzz(6);if(s.at===MZ*MZ-1){s.res=1;O.sfx('mgGood')}send()};
-     const send=()=>K.send(Math.round((1-s.D[s.at]/s.D[0])*100)+':'+s.res);const pad=K.el('div','dirPad small');['▲','▶','▼','◀'].forEach((a,k)=>pad.appendChild(K.btn(a,'dir d'+k,mv(k))));K.x.append(s.cv,pad);s.send=send;s.mv=mv;s.mo=O.motionOn&&O.motionOn();if(s.mo){O.motion.calibrate();s.mt=0}}
+     const send=()=>K.send(Math.round((1-s.D[s.at]/s.D[0])*100)+':'+s.res+':'+s.at);const pad=K.el('div','dirPad small');['▲','▶','▼','◀'].forEach((a,k)=>pad.appendChild(K.btn(a,'dir d'+k,mv(k))));K.x.append(s.cv,pad);s.send=send;s.mv=mv;s.mo=O.motionOn&&O.motionOn();if(s.mo){O.motion.calibrate();s.mt=0}}
    /* tilt: lean past a threshold and the dot steps that way, again every fifth of a second while you hold the lean */
    if(s.mo&&!s.res){const tl=O.motion.tilt(),ax=Math.abs(tl.x)>=Math.abs(tl.y),v=ax?tl.x:tl.y,now=performance.now();if(Math.abs(v)>.4){if(now-s.mt>(s.held?210:120)){s.mt=now;s.held=1;s.mv(ax?(v>0?1:3):(v>0?2:0))()}}else s.held=0}
    const t=K.now(),creep=(t-4)/1;if(!s.res&&creep>=1&&s.F[s.at]<creep){s.res=2;O.sfx('mgBad');s.send()}
+   {const[x,w,h]=K.fit(s.cv),tl=s.mo?O.motion.tilt():{x:0,y:0},R=Math.min(44,h*.38),cx=s.mo?w*.25:-999,cy=h/2;x.fillStyle='#140c14';x.fillRect(0,0,w,h);if(s.mo){x.strokeStyle='rgba(255,255,255,.4)';x.lineWidth=2;x.beginPath();x.arc(cx,cy,R,0,7);x.stroke();x.beginPath();x.arc(cx,cy,R*.4,0,7);x.stroke();x.fillStyle='#ffd27a';x.beginPath();x.arc(cx+clamp(tl.x,-1,1)*R*.8,cy+clamp(tl.y,-1,1)*R*.8,8,0,7);x.fill()}
+     const tx=s.mo?w*.66:w/2;x.fillStyle='#e8c05a';x.font='800 18px system-ui';x.textAlign='center';x.fillText(s.res===1?'Out!':s.res===2?'Caught!':'Watch your maze',tx,h/2-6);x.fillStyle='#bfb29a';x.font='600 13px system-ui';x.fillText(s.res?'':'on the big screen',tx,h/2+16);return}
    const[x,w,h]=K.fit(s.cv),c=Math.min(w,h)/MZ,ox=(w-c*MZ)/2;x.fillStyle='#140c14';x.fillRect(0,0,w,h);for(let i=0;i<MZ*MZ;i++){const a=i%MZ,b=Math.floor(i/MZ),X=ox+a*c,Y=b*c;if(s.F[i]<creep){x.fillStyle='rgba(224,128,255,.45)';x.fillRect(X,Y,c,c)}
      x.strokeStyle='#e080ff';x.lineWidth=2;x.beginPath();if(s.W[i]&1){x.moveTo(X,Y);x.lineTo(X+c,Y)}if(s.W[i]&2){x.moveTo(X+c,Y);x.lineTo(X+c,Y+c)}if(s.W[i]&4){x.moveTo(X,Y+c);x.lineTo(X+c,Y+c)}if(s.W[i]&8){x.moveTo(X,Y);x.lineTo(X,Y+c)}x.stroke()}
    x.fillStyle='#9dffb0';x.fillRect(ox+(MZ-1)*c+c*.2,(MZ-1)*c+c*.2,c*.6,c*.6);x.fillStyle=K.LANES[K.sl];x.beginPath();x.arc(ox+(s.at%MZ+.5)*c,(Math.floor(s.at/MZ)+.5)*c,c*.32,0,7);x.fill();
    if(s.mo){const tl=O.motion.tilt(),R=Math.min(26,c*1.4),cx=w-R-6,cy=R+6;x.strokeStyle='rgba(255,255,255,.4)';x.lineWidth=2;x.beginPath();x.arc(cx,cy,R,0,7);x.stroke();x.beginPath();x.arc(cx,cy,R*.4,0,7);x.stroke();x.fillStyle='#ffd27a';x.beginPath();x.arc(cx+clamp(tl.x,-1,1)*R*.8,cy+clamp(tl.y,-1,1)*R*.8,5,0,7);x.fill()}
    if(s.res){x.fillStyle=s.res===1?'#9dffb0':'#ff7a6a';x.font='800 28px system-ui';x.textAlign='center';x.fillText(s.res===1?'Out!':'Caught!',w/2,h/2)}},
- hint:()=>O.motionOn&&O.motionOn()?'Tilt to roll to the green corner. The pink fungus is chasing you.':'Reach the green corner. The pink fungus is chasing you.'});
+ hint:()=>O.motionOn&&O.motionOn()?'Watch your maze on the big screen and tilt to roll to the green corner. The pink fungus is chasing you.':'Watch your maze on the big screen and steer with the arrows to the green corner. The pink fungus is chasing you.'});
 
 /* ===== 25 · Stormspire · Lightning Rods: read the charge; lightning takes the most charged rod ===== */
 O.addMg({id:'rods',dun:12,name:'Lightning Rods',hearts:true,ctl:'Phone: five rods',live:true,
@@ -107,11 +114,11 @@ O.addMg({id:'gale',dun:12,name:'Gale',ctl:'Phone: hold LEAN ◀ or ▶',live:tru
  pass:(g,p)=>g.d.st[p.slot]<3,prog:(g,p)=>`${g.d.st[p.slot]} stumble${g.d.st[p.slot]===1?'':'s'}`,
  tv(K,g){const G2=K.room({w:7,d:4,back:false}),flags=[-1,1].map(s0=>{const f=K.vb(P2=>{P2.box(0,0,0,18,0,0,'i');P2.box(1,6,14,18,0,0,'a')},.1,K.pal());f.position.set(s0*3,0,-1.6);G2.add(f);return f});
    return{g:G2,cam:[[0,2,5],[0,1,-.4]],spot:(p,i,n)=>[slotX(i,n,1)+(g.d.n[p.slot]||0)*.4,0,0,0],update(m){const fl=m.d.fl||0;flags.forEach((f,i)=>{f.rotation.y=fl*.8+Math.sin(K.now()*8)*.1*Math.abs(fl)})}}},
- hud(x,w,h,g,HK){const fl=g.d.fl||0;if(fl)HK.txt(x,fl>0?'WIND → lean ◀':'lean ▶ ← WIND',w/2,h*.1,Math.max(22,h*.05),'#a0c0ff');const ps=HK.players();ps.forEach((p,i)=>{const X=w/2+(i-(ps.length-1)/2)*Math.min(w*.22,240);x.fillStyle='rgba(0,0,0,.6)';x.fillRect(X-60,h*.17,120,10);x.fillStyle='#9dffb0';x.fillRect(X-12,h*.17,24,10);x.fillStyle='#fff';x.fillRect(X+(g.d.n[p.slot]||0)*60-3,h*.16,6,14)})},
- pad(K){const d=K.d,s=K.s;if(K.first){s.cv=K.canvas(80);const hold=k=>v=>{K.buzz(v?8:0);K.send(String(v?k:0))};K.x.append(s.cv,K.row(2,K.btn('◀ LEAN','go big',hold(-1),true),K.btn('LEAN ▶','go big',hold(1),true)))}
-   const[x,w,h]=K.fit(s.cv),n=d.n[K.sl]||0;x.fillStyle='#10142a';x.fillRect(0,0,w,h);x.fillStyle='#2a6a3a';x.fillRect(w/2-w*.12,h*.3,w*.24,h*.4);x.fillStyle='#fff';x.fillRect(w/2+n*w*.45-4,h*.15,8,h*.7);
-   if(d.fl){x.fillStyle='#a0c0ff';x.font='800 18px system-ui';x.textAlign='center';x.fillText(d.fl>0?'wind →':'← wind',w/2,16)}},
- hint:()=>'Hold LEAN against the wind (away from the side it blows from).'});
+ hud(x,w,h,g,HK){const fl=g.d.fl||0;if(fl)HK.txt(x,fl>0?'WIND → lean ◀':'lean ▶ ← WIND',w/2,h*.1,Math.max(22,h*.05),'#a0c0ff');const ps=HK.players(),bw=Math.min(w*.2,260),bh=Math.max(14,h*.025);ps.forEach((p,i)=>{const X=w/2+(i-(ps.length-1)/2)*(bw+30),Y=h*.18;HK.panel(x,X-bw/2-10,Y-30,bw+20,bh+46,.8);HK.txt(x,O.CLASSES[p.cls].animal,X,Y-14,Math.max(13,h*.024),HK.LANES[p.slot]);
+   x.fillStyle='rgba(0,0,0,.6)';x.fillRect(X-bw/2,Y,bw,bh);x.fillStyle='#2a6a3a';x.fillRect(X-bw*.12,Y,bw*.24,bh);x.fillStyle='#fff';x.fillRect(X+(g.d.n[p.slot]||0)*bw/2-4,Y-6,8,bh+12);for(let k=0;k<3;k++)HK.txt(x,k<(g.d.st[p.slot]||0)?'✗':'·',X+(k-1)*18,Y+bh+12,14,k<(g.d.st[p.slot]||0)?'#ff7a6a':'#6a5a4a')})},
+ pad(K){const d=K.d,s=K.s;if(K.first){const hold=k=>v=>{K.buzz(v?8:0);K.send(String(v?k:0))};K.x.append(K.el('p','mgNote watchTv','👀 Watch your balance needle on the big screen'),K.row(2,K.btn('◀ LEAN','go big',hold(-1),true),K.btn('LEAN ▶','go big',hold(1),true)))}
+   },
+ hint:()=>'Watch the big screen. Hold LEAN against the wind (away from the side it blows from).'});
 
 /* ===== 27 · The Clockwork Depths · Gear Teeth: slip through each turning ring's gap ===== */
 O.addMg({id:'gears',dun:13,name:'Gear Teeth',ctl:'Phone: SLIP',live:true,
@@ -123,11 +130,13 @@ O.addMg({id:'gears',dun:13,name:'Gear Teeth',ctl:'Phone: SLIP',live:true,
  pass:(g,p)=>g.d.at[p.slot]>=5,prog:(g,p)=>g.d.at[p.slot]>=5?'centre!':`ring ${g.d.at[p.slot]+1}/5`,
  tv(K,g){const G2=K.room({w:8,d:7,back:false}),T=K.T,rings=[];for(let i=0;i<5;i++){const R=2.7-i*.5,gr=new T.Group();for(let k=0;k<24;k++){const a=k/24*Math.PI*2;if(Math.min(a,Math.PI*2-a)<.42)continue;const tb=new T.Mesh(new T.BoxGeometry(.22,.16,.18),new T.MeshBasicMaterial({color:K.lin(i%2?'#a08040':'#c8a050')}));tb.position.set(Math.sin(a)*R,.08,Math.cos(a)*R);tb.rotation.y=a;gr.add(tb)}G2.add(gr);rings.push(gr)}
    return{g:G2,cam:[[0,6.8,4.8],[0,0,.6]],spot:(p,i,n)=>{const r=g.d.at[p.slot];const R=r>=5?.3:2.95-r*.5;return[slotX(i,n,.3),0,R,Math.PI]},update(m){const t=m.st==='play'?m.t:0;rings.forEach((r,i)=>r.rotation.y=O.MG.gears.gap(m,i,t))}}},
- pad(K){const d=K.d,s=K.s;if(K.first){s.cv=K.canvas(220);K.x.append(s.cv,K.btn('SLIP','go big',()=>{K.buzz(15);s.n=(s.n||0)+1;K.send(String(s.n))}))}
-   const[x,w,h]=K.fit(s.cv),i=d.at[K.sl],cx=w/2,cy=h/2,R=Math.min(w,h)*.42;x.fillStyle='#1a140a';x.fillRect(0,0,w,h);if(i>=5){x.fillStyle='#9dffb0';x.font='800 28px system-ui';x.textAlign='center';x.fillText('Centre!',cx,cy);return}
-   const a=O.MG.gears.gap(K.live(),i,K.now());x.strokeStyle='#c8a050';x.lineWidth=14;x.beginPath();x.arc(cx,cy,R,Math.PI/2+a+.42,Math.PI/2+a+Math.PI*2-.42);x.stroke();x.fillStyle=K.LANES[K.sl];x.beginPath();x.arc(cx,cy+R,10,0,7);x.fill();
-   x.fillStyle='#e8d8c0';x.font='700 15px system-ui';x.textAlign='center';x.fillText(`Ring ${i+1} of 5`,cx,cy)},
- hint:()=>'SLIP when the gap in the ring reaches your dot.'});
+ pad(K){const d=K.d,s=K.s;if(K.first){K.x.append(K.el('p','mgNote watchTv','👀 Watch your ring on the big screen'),K.btn('SLIP','go big',()=>{K.buzz(15);s.n=(s.n||0)+1;K.send(String(s.n))}))}
+   },
+ hud(x,w,h,g,HK){HK.split(x,w,h,(x,X,Y,W,H,p)=>{const i=g.d.at[p.slot],cx=X+W/2,cy=Y+H/2,R=Math.min(W,H)*.38;if(i>=5){HK.txt(x,'Centre!',cx,cy,Math.max(22,H*.12),'#9dffb0');return}
+   for(let k=i+1;k<5;k++){x.strokeStyle='rgba(200,160,80,.18)';x.lineWidth=3;x.beginPath();x.arc(cx,cy,R*(1-(k-i)*.16),0,7);x.stroke()}
+   const a=O.MG.gears.gap(g,i,g.t),bk=g.d.bk[p.slot]&&g.t-g.d.bk[p.slot]<.7;x.strokeStyle=bk?'#ff7a6a':'#c8a050';x.lineWidth=Math.max(10,R*.12);x.beginPath();x.arc(cx,cy,R,Math.PI/2+a+.42,Math.PI/2+a+Math.PI*2-.42);x.stroke();
+   x.fillStyle=HK.LANES[p.slot];x.beginPath();x.arc(cx,cy+R,Math.max(8,R*.1),0,7);x.fill();HK.txt(x,`Ring ${i+1} of 5`,cx,cy,Math.max(14,H*.06))},{maxW:w*.3})},
+ hint:()=>'Watch the big screen. SLIP when the gap in your ring reaches your dot.'});
 
 /* ===== 28 · The Clockwork Depths · Pendulum Bridge: race across under the clock pendulums ===== */
 O.addMg({id:'pendulum',dun:13,name:'Pendulum Bridge',ctl:'Phone: hold to run',live:true,
