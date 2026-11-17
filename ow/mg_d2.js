@@ -28,7 +28,7 @@ O.addMg({id:'thinice',dun:5,name:'Thin Ice',hearts:true,ctl:'Phone: four columns
 
 /* ===== 12 · Frostcrypt · The Frozen Kings: a king wakes; strike his pose before his eyes open fully ===== */
 const POSE=['Arms up','Crouch','Shield'];
-O.addMg({id:'kings',dun:5,name:'The Frozen Kings',hearts:true,ctl:'Phone: ARMS UP · CROUCH · SHIELD',motion:1,mo:'Hold your phone in the pose: tip the top UP toward you for Arms up, tip it DOWN away from you to Crouch, tilt it hard to either side for Shield.',
+O.addMg({id:'kings',dun:5,name:'The Frozen Kings',hearts:true,ctl:'Phone: ARMS UP · CROUCH · SHIELD',
  brief:'Three frozen kings line the crypt. When one wakes, frost gathers on him and his pose shows: arms up, crouched, or shield raised. Strike the same pose before his eyes open, and hold it while he looks. They wake faster, and sometimes two at once in the same pose.',
  setup(g){const r=H.rng(g.seed);g.d.wk=[];let t=1.4,prev=-1;for(let i=0;i<16;i++){const f=i/15,warn=+(1.05-.55*f).toFixed(2),look=1.1,pose=(prev+1+Math.floor(r()*2))%3;prev=pose;const kg=Math.floor(r()*3),two=i>9&&r()<.35;
      g.d.wk.push([+t.toFixed(2),+(t+warn).toFixed(2),+(t+warn+look).toFixed(2),pose,two?[kg,(kg+1)%3]:[kg]]);t+=warn+look+.6-.3*f}g.dur=t+.5;g.d.pose={};g.res=0},
@@ -45,7 +45,6 @@ O.addMg({id:'kings',dun:5,name:'The Frozen Kings',hearts:true,ctl:'Phone: ARMS U
        sp.visible=!!on;if(on&&sp.userData.p!==w[3]){sp.userData.p=w[3];sp.material.map=null;const s2=K.sym(icons[w[3]],.5);sp.material=s2.material}})}}},
  hud(x,w,h,g,HK){const wk=g.d.wk[g.res];if(wk&&g.t>=wk[0])HK.txt(x,(g.t>=wk[1]?'HOLD IT: ':'Strike the pose: ')+POSE[wk[3]].toUpperCase(),w/2,h*.1,Math.max(22,h*.05),'#c8e8ff')},
  pad(K){if(K.first){const ic=['crown','skull','shield'];K.x.append(K.row(3,...POSE.map((n,k)=>{const b=K.btn('','pose',()=>{K.buzz(12);K.send(String(k))});b.append(K.glyph(ic[k],48),K.el('small',null,n));return b})))}
-   if(K.mo){const tl=K.tilt(),k=tl.y>.4?0:tl.y<-.4?1:Math.abs(tl.x)>.45?2:-1,now=performance.now();if(k>=0&&k!==K.d.pose[K.sl]&&!(K.s.pk===k&&now-K.s.pkT<400)){K.s.pk=k;K.s.pkT=now;K.buzz(12);K.send(String(k))}}
    K.x.querySelectorAll('.pose').forEach((b,k)=>b.classList.toggle('on',k===K.d.pose[K.sl]))},
  hint:()=>'Strike the pose shown above the waking king, and hold it while his eyes are open.'});
 
@@ -139,7 +138,7 @@ O.addMg({id:'quicksand',dun:8,name:'Quicksand',ctl:'Phone: CLIMB',motion:1,mo:'P
  hint:()=>O.motionOn&&O.motionOn()?'Pump the phone while the big screen says CLIMB. Stop when it says wait.':'Tap CLIMB only while the button is bright (the sand breathes out).'});
 
 /* ===== 18 · The Bone Desert · Tomb Arrows: press the arrow; red means the opposite; a scarab means nothing ===== */
-O.addMg({id:'arrows',dun:8,name:'Tomb Arrows',hearts:true,ctl:'Phone: four directions',motion:1,mo:'Tip your phone the way you answer: away from you is up, toward you is down, and left and right. Come back to level between arrows. A scarab: keep still.',
+O.addMg({id:'arrows',dun:8,name:'Tomb Arrows',hearts:true,ctl:'Phone: four directions',
  brief:'The tomb calls a direction. Press it. A RED arrow means press the opposite way. A SCARAB means press nothing at all. The calls come faster.',
  setup(g){const r=H.rng(g.seed);g.d.c=[];let t=1.2;for(let i=0;i<30;i++){const f=i/29,win=+(1.4-.72*f).toFixed(2),q=r();g.d.c.push([+t.toFixed(2),+(t+win).toFixed(2),Math.floor(r()*4),i<3?0:q<.3?1:q<.42?2:0]);t+=win+.35}g.dur=t+.3;g.res=0;g.ans={}},
  input(g,p,v){const[n,k]=String(v).split(':').map(Number);const c=g.d.c[g.res];if(!c||g.t<c[0])return;const a=g.ans[p.slot]=g.ans[p.slot]||{};if(a[g.res]==null)a[g.res]=k},
@@ -150,8 +149,7 @@ O.addMg({id:'arrows',dun:8,name:'Tomb Arrows',hearts:true,ctl:'Phone: four direc
  hud(x,w,h,g,HK){const c=g.d.c[g.res];if(!c||g.t<c[0])return;const s=Math.min(w,h)*.22;if(c[3]===2){HK.txt(x,'DON’T MOVE',w/2,h*.62,Math.max(24,h*.05),'#40d0c0');return}
    x.save();x.translate(w/2,h*.42);x.rotate([-Math.PI/2,0,Math.PI/2,Math.PI][c[2]]);x.fillStyle=c[3]===1?'#ff3a2a':'#ffc060';x.strokeStyle='#000';x.lineWidth=6;x.beginPath();x.moveTo(s*.6,0);x.lineTo(-s*.1,-s*.45);x.lineTo(-s*.1,-s*.18);x.lineTo(-s*.6,-s*.18);x.lineTo(-s*.6,s*.18);x.lineTo(-s*.1,s*.18);x.lineTo(-s*.1,s*.45);x.closePath();x.stroke();x.fill();x.restore();
    if(c[3]===1)HK.txt(x,'OPPOSITE!',w/2,h*.66,Math.max(22,h*.045),'#ff7a6a');HK.bar(x,w*.4,h*.72,w*.2,6,1-(g.t-c[0])/(c[1]-c[0]),'#ffc060')},
- pad(K){if(K.first){const pad=K.el('div','dirPad');for(let k=0;k<4;k++)pad.appendChild(K.btn(ARW[k],'dir d'+k,()=>{K.buzz(10);K.s.n=(K.s.n||0)+1;K.send(K.s.n+':'+k)}));K.x.appendChild(pad)}
-   K.lean(k=>{K.buzz(10);K.s.n=(K.s.n||0)+1;K.send(K.s.n+':'+k)},{on:.5})},
+ pad(K){if(K.first){const pad=K.el('div','dirPad');for(let k=0;k<4;k++)pad.appendChild(K.btn(ARW[k],'dir d'+k,()=>{K.buzz(10);K.s.n=(K.s.n||0)+1;K.send(K.s.n+':'+k)}));K.x.appendChild(pad)}},
  hint:()=>'Gold arrow: press it. Red arrow: the opposite. Scarab: nothing.'});
 
 /* ===== 19 · Gloom Marsh · Will-o'-the-Wisps: count only the true lights ===== */

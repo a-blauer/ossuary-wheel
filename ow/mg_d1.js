@@ -5,7 +5,7 @@ const O=window.OW,G=O.G,H=O.MGH,{clamp,num,here,alive}=H;
 const slotX=(i,n,sp)=>(i-(n-1)/2)*(sp||.8);
 const idx=p=>here().indexOf(p);
 /* ===== 1 · The Ossuary · Dart Gallery: dodge the glowing half, duck the high volleys ===== */
-O.addMg({id:'dart',dun:0,name:'Dart Gallery',hearts:true,ctl:'Phone: LEFT · DUCK · RIGHT',motion:1,mo:'Tilt your phone left or right to stand on that side of the hall; level keeps you where you are. Dip the phone sharply downward to DUCK.',
+O.addMg({id:'dart',dun:0,name:'Dart Gallery',hearts:true,ctl:'Phone: LEFT · DUCK · RIGHT',motion:1,mo:'Tilt your phone left or right to stand on that side of the hall; level keeps you where you are. DUCK stays on the button.',
  brief:'One half of the hall glows red, then darts sweep it: be on the other side. When both walls glow gold up high, the volley flies at head height: DUCK. Three hits and you are out. It gets faster.',
  setup(g){const r=H.rng(g.seed);g.d.w=[];let t=1.2,prev='L';const N=26;for(let i=0;i<N;i++){const f=i/(N-1),warn=+(1.1-.56*f).toFixed(2);
     let ty=i>=4&&r()<.3?'H':(i>6&&r()<.5+.3*f?(prev==='L'?'R':'L'):(r()<.5?'L':'R'));if(ty!=='H')prev=ty;g.d.w.push([ty,+t.toFixed(2),+(t+warn).toFixed(2)]);t+=warn+.9-.5*f}
@@ -29,7 +29,7 @@ O.addMg({id:'dart',dun:0,name:'Dart Gallery',hearts:true,ctl:'Phone: LEFT · DUC
      half.L.material.opacity=wL?.28+.15*Math.sin(K.now()*20):0;half.R.material.opacity=wR?.28+.15*Math.sin(K.now()*20):0;
      for(const a of darts)if(a)for(const d of a){if(!d.visible)continue;d.position.x+=d.userData.dir*16*dt;if((d.userData.dir>0&&d.position.x>d.userData.stop)||(d.userData.dir<0&&d.position.x<d.userData.stop))d.visible=false}}}},
  hud(x,w,h,g,HK){const nx=g.d.w[g.res];if(nx&&g.t>=nx[1])HK.txt(x,nx[0]==='H'?'DUCK!':nx[0]==='L'?'GO RIGHT!':'GO LEFT!',w/2,h*.16,Math.max(26,h*.07),nx[0]==='H'?'#ffd27a':'#ff7a6a')},
- pad(K){if(K.first){const mv=c=>()=>{K.buzz(c==='D'?25:12);K.s.n=(K.s.n||0)+1;K.send(K.s.n+':'+c)};K.s.mv=mv;K.jolt(dr=>{if(dr==='down')mv('D')()});K.x.append(K.row(3,K.btn('◀ Left','go side L',mv('L')),K.btn('Duck','go duck',mv('D')),K.btn('Right ▶','go side R',mv('R'))))}
+ pad(K){if(K.first){const mv=c=>()=>{K.buzz(c==='D'?25:12);K.s.n=(K.s.n||0)+1;K.send(K.s.n+':'+c)};K.s.mv=mv;K.x.append(K.mo?K.row(1,K.btn('DUCK','go big duck',mv('D'))):K.row(3,K.btn('◀ Left','go side L',mv('L')),K.btn('Duck','go duck',mv('D')),K.btn('Right ▶','go side R',mv('R'))))}
    if(K.mo){const tx=K.tilt().x,cur=K.d.pos[K.sl]||'L',w=tx>.3?'R':tx<-.3?'L':null,now=performance.now();if(w&&w!==cur&&!(K.s.sw===w&&now-K.s.swT<400)){K.s.sw=w;K.s.swT=now;K.s.mv(w)()}}
    K.x.querySelectorAll('.side').forEach(b=>b.classList.toggle('on',b.classList.contains(K.d.pos[K.sl]||'L')))},
  hint:()=>'Watch the big screen: stand on the side that is NOT glowing; duck the high gold volleys.'});
@@ -82,7 +82,7 @@ O.addMg({id:'snare',dun:1,name:'Root Snare',hearts:true,ctl:'Phone: a 3×3 patch
  hint:()=>'Watch the ground on the big screen. Tap a calm tile to stand there.'});
 
 /* ===== 4 · Rotwood · Deadfall Run: flee down the path; lanes for trunks, jump the roots, duck the branches ===== */
-O.addMg({id:'deadfall',dun:1,name:'Deadfall Run',hearts:true,ctl:'Phone: three lanes · JUMP · DUCK',motion:1,mo:'Tilt left, level or right to pick your lane. Flick the phone UP to jump the roots; dip it DOWN to duck the branches.',
+O.addMg({id:'deadfall',dun:1,name:'Deadfall Run',hearts:true,ctl:'Phone: three lanes · JUMP · DUCK',motion:1,mo:'Tilt left, level or right to pick your lane. JUMP and DUCK stay on the buttons.',
  brief:'Run! The rotten forest is falling. Change lanes past fallen trunks, JUMP the roots that cross the whole path, and DUCK the branches that hang across it. The torchlight only reaches a little way ahead, and it speeds up.',
  setup(g){const r=H.rng(g.seed);g.d.hz=[];let t=2.2;const N=30;for(let i=0;i<N;i++){const f=i/(N-1),q=r();
      if(i>3&&q<.22)g.d.hz.push([+t.toFixed(2),'J']);else if(i>6&&q<.42)g.d.hz.push([+t.toFixed(2),'D']);else{const a=Math.floor(r()*3),two=i>2&&r()<.45+.35*f;g.d.hz.push([+t.toFixed(2),two?[a,(a+1+Math.floor(r()*2))%3]:[a]])}t+=1.5-1.02*f}
@@ -103,7 +103,7 @@ O.addMg({id:'deadfall',dun:1,name:'Deadfall Run',hearts:true,ctl:'Phone: three l
    return{g:G2,cam:[[0,3.2,6.4],[0,.4,1]],walk:1,spot:(p,i,n)=>{const d=g.d,ln=d.ln[p.slot]??1,jt=d.jt[p.slot],dk=d.dk[p.slot],air=g.st==='play'&&jt!=null&&g.t-jt>=0&&g.t-jt<.5,low=g.st==='play'&&dk!=null&&g.t-dk>=0&&g.t-dk<.6;
      return[(ln-1)*1.2+(i%2?.16:-.16)*(n>2?1:0),air?Math.sin((g.t-jt)/.5*Math.PI)*.55:low?-.35:0,(i>1?.45:0),Math.PI]},
    update(m){const t=m.st==='play'?m.t:-9;m.d.hz.forEach((q,i)=>{const z=(q[0]-t)*3.4;hz[i].visible=z>-1.2&&z<4.2;hz[i].position.set(0,.02,-z)})}}},
- pad(K){if(K.first){const s=K.s,go=c=>()=>{K.buzz(c==='J'?25:c==='D'?25:10);s.n=(s.n||0)+1;K.send(s.n+':'+c)};s.go=go;K.jolt(dr=>{if(dr==='up')go('J')();else if(dr==='down')go('D')()});K.x.append(K.row(3,...['Left','Middle','Right'].map((t,i)=>K.btn(t,'lanes',go(String(i))))),K.row(2,K.btn('JUMP','go',go('J')),K.btn('DUCK','go duck',go('D'))))}
+ pad(K){if(K.first){const s=K.s,go=c=>()=>{K.buzz(c==='J'?25:c==='D'?25:10);s.n=(s.n||0)+1;K.send(s.n+':'+c)};s.go=go;const lr=K.row(3,...['Left','Middle','Right'].map((t,i)=>K.btn(t,'lanes',go(String(i)))));if(K.mo)lr.hidden=true;K.x.append(lr,K.row(2,K.btn('JUMP','go big',go('J')),K.btn('DUCK','go big duck',go('D'))))}
    K.slide(3,K.d.ln&&K.d.ln[K.sl]!=null?K.d.ln[K.sl]:1,k=>K.s.go(String(k))(),.7);
    K.x.querySelectorAll('.lanes').forEach((b,i)=>b.classList.toggle('on',i===K.d.ln[K.sl]))},
  hint:()=>'Trunks: change lane. Roots across the path: JUMP. Branches across it: DUCK.'});

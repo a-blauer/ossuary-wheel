@@ -5,7 +5,7 @@ const slotX=(i,n,sp)=>(i-(n-1)/2)*(sp||.8);
 
 /* ===== 21 · The Iron Keep · Shield Wall: raise the shield to the archers' height; roll from the ballista ===== */
 const HTS=['High','Mid','Low'];
-O.addMg({id:'shieldwall',dun:10,name:'Shield Wall',hearts:true,ctl:'Phone: HIGH · MID · LOW · ROLL',motion:1,mo:'Hold your shield with the phone: tip the top UP toward you for High, keep it level for Mid, tip it DOWN away for Low. Jerk the phone sideways to ROLL.',
+O.addMg({id:'shieldwall',dun:10,name:'Shield Wall',hearts:true,ctl:'Phone: HIGH · MID · LOW · ROLL',
  brief:'The keep’s archers draw high, middle or low: raise your shield to that height before they loose. When the great ballista winds up, no shield will stop it: ROLL aside. Faster volleys as it goes.',
  setup(g){const r=H.rng(g.seed);g.d.v=[];let t=1.3;for(let i=0;i<26;i++){const f=i/25,warn=+(1.15-.55*f).toFixed(2),ty=i>5&&r()<.18?3:Math.floor(r()*3);g.d.v.push([+t.toFixed(2),+(t+warn).toFixed(2),ty]);t+=warn+.75-.35*f}g.dur=t+.5;g.d.sh={};g.d.roll={};g.n={};for(const p of here())g.d.sh[p.slot]=1;g.res=0},
  input(g,p,v,at){const[n,k]=String(v).split(':').map(Number);if(n<=(g.n[p.slot]||0))return;g.n[p.slot]=n;if(k===3)g.d.roll[p.slot]=+at.toFixed(2);else if(k>=0&&k<3)g.d.sh[p.slot]=k},
@@ -16,9 +16,7 @@ O.addMg({id:'shieldwall',dun:10,name:'Shield Wall',hearts:true,ctl:'Phone: HIGH 
    return{g:G2,cam:[[0,1.8,5.4],[0,1,-1.4]],spot:(p,i,n)=>{const rl=g.d.roll[p.slot],r=g.st==='play'&&rl!=null&&g.t-rl>=0&&g.t-rl<.7;return[slotX(i,n,.8)+(r?.6:0),r?-.3:0,1,Math.PI]},
    update(m){const t=m.st==='play'?m.t:-9,v=m.d.v[m.res],on=v&&t>=v[0];glow.forEach((q,k)=>q.material.opacity=on&&v[2]===k?.25+.15*Math.sin(K.now()*24):0);bal.rotation.y=on&&v[2]===3?Math.sin(K.now()*30)*.05:0}}},
  hud(x,w,h,g,HK){const v=g.d.v[g.res];if(v&&g.t>=v[0])HK.txt(x,v[2]===3?'BALLISTA: ROLL!':'Shield '+HTS[v[2]].toUpperCase(),w/2,h*.1,Math.max(24,h*.055),v[2]===3?'#ff7a6a':'#ffd27a')},
- pad(K){if(K.first){const s=K.s,go=k=>()=>{K.buzz(k===3?30:10);s.n=(s.n||0)+1;K.send(s.n+':'+k)};s.go=go;K.jolt(dr=>{if(dr==='left'||dr==='right')go(3)()});const col=K.el('div','shCol');HTS.forEach((n,k)=>col.appendChild(K.btn(n,'ht',go(k))));K.x.append(col,K.btn('ROLL','go',go(3)))}
-   if(K.mo){const y=K.tilt().y,k=y>.35?0:y<-.35?2:1,now=performance.now();if(k!==K.d.sh[K.sl]&&!(K.s.hk===k&&now-K.s.hkT<400)){K.s.hk=k;K.s.hkT=now;K.s.go(k)()}}
-   K.x.querySelectorAll('.ht').forEach((b,k)=>b.classList.toggle('on',k===K.d.sh[K.sl]))},
+ pad(K){if(K.first){const s=K.s,go=k=>()=>{K.buzz(k===3?30:10);s.n=(s.n||0)+1;K.send(s.n+':'+k)};const col=K.el('div','shCol');HTS.forEach((n,k)=>col.appendChild(K.btn(n,'ht',go(k))));K.x.append(col,K.btn('ROLL','go',go(3)))}},
  hint:()=>'Raise your shield to the glowing height. ROLL from the ballista.'});
 
 /* ===== 22 · The Iron Keep · Portcullis Run: commit to a dash under each slamming gate ===== */

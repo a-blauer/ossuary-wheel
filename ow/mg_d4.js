@@ -81,7 +81,7 @@ O.addMg({id:'signal',dun:16,name:'The Deep Signal',ctl:'Phone: tap short · hold
  hint:(g,d)=>d.ph==='show'?'Watch the flashes: short and long.':'Tap = short pulse, hold = long pulse.'});
 
 /* ===== 35 · The Blood Cathedral · The Procession: step on every drum beat, kneel when the bell tolls ===== */
-O.addMg({id:'procession',dun:17,name:'The Procession',ctl:'Phone: STEP · KNEEL, on the beat',motion:1,mo:'Flick your phone UP to STEP on each drum beat; dip it DOWN to KNEEL when the bell tolls. Watch the ring on the big screen.',live:true,
+O.addMg({id:'procession',dun:17,name:'The Procession',ctl:'Phone: STEP · KNEEL, on the beat',live:true,
  brief:'Walk with the faithful. Press STEP on every drum beat, and KNEEL instead when the bell tolls. The tempo shifts. Steps off the beat, missed beats and the wrong move all draw eyes: four missteps and they see you for what you are.',
  setup(g){const r=H.rng(g.seed);g.d.bt=[];let t=1.6,iv=.82;for(let i=0;i<26;i++){g.d.bt.push([+t.toFixed(2),i>3&&r()<.22?1:0]);if(i===9||i===18)iv=r()<.5?iv*.82:iv*1.12;t+=iv;iv=Math.max(.48,iv-.008)}g.dur=t+.8;g.d.ms={}},
  input(g,p,v){g.d.ms[p.slot]=num(+v)},
@@ -91,9 +91,9 @@ O.addMg({id:'procession',dun:17,name:'The Procession',ctl:'Phone: STEP · KNEEL,
  hud(x,w,h,g,HK){const b=g.d.bt.find(q=>q[0]>g.t-.1);if(!b)return;const u=clamp(1-(b[0]-g.t)/.8,0,1);x.strokeStyle=b[1]?'#ffc060':'#ff5a2a';x.lineWidth=6;x.beginPath();x.arc(w/2,h*.16,20+(1-u)*60,0,7);x.stroke();x.fillStyle=b[1]?'#ffc060':'#ff5a2a';x.beginPath();x.arc(w/2,h*.16,18,0,7);x.fill();HK.txt(x,b[1]?'KNEEL':'STEP',w/2,h*.16+40,20)},
  pad(K){const d=K.d,s=K.s;if(K.first){s.done={};s.ms=0;s.ring=K.el('div','mgRing');s.ring.id='procRing';s.ring.appendChild(K.el('i'));
      const press=k=>()=>{const t=K.now(),i=d.bt.findIndex((q,j)=>!s.done[j]&&Math.abs(q[0]-t)<.2);if(i<0){s.ms++;K.buzz(80);O.sfx('mgBad')}else{s.done[i]=1;if(d.bt[i][1]!==k){s.ms++;K.buzz(80);O.sfx('mgBad')}else{K.buzz(12);O.sfx('mgTap')}}K.send(String(s.ms))};
-     K.x.append(s.ring,K.row(2,K.btn('STEP','go big',press(0)),K.btn('KNEEL','go big duck',press(1))));K.jolt(dr=>{if(dr==='up')press(0)();else if(dr==='down')press(1)()})}
+     K.x.append(s.ring,K.row(2,K.btn('STEP','go big',press(0)),K.btn('KNEEL','go big duck',press(1))))}
    const t=K.now();d.bt.forEach((q,j)=>{if(!s.done[j]&&t>q[0]+.22){s.done[j]=1;s.ms++;K.send(String(s.ms))}});if(!s.ping||t-s.ping>1){s.ping=t;K.send(String(s.ms))}const b=d.bt.find(q=>q[0]>t-.15),u=b?clamp((b[0]-t)/.8,0,1):1;s.ring.firstChild.style.transform='scale('+(.35+u*1.4)+')';s.ring.classList.toggle('hot',u<.15);s.ring.classList.toggle('bell',!!b&&!!b[1])},
- hint:()=>O.motionOn&&O.motionOn()?'Watch the ring on the big screen: flick up to STEP as it closes, dip down to KNEEL when it is gold.':'STEP as the ring closes. KNEEL instead when it is gold (the bell).'});
+ hint:()=>'STEP as the ring closes. KNEEL instead when it is gold (the bell).'});
 
 /* ===== 36 · The Blood Cathedral · The Pews: sneak to the altar; pray when the lantern swings your way ===== */
 O.addMg({id:'pews',dun:17,name:'The Pews',ctl:'Phone: hold SNEAK · hold PRAY',live:true,
@@ -147,7 +147,7 @@ O.addMg({id:'dragonfire',dun:18,name:'Dragonfire',hearts:true,ctl:'Phone: five p
 
 /* ===== 39 · The Hollow Throne · The Mirror Court: perform the shadow's dance, mirrored ===== */
 const MARW=['▲','▶','▼','◀'];
-O.addMg({id:'mirror',dun:19,name:'The Mirror Court',ctl:'Phone: four directions, mirrored',motion:1,mo:'Tip your phone in each direction of your answer (remember: mirrored), coming back to level between moves. Away from you is up, toward you is down.',
+O.addMg({id:'mirror',dun:19,name:'The Mirror Court',ctl:'Phone: four directions, mirrored',
  brief:'Your shadow on the throne dances a sequence of moves. Perform it back as its mirror image: its LEFT is your RIGHT, its right your left; up and down stay as they are. One longer each round. One wrong move and the court turns on you. Clear four rounds.',
  setup(g){const r=H.rng(g.seed);g.d.seq=[];for(let i=0;i<10;i++)g.d.seq.push(Math.floor(r()*4));g.dur=200;g.d.cl={};this.round(g,1)},
  round(g,rd){const d=g.d;d.rd=rd;d.len=2+rd;d.on=+(.62-.03*rd).toFixed(2);d.gp=.25;d.ph='show';d.pt=+g.t.toFixed(2);d.done={};d.lim=+(2+.7*d.len).toFixed(1)},
@@ -164,8 +164,8 @@ O.addMg({id:'mirror',dun:19,name:'The Mirror Court',ctl:'Phone: four directions,
  hud(x,w,h,g,HK){const d=g.d,el=g.t-d.pt,st=d.on+d.gp,i=Math.floor((el-.4)/st),on=d.ph==='show'&&i>=0&&i<d.len&&(el-.4)-i*st<d.on;HK.txt(x,d.ph==='show'?`Round ${d.rd}: the shadow dances`:d.ph==='input'?'Now mirror it!':'…',w/2,h*.1,Math.max(22,h*.05),'#c070ff');
    if(on)HK.txt(x,MARW[d.seq[i]],w/2,h*.3,Math.max(60,h*.14),'#e0d0ff')},
  pad(K){const d=K.d,s=K.s;if(s.rd!==d.rd){s.rd=d.rd;s.v=''}
-   const rk=d.ph+':'+d.rd+':'+s.v+':'+(d.done[K.sl]?1:0);if(rk===s.rk&&K.x.firstChild){if(d.ph==='input'&&!d.done[K.sl])K.lean(k=>{K.buzz(10);s.v+=k;K.send(d.rd+':'+s.v)},{on:.5});return}s.rk=rk;K.x.textContent='';const dots=K.el('div','mgDots');for(let i=0;i<d.len;i++)dots.appendChild(K.el('span',null,s.v[i]!=null?MARW[+s.v[i]]:'·'));K.x.appendChild(dots);
-   if(d.ph==='show'){K.x.appendChild(K.el('div','mgBig','Watch…'));return}if(d.ph!=='input'||d.done[K.sl])return;K.lean(k=>{K.buzz(10);s.v+=k;K.send(d.rd+':'+s.v)},{on:.5});const pad=K.el('div','dirPad');for(let k=0;k<4;k++)pad.appendChild(K.btn(MARW[k],'dir d'+k,()=>{K.buzz(10);s.v+=k;K.send(d.rd+':'+s.v)}));K.x.appendChild(pad)},
+   K.x.textContent='';const dots=K.el('div','mgDots');for(let i=0;i<d.len;i++)dots.appendChild(K.el('span',null,s.v[i]!=null?MARW[+s.v[i]]:'·'));K.x.appendChild(dots);
+   if(d.ph==='show'){K.x.appendChild(K.el('div','mgBig','Watch…'));return}if(d.ph!=='input'||d.done[K.sl])return;const pad=K.el('div','dirPad');for(let k=0;k<4;k++)pad.appendChild(K.btn(MARW[k],'dir d'+k,()=>{K.buzz(10);s.v+=k;K.send(d.rd+':'+s.v)}));K.x.appendChild(pad)},
  hint:(g,d)=>d.ph==='show'?'Watch the shadow.':'Mirror it: swap left and right.'});
 
 /* ===== 40 · The Hollow Throne · The Last Gauntlet: three-second trials, one after another, ever faster ===== */
