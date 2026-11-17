@@ -16,26 +16,32 @@ try{pixOn=localStorage.getItem('ow_vpix')==='1';fxOn=localStorage.getItem('ow_fx
 const K0lin=c=>new THREE.Color(c).convertSRGBToLinear(),aimRings=[],trails=[];let hemi,moon,fire1,monLight,world,floor,lobbyG,courseG=null,course=null,courseKey='',monG=null,monFor='',monH=2.6,terrG=null,terrKey='',ledge=null,aimArrows=[],torches=[],themeFor=-1;
 const heroes=new Map(),marbles=new Map(),floats=[];
 const camPos=new T.Vector3(0,6,8),camTgt=new T.Vector3(0,0,0),wantPos=new T.Vector3(),wantTgt=new T.Vector3(),camVel=new T.Vector3(),tgtVel=new T.Vector3(),tmp=new T.Vector3();
+/* ---- the split screen: a pair shooting together, each on their own half, each half its own camera ---- */
+const splitOn=()=>G.screen==='combat'&&!!G.split&&G.phase==='aim'&&!G.inspect;
+const cineOf=p=>G.split&&G.cn?G.cn[(p&&p.lane)||0]:G.cine;
+const inGrp=p=>!!p&&!!G.grp&&G.grp.includes(p.id);
+const camS=[null,{pos:new T.Vector3(0,6,8),tgt:new T.Vector3(),vel:new T.Vector3(),tv:new T.Vector3()}],strS=[{k:'',P:new T.Vector3(),T:new T.Vector3()},{k:'',P:new T.Vector3(),T:new T.Vector3()}];let wasSplit=false,PLN=2;
 function damp(cur,want,vel,st,dt){const om=2/Math.max(.02,st),x=om*dt,e=1/(1+x+.48*x*x+.235*x*x*x);for(const c of['x','y','z']){const ch=cur[c]-want[c],t=(vel[c]+om*ch)*dt;vel[c]=(vel[c]-om*t)*e;cur[c]=want[c]+(ch+t)*e}}
 
 /* ---------- particles: square points read as flying voxels ---------- */
 const PN=2400;let pts,pPos,pCol,pVel,pLife,pMax,pBase,pi=0;
-function initParticles(){const g=new T.BufferGeometry();pPos=new Float32Array(PN*3);pCol=new Float32Array(PN*3);pBase=new Float32Array(PN*3);pVel=new Float32Array(PN*4);pLife=new Float32Array(PN);pMax=new Float32Array(PN);
-  for(let i=0;i<PN;i++)pPos[i*3+1]=-99;g.setAttribute('position',new T.BufferAttribute(pPos,3));g.setAttribute('color',new T.BufferAttribute(pCol,3));
+let pView,pLane;function initParticles(){const g=new T.BufferGeometry();pPos=new Float32Array(PN*3);pCol=new Float32Array(PN*3);pView=new Float32Array(PN*3);pLane=new Uint8Array(PN).fill(2);pBase=new Float32Array(PN*3);pVel=new Float32Array(PN*4);pLife=new Float32Array(PN);pMax=new Float32Array(PN);
+  for(let i=0;i<PN;i++)pPos[i*3+1]=-99;g.setAttribute('position',new T.BufferAttribute(pPos,3));g.setAttribute('color',new T.BufferAttribute(pView,3));
   pts=new T.Points(g,new T.PointsMaterial({size:.07,vertexColors:true,sizeAttenuation:true,transparent:true,depthWrite:false,blending:T.AdditiveBlending}));pts.frustumCulled=false;scene.add(pts)}
 const tc=new T.Color();
-function P(x,y,z,vx,vy,vz,life,col,grav){const i=pi;pi=(pi+1)%PN;pPos[i*3]=x;pPos[i*3+1]=y;pPos[i*3+2]=z;pVel[i*4]=vx;pVel[i*4+1]=vy;pVel[i*4+2]=vz;pVel[i*4+3]=grav==null?-7:grav;pLife[i]=pMax[i]=life;tc.set(col);pBase[i*3]=tc.r;pBase[i*3+1]=tc.g;pBase[i*3+2]=tc.b}
+function P(x,y,z,vx,vy,vz,life,col,grav){const i=pi;pi=(pi+1)%PN;pLane[i]=PLN;pPos[i*3]=x;pPos[i*3+1]=y;pPos[i*3+2]=z;pVel[i*4]=vx;pVel[i*4+1]=vy;pVel[i*4+2]=vz;pVel[i*4+3]=grav==null?-7:grav;pLife[i]=pMax[i]=life;tc.set(col);pBase[i*3]=tc.r;pBase[i*3+1]=tc.g;pBase[i*3+2]=tc.b}
 function burst3(x,y,z,col,n,sp){for(let i=0;i<n;i++){const a=Math.random()*6.283,e=Math.random()*1.3,s=(sp||2.5)*(.3+Math.random());P(x,y,z,Math.cos(a)*Math.cos(e)*s,Math.sin(e)*s+.5,Math.sin(a)*Math.cos(e)*s,.5+Math.random()*.6,col)}}
 function ring3(x,y,z,col,R,n){n=n||28;for(let i=0;i<n;i++){const a=i/n*6.283;P(x+Math.cos(a)*.05,y,z+Math.sin(a)*.05,Math.cos(a)*R*2,.4,Math.sin(a)*R*2,.45,col,0)}}
 function stepParticles(dt){for(let i=0;i<PN;i++){if(pLife[i]<=0)continue;pLife[i]-=dt;const j=i*3,v=i*4;if(pLife[i]<=0){pPos[j+1]=-99;continue}
     pVel[v+1]+=pVel[v+3]*dt;pPos[j]+=pVel[v]*dt;pPos[j+1]+=pVel[v+1]*dt;pPos[j+2]+=pVel[v+2]*dt;if(pPos[j+1]<.01&&pVel[v+3]<0){pPos[j+1]=.01;pVel[v+1]*=-.35;pVel[v]*=.6;pVel[v+2]*=.6}
     const a=Math.min(1,pLife[i]/pMax[i]*1.6);pCol[j]=pBase[j]*a;pCol[j+1]=pBase[j+1]*a;pCol[j+2]=pBase[j+2]*a}
-  pts.geometry.attributes.position.needsUpdate=true;pts.geometry.attributes.color.needsUpdate=true}
+  pts.geometry.attributes.position.needsUpdate=true;maskParticles(-1)}
+function maskParticles(L){for(let i=0;i<PN;i++){const j=i*3,on=L<0||pLane[i]===2||pLane[i]===L;pView[j]=on?pCol[j]:0;pView[j+1]=on?pCol[j+1]:0;pView[j+2]=on?pCol[j+2]:0}pts.geometry.attributes.color.needsUpdate=true}
 /* a voxel model blown apart: its own blocks fly off */
 function shatter(g,n){g.updateMatrixWorld(true);const v=new T.Vector3();let k=0;g.traverse(o=>{if(!o.isMesh||!o.geometry.attributes.color)return;const p=o.geometry.attributes.position,c=o.geometry.attributes.color,step=Math.max(4,Math.floor(p.count/(n||600))*4);
   for(let i=0;i<p.count;i+=step){v.fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld);const a=Math.random()*6.283,s=1+Math.random()*3.5;tc.setRGB(c.getX(i),c.getY(i),c.getZ(i)).convertLinearToSRGB();
     const j=pi;P(v.x,v.y,v.z,Math.cos(a)*s,1.5+Math.random()*4,Math.sin(a)*s,1.4+Math.random(),'#'+tc.getHexString(),-9);pts.material.blending=T.NormalBlending;k++}});return k}
-function floatText(x,y,z,txt,col,big){const d=document.createElement('div');d.className='ft'+(big?' big':'');d.textContent=txt;d.style.color=col||'#fff3e6';$('floats').appendChild(d);floats.push({d,p:new T.Vector3(x,y,z),t:0})}
+function floatText(x,y,z,txt,col,big){const d=document.createElement('div');d.className='ft'+(big?' big':'');d.textContent=txt;d.style.color=col||'#fff3e6';$('floats').appendChild(d);floats.push({d,p:new T.Vector3(x,y,z),t:0,ln:PLN})}
 
 /* ---------- the world ---------- */
 function torchModel(col){const P2=new V.Part('t',[0,0,0]);P2.box(0,1,0,13,0,1,'w');P2.box(-1,2,14,14,-1,2,'i');P2.box(0,1,15,16,0,1,'f');P2.set(0,17,0,'f2');P2.set(1,17,1,'f2');
@@ -61,6 +67,9 @@ function applyTheme(){
   hemi.color.set(d.light||'#c8d0ff').lerp(new T.Color('#8c9ad0'),.6);hemi.groundColor.set(S.hz);
   for(const L of torches)L.color.set(S.fire);for(const t of aimArrows)t.visible=false;courseKey=''}
 /* ---------- the course for the monster in front of the party ---------- */
+/* which hole size the course lights up: the ball in flight, or the one fighter lining up (in a pair, each half its own) */
+function fitFor(L){if(G.phase!=='aim')return 0;const ci=L<0?G.cine:G.cn&&G.cn[L];if(ci&&!ci.atk.ab.instant&&ci.atk.ab.m)return O.mSize(ci.atk.ab.m.r);
+  const aimers=G.players.filter(p=>p.hp>0&&!p.fired&&(L<0?(G.players.length===1||p.id===G.shooter):inGrp(p)&&(p.lane||0)===L));if(aimers.length===1){const p=aimers[0],ab=CLASSES[p.cls].ab[p.ab];if(ab&&ab.m)return Math.max(1,O.mSize(ab.m.r)-(O.mods(p).sizeDown||0)-(p.small<1?1:0))}return 0}
 function syncCourse(){
   const mo=G.mons[0],C=G.screen==='combat'&&mo?mo.course:null,key=C?mo.uid+':'+mo.id:'';
   if(key!==courseKey){courseKey=key;if(courseG){world.remove(courseG);courseG=null;course=null}if(terrG){world.remove(terrG);terrG=null;terrKey=''}
@@ -71,10 +80,7 @@ function syncCourse(){
   lobbyG.visible=!C&&G.screen!=='map';ledge.visible=!!C;if(!course)return;
   const C2=mo.course;course.update(G.ck,cam);
   /* who the course's grates and glowing rims speak to: the ball in play, or the one fighter lining up a shot */
-  const ci=G.cine;let fit=0;
-  if(ci&&!ci.atk.ab.instant&&ci.atk.ab.m)fit=O.mSize(ci.atk.ab.m.r);
-  else{const aimers=G.players.filter(p=>p.hp>0&&!p.fired&&(G.players.length===1||p.id===G.shooter));if(aimers.length===1){const p=aimers[0],ab=CLASSES[p.cls].ab[p.ab];if(ab&&ab.m)fit=Math.max(1,O.mSize(ab.m.r)-(O.mods(p).sizeDown||0)-(p.small<1?1:0))}}
-  course.setFit(G.phase==='aim'?fit:0);
+  course.setFit(fitFor(-1));
   /* the monster's sand, gravel, water or wind */
   const tr=mo.terr,tk=tr?tr.k+':'+tr.spots.map(s=>s.x+','+s.y).join(';'):'';
   if(tk!==terrKey){terrKey=tk;if(terrG){world.remove(terrG);terrG=null}if(tr){terrG=new T.Group();world.add(terrG);
@@ -121,7 +127,7 @@ function heroSpot(p,i){
   if(mgS&&G.mg&&G.screen==='map'&&podOn()){const ps=G.players.filter(q=>!q.away),r=podRank(p),n=ps.length;return[MGX+PODX(r,n),PODH(r),MGZ+PODZ,0,false]}
   if(mgS&&G.mg&&G.screen==='map'){const s=mgS.spot(p,i,G.players.length);return[MGX+s[0],s[1],MGZ+s[2],s[3],false]}
   const fight=G.screen==='combat'||G.screen==='result'&&false,C=G.mons[0]&&G.mons[0].course;
-  if(G.screen==='combat'&&C){const ci=G.cine,me=ci&&ci.atk.pl===p&&ci.st!=='out',aiming=G.phase==='aim'&&!ci&&!p.fired&&p.hp>0&&(G.players.length===1||G.shooter===p.id);
+  if(G.screen==='combat'&&C){const ci=cineOf(p),me=ci&&ci.atk.pl===p&&ci.st!=='out',aiming=G.phase==='aim'&&!ci&&!p.fired&&p.hp>0&&(G.players.length===1||G.shooter===p.id||(G.split&&inGrp(p)));
     if(me||aiming)return[wx(O.launchX(p)),0,wz(O.TY+20),Math.PI,true];
     const k=G.players.filter(q=>q!==p).indexOf(p)<0?i:G.players.indexOf(p);return[wx(C.cx(150)-C.half(150)-90),-.03,wz(30+k*95),Math.PI/2,false]}
   const n=G.players.length;return[(i-(n-1)/2)*1.1,-.35,.4,0,false]}
@@ -150,17 +156,17 @@ function syncHeroes(dt){
   while(aimArrows.length<4){const g=mkSling();world.add(g);aimArrows.push(g)}
   const pv=new T.Vector3();
   /* the shooter's own last shot, a faint dashed line in their colour, so they can learn from it */
-  G.players.forEach((p,i)=>{let L=trails[i];const C=G.mons[0]&&G.mons[0].course,on=!!p&&!!C&&!!p.trail&&G.screen==='combat'&&G.phase==='aim'&&!G.cine&&!G.inspect&&!p.fired&&p.hp>0&&(G.players.length===1||G.shooter===p.id);          // only the fighter whose turn it is sees their own last shot
+  G.players.forEach((p,i)=>{let L=trails[i];const C=G.mons[0]&&G.mons[0].course,on=!!p&&!!C&&!!p.trail&&G.screen==='combat'&&G.phase==='aim'&&!cineOf(p)&&!G.inspect&&!p.fired&&p.hp>0&&(G.players.length===1||G.shooter===p.id||(G.split&&inGrp(p)));          // only the fighter whose turn it is sees their own last shot
     if(!on){if(L)L.visible=false;return}
     if(!L||L.userData.n!==p.trailN){if(L){world.remove(L);L.geometry.dispose()}const pts=[];{const tr=p.trail;let acc=0;pts.push(new T.Vector3(wx(tr[0][0]),.03+tr[0][2]*W,wz(tr[0][1])));for(let k=1;k<tr.length;k++){const a0=tr[k-1],b0=tr[k],seg=Math.hypot(b0[0]-a0[0],b0[1]-a0[1],b0[2]-a0[2]);let t0=10-acc;while(t0<=seg){const f=t0/seg;pts.push(new T.Vector3(wx(a0[0]+(b0[0]-a0[0])*f),.03+(a0[2]+(b0[2]-a0[2])*f)*W,wz(a0[1]+(b0[1]-a0[1])*f)));t0+=10}acc=(acc+seg)%10}}
       L=new T.Points(new T.BufferGeometry().setFromPoints(pts),new T.PointsMaterial({color:LANES[p.slot],size:Math.max(4,renderer.domElement.height/170),sizeAttenuation:false,transparent:true,opacity:.75,depthTest:false}));L.renderOrder=4;L.userData.n=p.trailN;world.add(L);trails[i]=L}
     L.visible=true});
   /* fighters whose ability or upgrade shows where the ball stops (and everyone in practice) see that ring on the big screen */
   while(aimRings.length<4){const r=new T.Mesh(new T.RingGeometry(.11,.15,28),new T.MeshBasicMaterial({color:'#fff',transparent:true,opacity:.9,depthTest:false,side:T.DoubleSide}));r.rotation.x=-Math.PI/2;r.renderOrder=6;r.visible=false;world.add(r);aimRings.push(r)}
-  aimRings.forEach((r,i)=>{const p=G.players[i],C=G.mons[0]&&G.mons[0].course;let on=!!p&&!!C&&G.screen==='combat'&&G.phase==='aim'&&!G.cine&&p.ch&&!p.fired;
+  aimRings.forEach((r,i)=>{const p=G.players[i],C=G.mons[0]&&G.mons[0].course;let on=!!p&&!!C&&G.screen==='combat'&&G.phase==='aim'&&!cineOf(p)&&p.ch&&!p.fired;
     if(on){const ab=CLASSES[p.cls].ab[p.ab||0];on=!!(ab&&ab.sight)||!!(O.mods(p).eye)||!!G.practice}r.visible=on;if(!on)return;
     const a=p.aim*Math.PI/180,d=O.powD(C.len,p.pw||0);r.position.set(wx(O.launchX(p)+Math.cos(a)*d),.05,wz(O.COURSE.TEE+Math.sin(a)*d));r.material.color.set(LANES[p.slot])});
-  aimArrows.forEach((g,i)=>{const p=G.players[i],C=G.mons[0]&&G.mons[0].course;const on=!!p&&!!C&&G.screen==='combat'&&G.phase==='aim'&&!G.cine&&p.ch&&!p.fired;g.visible=on;if(!on)return;const u=g.userData,pw=clamp(p.pw||0,0,1);
+  aimArrows.forEach((g,i)=>{const p=G.players[i],C=G.mons[0]&&G.mons[0].course;const on=!!p&&!!C&&G.screen==='combat'&&G.phase==='aim'&&!cineOf(p)&&p.ch&&!p.fired;g.visible=on;if(!on)return;const u=g.userData,pw=clamp(p.pw||0,0,1);
     g.position.set(wx(O.launchX(p)),.03,wz(O.COURSE.TEE)-.55);g.scale.setScalar(1.7);g.rotation.y=(p.aim-90)*Math.PI/180;poseSling(g,p,pw)})
 }
 /* a sling for the big screen: posts, a band, the ball drawn back and an arrow the way it will leave (local -z is forward) */
@@ -205,15 +211,15 @@ function wakeFx(p,m,T){const R=m.r*W,r=()=>(Math.random()-.5),t=performance.now(
 function syncMarbles(dt){
   const live=new Set();for(const m of G.marbles){live.add(m.id);let o=marbles.get(m.id);if(!o){o=CG.marble(m.r,m.col,m.fx,m.fxc);world.add(o);marbles.set(m.id,o)}
     const y=m.r*W+(m.off?m.z:Math.max(0,m.z))*W;o.position.set(wx(m.x),y,wz(m.y));const b=o.userData.ball;b.rotation.x-=m.vy*W*dt/(m.r*W);b.rotation.z-=m.vx*W*dt/(m.r*W);
-    const u=o.userData;if(u.fx)ballFx(o,u,m,dt);else if(m.wk&&O.TRAILS[m.wk])wakeFx(o.position,m,O.TRAILS[m.wk]);else if(Math.random()<.5)P(o.position.x,o.position.y,o.position.z,0,.2,0,.35,m.col,0)}
-  for(const[id,o]of marbles)if(!live.has(id)){world.remove(o);marbles.delete(id)}}
+    const u=o.userData;u.ln=O.laneOf(m.pl);PLN=G.split?u.ln:2;if(u.fx)ballFx(o,u,m,dt);else if(m.wk&&O.TRAILS[m.wk])wakeFx(o.position,m,O.TRAILS[m.wk]);else if(Math.random()<.5)P(o.position.x,o.position.y,o.position.z,0,.2,0,.35,m.col,0)}
+  PLN=2;for(const[id,o]of marbles)if(!live.has(id)){world.remove(o);marbles.delete(id)}}
 /* ---------- events from the rules ---------- */
 const SFX={kick:1,blunt:1,lock:1,core:1,launch:1,sink:1,miss:1,comboEnd:1,monHit:1,monFlinch:1,monAtk:1,monSlam:1,hurt:1,heal:1,enrage:1,monDie:1,intro:1,boon:1,win:1,lose:1,cast:1};
 const fxT={drone:'',trav:false,mg:''};
 const heroAt=pl=>{const f=heroes.get(pl.id);return f?f.position:new T.Vector3()};
 function drainEvents(){
   const played={};let ticks=0;
-  for(const e of G.ev){
+  for(const e of G.ev){PLN=e.ln==null?2:e.ln;
     if(e.k==='tick'){if(ticks++<3)O.sfx('tick',{n:e.n||0})}else if(SFX[e.k]&&!played[e.k]){played[e.k]=1;O.sfx(e.k,e.k==='cast'?{cls:e.pl.cls,rep:e.rep}:e)}
     const X=e.x!=null?wx(e.x):0,Z=e.y!=null?wz(e.y):0;
     if(e.k==='sink'){for(let i=0;i<30+e.dmg;i++)P(X+(Math.random()-.5)*.1,.02,Z+(Math.random()-.5)*.1,(Math.random()-.5)*.8,2+Math.random()*3.5,(Math.random()-.5)*.8,.9,i%3?e.col:'#fff3e6');ring3(X,.03,Z,e.col,.8);shake=Math.max(shake,Math.min(1,.25+e.dmg/50));
@@ -253,7 +259,7 @@ function fitOver(C,wide,asp){const L=C.len*W,pts=[];for(const y of[-60,C.len*.5,
   let lo=2,hi=60;for(let i=0;i<22;i++){const d=(lo+hi)/2;cm.position.copy(c).addScaledVector(dir,d);cm.lookAt(c);cm.updateMatrixWorld();let ok=true;for(const p of pts){const q=p.clone().project(cm);if(Math.abs(q.x)>.9||q.y>.72||q.y<-.82){ok=false;break}}if(ok)hi=d;else lo=d}
   fitP.copy(c).addScaledVector(dir,hi);fitT.copy(c)}
 /* the straight-on views once someone has spun: from behind the tee looking up the whole course. Aiming drops lower and leans toward the fighter's lane. */
-const strP=new T.Vector3(),strT=new T.Vector3();let strKey='';
+const strP=new T.Vector3(),strT=new T.Vector3();let strKey='';const cam2=new T.PerspectiveCamera(42,1,.05,90);
 function fitStraight(C,asp,wide,aimX){const pts=[];for(const y of[-40,O.COURSE.TEE,C.len*.5,C.len])for(const s of[-1,1])pts.push(new T.Vector3(wx(C.cx(y)+s*(C.half(y)+16)),0,wz(y)));
   pts.push(new T.Vector3(wx(C.cx(C.len)),monH*.9,wz(C.len+150)));
   const c=new T.Vector3();for(let i=0;i<pts.length-1;i++)c.add(pts[i]);c.multiplyScalar(1/(pts.length-1));c.y=0;if(aimX!=null)c.x=c.x*.5+aimX*.5;
@@ -271,11 +277,10 @@ function orbit(){const off=fitP.clone().sub(fitT),d0=off.length(),yaw0=Math.atan
   const yaw=yaw0+LOOK.yaw,el=clamp(el0+LOOK.el,.2,1.5),d=d0/LOOK.zoom;wantTgt.set(fitT.x+LOOK.px,fitT.y,fitT.z+LOOK.pz);
   wantPos.set(wantTgt.x+Math.sin(yaw)*Math.cos(el)*d,wantTgt.y+Math.sin(el)*d,wantTgt.z+Math.cos(yaw)*Math.cos(el)*d)}
 let wasIns=false;
-function direct(dt){
-  const asp=canvas.clientWidth/Math.max(1,canvas.clientHeight),wide=asp>=1.2,mo=G.mons[0],C=mo&&mo.course;let st=.55;
-  if(G.screen==='combat'&&C){const L=C.len*W,k=Math.max(1,1.78/asp)*Math.max(1,L/14),ci=G.cine;
+/* where one camera wants to be in a fight. Ln is the half of the screen (0 when there is no split); asp is that half's shape */
+function combatWant(Ln,asp,wide,C){const L=C.len*W,k=Math.max(1,1.78/asp)*Math.max(1,L/14),ci=splitOn()?G.cn[Ln]:G.cine;let st=.55;
     const over=()=>{const key=C.id+':'+monFor+':'+asp.toFixed(2)+':'+(G.inspect?1:0);if(fitKey!==key){fitKey=key;fitOver(C,wide,asp)}wantPos.copy(fitP);wantTgt.copy(fitT);if(G.inspect)orbit()};
-    if(G.inspect!==wasIns){wasIns=G.inspect;if(G.inspect)O.lookReset()}
+    if(Ln===0&&G.inspect!==wasIns){wasIns=G.inspect;if(G.inspect)O.lookReset()}
     if(G.phase==='intro'){const t=G.introT;if(t<1.6){const m=monChest();wantPos.set(m.x+3.2,monH*.7,m.z+5);wantTgt.copy(m);st=.4}else{over();st=.8}}
     else if(ci&&(ci.st==='cast')){const f=heroes.get(ci.atk.pl.id);if(f){wantPos.set(f.position.x+1.9,1.25,f.position.z-2.3);wantTgt.set(f.position.x,.85,f.position.z);st=.35}}
     else if(ci&&(ci.st==='pan'||ci.st==='flight')){const fx=wx(ci.fx),fz=wz(ci.fy),dx=ci.dir[0],dz=-ci.dir[1],multi=ci.multi;
@@ -283,10 +288,14 @@ function direct(dt){
       else{const near=ci.close;wantPos.set(fx-dx*(near?1.8:3)+(wide?.6:0),near?1.3:2.2,fz-dz*(near?1.8:3));wantTgt.set(fx+dx*1.4,.1,fz+dz*1.4)}st=ci.st==='pan'?.5:.28}
     else if(ci&&ci.st==='hit'){const m=monChest();wantPos.set(m.x+3.5,monH*.75,m.z+5.5);wantTgt.copy(m);st=.35}
     else if(G.phase==='boss'){const m=monChest();if(wide){wantPos.set(7*k,6.5*k,m.z+7*k);wantTgt.set(0,1,m.z+3)}else{wantPos.set(0,7,m.z+9);wantTgt.set(0,1,m.z+2)}st=.7}
-    else if(G.phase==='aim'&&!ci&&!G.inspect&&!G.practice||(G.phase==='aim'&&!ci&&G.practice&&!G.inspect)){const live=G.players.filter(p=>!p.fired&&p.hp>0&&!p.away&&(G.players.length===1||!G.shooter||p.id===G.shooter)),ch=live.filter(p=>p.ch),rd=live.filter(p=>p.rdy||p.ch);
-      if(rd.length){const aimX=ch.length===1?wx(O.launchX(ch[0])):null,key=C.id+':'+asp.toFixed(2)+':'+(aimX==null?'s':aimX.toFixed(2));if(key!==strKey){strKey=key;fitStraight(C,asp,wide,aimX)}wantPos.copy(strP);wantTgt.copy(strT);st=aimX==null?.32:.3}
+    else if(G.phase==='aim'&&!ci&&!G.inspect&&!G.practice||(G.phase==='aim'&&!ci&&G.practice&&!G.inspect)){const live=G.players.filter(p=>!p.fired&&p.hp>0&&!p.away&&(G.players.length===1||!G.shooter||p.id===G.shooter)&&(!splitOn()||(inGrp(p)&&(p.lane||0)===Ln))),ch=live.filter(p=>p.ch),rd=live.filter(p=>p.rdy||p.ch);
+      if(rd.length){const aimX=ch.length===1?wx(O.launchX(ch[0])):null,key=C.id+':'+asp.toFixed(2)+':'+(aimX==null?'s':aimX.toFixed(2));const S2=strS[Ln];if(key!==S2.k){S2.k=key;fitStraight(C,asp,wide,aimX);S2.P.copy(strP);S2.T.copy(strT)}wantPos.copy(S2.P);wantTgt.copy(S2.T);st=aimX==null?.32:.3}
       else{over();st=.7}}
-    else{over();st=G.inspect?.14:.7}}
+    else{over();st=G.inspect?.14:.7}
+  return st}
+function direct(dt){
+  let asp=canvas.clientWidth/Math.max(1,canvas.clientHeight),wide=asp>=1.2;const mo=G.mons[0],C=mo&&mo.course;let st=.55;
+  if(G.screen==='combat'&&C){if(splitOn()){asp=asp/2;wide=asp>=1.2}st=combatWant(0,asp,wide,C)}
   else if(G.screen==='map'&&mapG&&mapG.visible&&MAP[G.node]&&MAP[G.node]._p){const tr=G.travel;let p=MAP[G.node]._p;if(tr&&MAP[tr.to]._p){const A=MAP[tr.from]._p,B2=MAP[tr.to]._p,e=sm(0,1,tr.t);p=[lerp(A[0],B2[0],e),lerp(A[1],B2[1],e)]}
     const k=wide?1:1.5;wantPos.set(MPX+p[0]*.5,6.2*k,p[1]+5.2*k);wantTgt.set(MPX+p[0]*.6,0,p[1]-2.6);st=.9}
   else if(mgS&&podOn()){const k=wide?1:1.5;wantPos.set(MGX,1.5*k,MGZ+PODZ+3.6*k);wantTgt.set(MGX,.75,MGZ+PODZ);st=.5}
@@ -297,6 +306,10 @@ function direct(dt){
   damp(camPos,wantPos,camVel,st,dt);damp(camTgt,wantTgt,tgtVel,st*.8,dt);
   cam.position.copy(camPos);if(shake>0&&shakeOn){cam.position.x+=(Math.random()-.5)*shake*.12;cam.position.y+=(Math.random()-.5)*shake*.12}shake=Math.max(0,shake-dt*2.2);cam.lookAt(camTgt);
   const fov=wide?42:50;if(cam.fov!==fov){cam.fov=fov;cam.updateProjectionMatrix()}
+  {const want=splitOn()?asp:canvas.clientWidth/Math.max(1,canvas.clientHeight);if(Math.abs(cam.aspect-want)>1e-3){cam.aspect=want;cam.updateProjectionMatrix()}}
+  if(splitOn()&&mo&&C){const S1=camS[1],st2=combatWant(1,asp,wide,C);if(!wasSplit){S1.pos.copy(camPos);S1.tgt.copy(camTgt);S1.vel.set(0,0,0);S1.tv.set(0,0,0)}
+    damp(S1.pos,wantPos,S1.vel,st2,dt);damp(S1.tgt,wantTgt,S1.tv,st2*.8,dt);cam2.position.copy(S1.pos);cam2.lookAt(S1.tgt);if(cam2.fov!==fov||Math.abs(cam2.aspect-asp)>1e-3){cam2.fov=fov;cam2.aspect=asp;cam2.updateProjectionMatrix()}}
+  wasSplit=splitOn();
   moon.position.set(camTgt.x-4,10,camTgt.z+5);moon.target.position.copy(camTgt)}
 /* ---------- HUD ---------- */
 const nmAnimal=id=>{const q=G.players.find(p=>p.id===id);return q?'the '+CLASSES[q.cls].animal:'one of you'};
@@ -325,10 +338,10 @@ function foes(){
       const hit=new Set(show.cells||[]);f.reels.forEach(R=>R.cells.forEach(C=>C.r.classList.toggle('hit',hit.has(C.cell))));
       f.el.querySelector('.fm b').textContent=mv.name;f.el.querySelector('.fm em').textContent=(mv.sp?'Special · ':'')+O.powText(show.pw,show.n);f.el.querySelector('.fd').textContent=mv.line;f.key=''}
     if(n===3){const key=[show.t,show.t2,show.dmg,show.b,show.fv].join('|');if(key!==f.key){f.key=key;f.el.querySelector('.fe').textContent=O.intentText(m.id,show,nmAnimal)}}})}
-function aimPow(){const box=$('aimPow');if(!box)return;const show=(G.screen==='combat'&&G.phase==='aim'&&!G.cine)||false;
-  const ch=show?G.players.filter(p=>p.ch&&!p.fired&&p.hp>0):[];box.hidden=!ch.length;if(!ch.length)return;
+function aimPow(){const box=$('aimPow');if(!box)return;const show=(G.screen==='combat'&&G.phase==='aim')||false;
+  const ch=show?G.players.filter(p=>p.ch&&!p.fired&&p.hp>0&&!cineOf(p)):[];box.hidden=!ch.length;box.classList.toggle('split',splitOn());if(!ch.length)return;
   while(box.children.length<ch.length){const r=document.createElement('div');r.className='ap';r.innerHTML='<b></b><div class="apBar"><i></i></div><em></em>';box.appendChild(r)}
-  [...box.children].forEach((r,k)=>{const p=ch[k];r.hidden=!p;if(!p)return;const cl=CLASSES[p.cls];r.style.setProperty('--lc',LANES[p.slot]);r.querySelector('b').textContent=cl.animal+' · '+(O.RAMPS[p.rp||0]||O.RAMPS[0]).short+(p.lk?' · aim locked':' · steering');
+  [...box.children].forEach((r,k)=>{const p=ch[k];r.hidden=!p;if(!p)return;const cl=CLASSES[p.cls];r.style.setProperty('--lc',LANES[p.slot]);r.classList.toggle('right',splitOn()&&(p.lane||0)===1);r.querySelector('b').textContent=cl.animal+' · '+(O.RAMPS[p.rp||0]||O.RAMPS[0]).short+(p.lk?' · aim locked':' · steering');
     const pw=clamp(p.pw||0,0,1);r.querySelector('i').style.width=(pw*100)+'%';r.querySelector('em').textContent=Math.round(pw*100)+'%'})}
 function hud(){foes();aimPow();
   const C=G.cine,fight=G.screen==='combat',mon=fight?G.mons[0]:null,lead=mon&&MONSTERS[mon.id],aim=fight&&G.phase==='aim',wait=aim?G.players.filter(p=>p.hp>0&&!p.fired).length:0,left=aim&&!C&&!G.queue.length&&G.players.length>1&&!G.practice?Math.ceil(O.TURN-G.turnT):99;
@@ -585,7 +598,20 @@ O.renderStage=function(dt){
   const sdt=dt*(G.screen==='combat'?G.ts:1);
   syncCourse();syncMonster(sdt);syncHeroes(dt);syncMarbles(sdt);drainEvents();direct(dt);stepParticles(sdt);
   for(const L of torches)L.intensity=(L.userData.course?1.5:2.2)+Math.sin(time*9+L.id)*.12+Math.sin(time*23+L.id*2)*.07;
-  for(const f of floats){f.t+=dt;tmp.copy(f.p);tmp.y+=f.t*.7;tmp.project(cam);f.d.style.left=((tmp.x+1)/2*100)+'%';f.d.style.top=((1-tmp.y)/2*100)+'%';f.d.style.opacity=tmp.z>1?0:clamp(1.6-f.t,0,1);if(f.t>1.6)f.d.remove()}
+  const spl=splitOn();for(const f of floats){f.t+=dt;tmp.copy(f.p);tmp.y+=f.t*.7;const fl=spl&&f.ln===1?1:0;tmp.project(fl?cam2:cam);f.d.style.left=(spl?fl*50+(tmp.x+1)/2*50:(tmp.x+1)/2*100)+'%';f.d.style.top=((1-tmp.y)/2*100)+'%';f.d.style.opacity=tmp.z>1?0:clamp(1.6-f.t,0,1);if(f.t>1.6)f.d.remove()}
   for(let i=floats.length-1;i>=0;i--)if(floats[i].t>1.6)floats.splice(i,1);
-  hud();renderer.render(scene,cam)};
+  hud();
+  if(splitOn()){const hw=Math.floor(w/2),hide=[];splitUI(true);
+    for(const L of[0,1]){passLane(L,hide);renderer.setScissorTest(true);renderer.setViewport(L*hw,0,L?w-hw:hw,h);renderer.setScissor(L*hw,0,L?w-hw:hw,h);renderer.render(scene,L?cam2:cam)}
+    for(const o of hide)o.visible=true;renderer.setScissorTest(false);renderer.setViewport(0,0,w,h);maskParticles(-1);course&&course.setFit(fitFor(-1))}
+  else{splitUI(false);renderer.render(scene,cam)}};
+/* one half of the split: hide the other fighter's ball, aim, trail and figure at the tee, and their particles; light the holes this ball fits */
+function passLane(L,hide){for(const o of hide)o.visible=true;hide.length=0;const off=o=>{if(o&&o.visible){o.visible=false;hide.push(o)}};
+  for(const o of marbles.values())if((o.userData.ln||0)!==L)off(o);
+  G.players.forEach((p,i)=>{if(!inGrp(p)||(p.lane||0)===L)return;off(aimRings[i]);off(aimArrows[i]);off(trails[i]);off(heroes.get(p.id))});
+  maskParticles(L);if(course)course.setFit(fitFor(L))}
+/* the frame around each half: whose board it is */
+function splitUI(on){let el=$('splitUI');if(!el){el=document.createElement('div');el.id='splitUI';el.innerHTML='<div class="sp l"><b></b></div><div class="sp r"><b></b></div><i></i>';canvas.parentNode.appendChild(el)}
+  if(el.hidden===!on&&!on)return;el.hidden=!on;if(!on)return;[0,1].forEach(L=>{const p=G.players.find(q=>inGrp(q)&&(q.lane||0)===L),d=el.children[L];if(!p){d.hidden=true;return}d.hidden=false;d.style.setProperty('--lc',LANES[p.slot]);
+    const t=(CLASSES[p.cls].animal)+(O.titleOf(p)?' '+O.titleOf(p):'')+(p.fired&&!cineOf(p)?' · done':'');if(d.firstChild.textContent!==t)d.firstChild.textContent=t})}
 })();

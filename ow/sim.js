@@ -24,7 +24,7 @@ const G=O.G={screen:'lobby',node:0,visited:[0],relics:[],players:[],dec:null,dec
   seed:1,tier:0,practice:false,focus:-1,holdT:0,seen:{},bonus:0,finale:false};
 O.TURN=60;O.PARTY_DMG=[.52,.78,.95,1.05];O.MDMG=1.5;O.TIERS=['','Grim','Dire','Doomed'];
 
-const ev=(k,o)=>G.ev.push(Object.assign({k},o));
+const ev=(k,o)=>G.ev.push(Object.assign({k,ln:G.split&&G.phase==='aim'?(G.lnNow||0):2},o));       // in a pair, which half of the screen it happened on
 /* ----- the host's stash: gold, loot boxes opened, what they unlocked, dungeons cleared. Kept on the host's device. ----- */
 const SKEY='ow_stash1';
 function loadStash(){let s=null;try{s=JSON.parse(localStorage.getItem(SKEY)||'null')}catch(e){}s=s&&typeof s==='object'?s:{};
@@ -64,7 +64,7 @@ O.cosmHas=(mask,id)=>{const i=O.COSM.indexOf(id);if(i<0)return false;return!!((p
 O.cosmLeft=()=>O.COSM.filter(x=>!G.stash.unl.includes(x)).length;
 const has=id=>!O.LOCKS.includes(id)||G.stash.unl.includes(id),DG=()=>O.DUNGEONS[G.dung];
 O.HPB=1;                 // balls find holes far more often on a rimmed wheel, so monsters carry more health to keep fights the same length
-const HPK=()=>DG().hpK*(1+.35*G.tier)*O.HPB,DMGK=()=>O.MDMG*Math.pow(DG().dmgK,.45)*(1+.22*G.tier)*(O.PARTY_DMG[G.players.length-1]||1);
+const HPK=()=>DG().hpK*(1+.35*G.tier)*O.HPB,DMGK=()=>O.MDMG*Math.pow(DG().dmgK,.45)*(1+.22*G.tier)*(O.PARTY_DMG[G.players.length-1]||1)*(G.grpK||1);
 function say(t){G.msg=t;G.log.unshift(t);if(G.log.length>30)G.log.pop()}
 const float=(x,y,txt,col)=>ev('text',{x,y,txt,col});
 const burst=(x,y,col,n)=>ev('burst',{x,y,col,n});
@@ -167,7 +167,7 @@ function updateDec(){
     else{O.clearRun();const nx=G.result==='win'&&G.newDung,lost=G.result==='lose';toLobby();if(nx){G.dung=O.RUNS[r+1][0];G.tier=0}else if(lost)G.dung=R[0];else G.dung=O.runStage(r)}}
 }
 function toLobby(){G.screen='lobby';G.phase='idle';G.result=null;G.mons=[];G.cur=-1;G.boss=null;G.holes=[];G.bumps=[];G.divots=[];G.walls=[];G.relics=[];G.items=[];G.mg=null;G.ward=1;G.node=0;G.visited=[0];
-  G.practice=false;G.finale=false;G.fervor=0;G.fervorOn=false;G.picks=[];G.marbles=[];G.pending=[];G.queue=[];G.cine=null;G.dec=null;G.after=null;G.travel=null;G.active=-1;G.actor=-1;G.bonus=0;G.players=G.players.filter(p=>!p.away);
+  G.practice=false;G.finale=false;G.fervor=0;G.fervorOn=false;G.picks=[];G.marbles=[];G.pending=[];G.queue=[];G.cine=null;G.cn=[null,null];G.grp=[];G.split=false;G.dec=null;G.after=null;G.travel=null;G.active=-1;G.actor=-1;G.bonus=0;G.players=G.players.filter(p=>!p.away);
   G.players.forEach(p=>{p.lv=1;p.ups=[];p.owned=ownedFor(p.cls);p.mhp=maxHp(p);p.hp=p.mhp;p.buff=false;p.tgt=-1;p.fired=false;p.cd=noCd(p.cls)});G.log=[];G.msg=''}
 O.toLobby=toLobby;
 O.lossGold=()=>4*Math.max(0,G.visited.length-1);
@@ -232,7 +232,7 @@ function startFight(enc){
   G.mons=enc.map(id=>{const d=MONSTERS[id],C=O.course(id),lesser=d.rank==='lesser',hp=Math.round(d.hp*sc*(lesser?1.35*(1+(HPK()-1)*.55):(d.rank==='boss'?.6:.85)*HPK()));
     return{uid:++G.uid,id,name:d.name,rank:d.rank,hp,max:hp,enraged:false,dead:false,freeze:false,rot:0,atk:null,terr:null,course:C,holes:C.holes,bumps:C.bumps,sand:C.sand,blocks:C.blocks,divots:[],walls:[],mv:C.mv,locks:C.locks,core:C.core,rest:[],sg:-1,blunt:false,lk:0,coreT:0,wk:-1}});
   const c={};G.mons.forEach(m=>{c[m.id]=(c[m.id]||0)+1});const seen={};G.mons.forEach(m=>{if(c[m.id]>1){seen[m.id]=(seen[m.id]||0)+1;m.name+=' '+'ABCD'[seen[m.id]-1]}});
-  G.C=G.mons[0].course;G.marbles=[];G.pending=[];G.queue=[];G.cine=null;G.round=0;G.dec=null;G.after=null;G.travel=null;G.mg=null;G.ward=1;G.combo=0;G.stop=0;G.active=-1;G.actor=-1;G.inspect=false;G.focus=-1;G.turnT=0;G.holdT=0;G.seen={};G.spin=0;G.ck=0;
+  G.C=G.mons[0].course;G.marbles=[];G.pending=[];G.queue=[];G.cine=null;G.cn=[null,null];G.gi=0;G.grp=[];G.split=false;G.round=0;G.dec=null;G.after=null;G.travel=null;G.mg=null;G.ward=1;G.combo=0;G.stop=0;G.active=-1;G.actor=-1;G.inspect=false;G.focus=-1;G.turnT=0;G.holdT=0;G.seen={};G.spin=0;G.ck=0;
   G.screen='combat';G.phase='intro';G.introT=0;G.result=null;G.boss=enc[0];loadBoard(0);
   for(const p of G.players){p.mhp=maxHp(p);if(p.hp<=0)p.hp=Math.round(p.mhp*.35);p.cd=noCd(p.cls);p.buff=false;p.fired=false;p.tgt=-1;p.barUsed=false;p.wardUsed=false;p.oil=1;p.small=1;p.sure=false;p.whet=1;p.twice=false;p.extra=0;p.dot=null;p.deb=null;p.hex=1;p.trail=null}
   G.idolUsed=false;G.fervorOn=false;if(G.practice)G.fervor=0;
@@ -260,17 +260,27 @@ O.waiting=waiting;
 function retarget(){
   const a=alive(),only=a.length?G.mons.indexOf(a[0]):-1;
   for(const p of G.players)p.tgt=only;G.focus=only;
-  if(!G.cine&&!G.queue.length&&only>=0&&G.cur!==only)loadBoard(only)}
+  if(!anyCine()&&!G.queue.length&&only>=0&&G.cur!==only)loadBoard(only)}
+/* ----- turns: the party acts in pairs. A pair shoots at the same time, each on their own half of the big screen and their own copy of the wheel;
+   the monster answers after every pair. Two fighters: one pair. Three: a pair, the monster, the third, the monster. Four: two pairs. ----- */
+O.PAIR=2;O.GRPK=1.05;                      // the monster strikes after every pair, each strike scaled by the share of the party that just acted
+const groupsOf=()=>{const g=[];for(let i=0;i<G.players.length;i+=O.PAIR)g.push(G.players.slice(i,i+O.PAIR));return g};
+const laneOf=pl=>pl&&pl.lane||0;O.laneOf=laneOf;
+const anyCine=()=>!!(G.cn&&(G.cn[0]||G.cn[1]));
+/* the next pair with anyone standing: they spin and reset; everyone else sits this turn out */
+function beginGroup(){const gs=groupsOf();if(!gs.length)return[];let gi=(G.gi||0)%gs.length;for(let k=0;k<gs.length&&!gs[gi].some(p=>p.hp>0);k++)gi=(gi+1)%gs.length;G.gi=gi;
+  const grp=gs[gi];G.grp=grp.map(p=>p.id);grp.forEach((p,i)=>p.lane=i);G.players.forEach(p=>{if(!grp.includes(p))p.lane=0});G.grpK=gs.length>1?grp.length/G.players.length*O.GRPK:1;G.split=grp.filter(p=>p.hp>0).length>1;return grp}
+O.groupsOf=groupsOf;
 function startRound(){
-  G.round++;G.phase='aim';G.shooter='';planIntents();
+  G.round++;G.phase='aim';G.shooter='';const grp=beginGroup();planIntents();
   G.fervorOn=false;for(const m of alive()){const open=m.holes.map((h,i)=>h.armor<=0?i:-1).filter(i=>i>=0);m.wk=open.length>1&&(G.round>1||G.practice)?pick(open):-1;
     const sg=open.filter(i=>i!==m.wk&&i!==m.core);m.sg=sg.length&&m.intent&&!m.stun&&!G.practice?pick(sg):-1;m.blunt=false}       // and one hole carries the strike the monster is winding up: sink it and the blow lands at half weight
   // each round one open hole on every wheel lies exposed (sink it for double)
-  for(const p of G.players){spin(p);p.fired=false;p.oil=1;p.small=1;p.sure=false;p.twice=false;p.extra=0;p.cd=p.cd.map(v=>Math.max(0,v-1));        // a fighter stays on the monster they chose until it falls or they pick another
+  for(const p of G.players){if(!grp.includes(p)){p.fired=true;p.bag=[];p.ch=false;continue}spin(p);p.fired=false;p.oil=1;p.small=1;p.sure=false;p.twice=false;p.extra=0;p.cd=p.cd.map(v=>Math.max(0,v-1));        // a fighter stays on the monster they chose until it falls or they pick another
     p.hex=1;if(p.deb){if(p.deb.shrink)p.small=p.deb.shrink>1?.5:.75;if(p.deb.hex)p.hex=p.deb.hex>1?.55:.7;p.deb=null}
     const rg=(G.relics.includes('bell')?5:0)+(G.round>1?mods(p).regen:0);if(rg&&p.hp>0&&p.hp<p.mhp)p.hp=Math.min(p.mhp,p.hp+rg)}
   G.active=-1;G.turnT=0;{const p0=G.players.length===1?G.players[0]:null,keep=p0&&p0.hp>0&&G.mons[p0.tgt]&&!G.mons[p0.tgt].dead;G.focus=keep?p0.tgt:-1}loadBoard(G.focus);retarget();ev('round',{});        // with a party the big screen opens each round on the whole pack; a lone fighter goes straight back to their wheel
-  say(G.practice?'Take your shots. Nothing here strikes back.':G.players.length>1?`Round ${G.round}. Take your shots in turn.`:`Round ${G.round}.`)}
+  const nm=grp.filter(p=>p.hp>0).map(p=>who(p).replace(/^the /,''));say(G.practice?'Take your shots. Nothing here strikes back.':G.players.length>1?(nm.length>1?`${nm.join(' and ')}: shoot together.`:`${nm[0]||'The party'}'s turn.`):`Round ${G.round}.`);for(const p of grp)if(p.hp>0)ev('turn',{pl:p})}
 function setTarget(pid,i){return;
   const pl=G.players.find(p=>p.id===pid);if(!pl||G.screen!=='combat'||G.phase!=='aim'||pl.fired||pl.hp<=0)return;i=Math.floor(num(i,-1));const quiet=!G.cine&&!G.queue.length;
   if(i<0){if(alive().length>1){pl.tgt=-1;if(quiet&&!waiting().some(p=>p.tgt>=0)){G.focus=-1;loadBoard(-1)}}return}
@@ -279,7 +289,7 @@ O.setTarget=setTarget;
 O.toggleInspect=pid=>{if(G.cine||G.queue.length||G.phase!=='aim')return;const p=waiting().find(q=>q.id===pid);if(G.cur<0&&p&&G.mons[p.tgt]&&!G.mons[p.tgt].dead){G.focus=p.tgt;loadBoard(p.tgt)}if(G.cur<0)return;if(pid==='host'||p)G.inspect=!G.inspect};
 function fire(pl,abi,ang,pow,rp){
   if(G.screen!=='combat'||G.phase!=='aim'||!G.players.includes(pl)||pl.fired||pl.hp<=0)return false;
-  if(G.players.length>1&&G.shooter&&G.shooter!==pl.id)return false;                 // not your turn yet
+  if(G.grp&&G.grp.length&&!G.grp.includes(pl.id))return false;                 // not your pair's turn
   pl.sankNow=false;
   abi=Math.floor(num(abi,-1));const ab=CLASSES[pl.cls].ab[abi];if(!ab||!pl.owned.includes(abi))return false;if(!Array.isArray(pl.bag))return false;let use=abi;if(!pl.bag.includes(abi)){const sw=swapOf(pl);if(abi!==(pl.owned[0]||0)||sw<0)return false;use=sw}const sl=O.slotOf(pl);
   const needs=!ab.instant||ab.foe;if(needs&&(!G.mons[pl.tgt]||G.mons[pl.tgt].dead))return false;
@@ -301,7 +311,7 @@ function applyInstant(a){
   else if(id==='rally'){for(const p of G.players){if(p===a.pl||p.hp<=0||p.fired)continue;(p.bag=p.bag||[]).push(p.owned[0]||0);float(laneX(p),TY,'+1 ball','#f0cc5c');ev('heal',{pl:p,col:'#f0cc5c'})}}
   else if(id==='grounds'&&mon){mon.terr=null;G.terr=null;for(const q of mon.sand)q.on=false;G.boardVer++;say('The course is swept and drained.');ev('boon',{})}
   else if(id==='flag'&&mon){const hs=mon.holes.filter(h=>h.armor>0).sort((p,q)=>q.dmg-p.dmg);if(hs.length){const h=hs[0];h.armor=0;burst(h.x,h.y,'#d8cfba',20);float(h.x,h.y,'lid shot off','#d8cfba');ev('ring',{x:h.x,y:h.y,col:'#8fd88a',R:80});G.boardVer++}else say('There is no lid left to shoot off.')}
-  else if(id==='crescendo'){let n=0;for(const p of G.players)if(p.hp>0&&p!==a.pl){if(p.fired){p.fired=false;spin(p);n++}else if(!p.extra)p.extra=1;ev('heal',{pl:p,col:'#ff9a3a'})}ev('boon',{});say(`${who(a.pl)} plays a Crescendo. Everyone attacks again.`.replace(/^t/,'T'))}
+  else if(id==='crescendo'){let n=0;for(const p of G.players)if(p.hp>0&&p!==a.pl&&(!G.grp||!G.grp.length||G.grp.includes(p.id))){if(p.fired){p.fired=false;spin(p);n++}else if(!p.extra)p.extra=1;ev('heal',{pl:p,col:'#ff9a3a'})}ev('boon',{});say(`${who(a.pl)} plays a Crescendo. Everyone attacks again.`.replace(/^t/,'T'))}
   else if(id==='bash'&&mon){mon.stun=true;say(`${mon.name} is stunned.`);ev('monFlinch',{uid:mon.uid,dmg:0,col:'#c9d2de'});ev('shake',{v:.6})}}
 function launch(a){
   const m=mods(a.pl),mon=cm(),id=a.ab.id;if(a.ab.freeze&&mon)mon.freeze=true;
@@ -323,7 +333,7 @@ function spawn(p){
 function splitM(m){if(!m.split)return;m.split=0;m.r=Math.min(m.r,8);const sp=Math.hypot(m.vx,m.vy)||1;burst(m.x,m.y,m.col,14);
   for(const da of[-.5,.5]){const c=Math.cos(da),s2=Math.sin(da);G.marbles.push(Object.assign({},m,{id:++G.mid,vx:(m.vx*c-m.vy*s2),vy:(m.vx*s2+m.vy*c),told:null,age:m.age,path:null}))}}
 function collideMarbles(){
-  const a=G.marbles;for(let i=0;i<a.length;i++)for(let j=i+1;j<a.length;j++){const p=a[i],q=a[j];if(p.dead||q.dead||p.z<-4||q.z<-4||Math.abs(p.z-q.z)>p.r+q.r)continue;
+  const a=G.marbles;for(let i=0;i<a.length;i++)for(let j=i+1;j<a.length;j++){const p=a[i],q=a[j];if(laneOf(p.pl)!==laneOf(q.pl)||p.dead||q.dead||p.z<-4||q.z<-4||Math.abs(p.z-q.z)>p.r+q.r)continue;
     const dx=q.x-p.x,dy=q.y-p.y,d=Math.hypot(dx,dy),min=p.r+q.r;if(d>=min||d<1e-4)continue;const nx=dx/d,ny=dy/d,mp=p.r*p.r*p.r,mq=q.r*q.r*q.r,pen=min-d;
     p.x-=nx*pen*mq/(mp+mq);p.y-=ny*pen*mq/(mp+mq);q.x+=nx*pen*mp/(mp+mq);q.y+=ny*pen*mp/(mp+mq);const rv=(q.vx-p.vx)*nx+(q.vy-p.vy)*ny;if(rv>=0)continue;
     const jj=-(1.85)*rv/(1/mp+1/mq);p.vx-=jj/mp*nx;p.vy-=jj/mp*ny;q.vx+=jj/mq*nx;q.vy+=jj/mq*ny;p.bn=(p.bn||0)+1;q.bn=(q.bn||0)+1;ev('tick',{x:p.x+nx*p.r,y:p.y+ny*p.r,n:Math.max(p.bn,q.bn),k:'clack'})}}
@@ -331,7 +341,7 @@ function win(){G.phase='won';G.deathT=0;loadBoard(-1);G.active=-1;G.queue=[];sav
 function sweep(){for(const m of G.mons)if(m.hp<=0&&!m.dead){if(G.practice){m.hp=m.max;say(`${m.name} is stood back up.`);continue}m.dead=true;G.stash.kills[m.id]=(G.stash.kills[m.id]||0)+1;ev('monDie',{uid:m.uid});say(`${m.name} is destroyed.`)}return !alive().length}
 function damageMon(d,x,y,col,mon){
   const here=!mon||mon===cm();mon=mon||cm();if(!mon||d<=0||mon.hp<=0)return 0;d=Math.max(1,Math.round(d*(mon.vuln||1)*(mon.guard===G.round?(mon.guardK||.5):1)));const was=mon.hp;
-  mon.hp=Math.max(0,mon.hp-d);if(here){float(x,y,'-'+d,col||'#fff3e6');if(G.cine)G.cine.dmg+=d}else ev('monFlinch',{uid:mon.uid,dmg:d,col:col||'#fff3e6'});
+  mon.hp=Math.max(0,mon.hp-d);if(here){float(x,y,'-'+d,col||'#fff3e6');{const ci=G.cn&&G.cn[G.lnNow||0]||G.cine;if(ci)ci.dmg+=d}}else ev('monFlinch',{uid:mon.uid,dmg:d,col:col||'#fff3e6'});
   if(mon.hp<=0){if(here)burst(MX(),MY(),'#d2483a',80);return was}
   if(!mon.enraged&&mon.rank!=='lesser'&&mon.hp<=mon.max/2){mon.enraged=true;
     if(mon.id==='vharn'){mon.bumps.forEach(b=>b.on=true);mon.divots.forEach(b=>b.on=true);mon.holes.forEach(h=>h.armor=h.armor0);G.boardVer++;say('Vharn howls. Bone knits back over every wound.')}
@@ -354,7 +364,7 @@ function sinkInto(m,h,hx,hy){
   const dmg=Math.round(h.dmg*k);if(m.mark)h.mark=md.markx;G.stop=G.marbles.some(q=>q!==m&&!q.dead)?0:dmg>=20?.16:.07;        // no freeze while other balls are still rolling
   
   ev('sink',{x:hx,y:hy,tier:h.tier,dmg,combo:G.combo,trick,col:TIER[h.tier]});const ps=m.pl.st;ps.sinks++;if(trick)ps.trick++;
-  burst(hx,hy,TIER[h.tier],26);ev('ring',{x:hx,y:hy,col:TIER[h.tier],R:90});ev('shake',{v:Math.min(1,dmg/40)});const dealt=damageMon(dmg,hx,hy,TIER[h.tier]);m.dead=true;m.sunk=true;m.pl.st.dmg+=dealt;m.pl.st.best=Math.max(m.pl.st.best,dealt);if(G.cine)G.cine.sinks=(G.cine.sinks||0)+1;
+  burst(hx,hy,TIER[h.tier],26);ev('ring',{x:hx,y:hy,col:TIER[h.tier],R:90});ev('shake',{v:Math.min(1,dmg/40)});const dealt=damageMon(dmg,hx,hy,TIER[h.tier]);m.dead=true;m.sunk=true;m.pl.st.dmg+=dealt;m.pl.st.best=Math.max(m.pl.st.best,dealt);{const ci=G.cn&&G.cn[G.lnNow||0]||G.cine;if(ci)ci.sinks=(ci.sinks||0)+1}
 
   if(mon&&dealt>0&&mon.hp>0){const b=m.burn||(G.relics.includes('ember')?.3:0);if(b){const d=Math.max(2,Math.round(dealt*b*md.pyre/3));if(!mon.burn||mon.burn.d<=d){mon.burn={d,t:3};float(hx,hy+58,'burning','#ff7a2a')}}}
   if(mon&&m.splash&&dealt>0){const others=G.holes.filter(o=>o!==h&&!lidOn(o));for(const o of shuffle(others).slice(0,2)){const[ox,oy]=wpos(o.x,o.y),d2=Math.round(o.dmg*m.mult*m.splash);burst(ox,oy,m.col,12);ev('ring',{x:ox,y:oy,col:m.col,R:50});m.pl.st.dmg+=damageMon(d2,ox,oy,m.col)}}
@@ -511,24 +521,21 @@ function endMonsters(){
   for(const p of G.players)if(p.dot&&p.hp>0){const v=p.dot.d;p.hp=Math.max(0,p.hp-v);p.st.taken+=v;float(laneX(p),TY-30,'bleeding','#d2483a');ev('hurt',{pl:p,v,dead:p.hp<=0});if(--p.dot.t<=0)p.dot=null}
   if(G.players.every(p=>p.hp<=0)){G.phase='lost';G.deathT=0;say('The party has fallen.');return}
   for(const m of alive())if(m.burn){const d=m.burn.d;m.hp=Math.max(0,m.hp-d);ev('monFlinch',{uid:m.uid,dmg:d,col:'#ff7a2a'});if(--m.burn.t<=0)m.burn=null}             // what is burning burns a little more
-  if(sweep()){win();return}startRound()}
+  if(sweep()){win();return}G.gi=(G.gi||0)+1;startRound()}
 function updateCombat(dt){
   for(const p of G.pending){p.t-=dt;if(p.t<=0&&G.players.includes(p.pl))spawn(p)}
   G.pending=G.pending.filter(p=>p.t>0);
   {const mo=cm();if(!(mo&&mo.freeze))G.ck+=dt}
-  for(let i=0;i<10;i++){for(const m of G.marbles)if(!m.dead)stepMarble(m,dt/10);wakeRest();if(G.marbles.length>1)collideMarbles()}
+  for(let i=0;i<10;i++){for(const m of G.marbles)if(!m.dead){G.lnNow=laneOf(m.pl);stepMarble(m,dt/10)}wakeRest();if(G.marbles.length>1)collideMarbles()}
   for(const m of G.marbles)if(m.dead&&m.path&&m.pl){if(m.sunk)m.pl.trail=null;else if(m.path.length>2&&!m.pl.sankNow){m.path.push([Math.round(m.x),Math.round(m.y),Math.round(m.off?m.z:0)]);m.pl.trail=m.path}m.pl.trailN=(m.pl.trailN||0)+1;if(m.sunk)m.pl.sankNow=true;m.path=null}         // each fighter's last shot, drawn faintly on the big screen; a shot that went in leaves no guide
   G.marbles=G.marbles.filter(m=>!m.dead);
   if(G.phase==='aim'){
-    if(!G.cine&&!G.queue.length&&!G.marbles.length&&!G.pending.length){
+    if(!anyCine()&&!G.queue.length&&!G.marbles.length&&!G.pending.length){
       const w=waiting();
       if(!w.length){if(G.practice)practiceRound();else beginMonsters()}
-      else{G.turnT+=dt;const here=w.filter(p=>!p.away);
-        /* fighters take their shots one at a time, in party order: the shooter keeps the turn until their reels' balls are all loosed */
-        let sh=G.players.find(p=>p.id===G.shooter);if(!sh||sh.fired||sh.hp<=0||(sh.away&&here.length)){const i0=sh?G.players.indexOf(sh):-1,ord=[...G.players.slice(i0+1),...G.players.slice(0,i0+1)];sh=ord.find(p=>w.includes(p)&&!p.away)||w[0];
-          if(sh.id!==G.shooter){G.shooter=sh.id;G.turnT=0;if(G.players.length>1)say(`${who(sh)}'s shot.`.replace(/^t/,'T'));ev('turn',{pl:sh})}}
+      else{G.turnT+=dt;const here=w.filter(p=>!p.away);G.shooter=w.length===1&&G.players.length>1?w[0].id:'';
         if(!here.length){if(G.turnT>6){w.forEach(p=>{p.fired=true});say('The fighters who have gone quiet lose the turn.')}}                 // a phone that dropped out does not hold up the round
-        else if(G.players.length>1&&!G.practice&&G.turnT>O.TURN){sh.fired=true;say(`${who(sh)} hesitates and loses the turn.`.replace(/^t/,'T'))}}}
+        else if(G.players.length>1&&!G.practice&&G.turnT>O.TURN){here.forEach(p=>{p.fired=true});say(`${here.map(p=>who(p)).join(' and ')} hesitate${here.length>1?'':'s'} and lose${here.length>1?'':'s'} the turn.`.replace(/^t/,'T'))}}}
   }else if(G.phase==='boss'){
     const mon=G.mons[G.actor];if(!mon){endMonsters();return}
     G.bossT+=dt;mon.atk.t=G.bossT;
@@ -545,7 +552,7 @@ function afterAttack(){G.active=-1;if(sweep()){win();return}retarget();if(!G.que
 O.useItem=function(pid,i){
   const pl=G.players.find(p=>p.id===pid);i=Math.floor(num(i,-1));const id=G.items[i],it=ITEMS[id];
   if(!it||!pl||G.screen!=='combat'||G.phase!=='aim'||pl.fired||pl.hp<=0)return false;
-  const quiet=!G.cine&&!G.queue.length&&!G.marbles.length&&!G.pending.length,tm=G.mons[pl.tgt];
+  const quiet=!anyCine()&&!G.queue.length&&!G.marbles.length&&!G.pending.length,tm=G.mons[pl.tgt];
   if((it.wheel||it.foe)&&!quiet)return false;                                 // what changes a wheel or wounds a monster waits for the shot in the air to finish
   if((it.wheel||it.tgt)&&(!tm||tm.dead))return false;if(id==='phoenix'&&!G.players.some(p=>p.hp<=0))return false;
   G.items.splice(i,1);say(`${who(pl)} uses ${it.name}.`.replace(/^t/,'T'));const heal=(p,v)=>{if(p.hp<=0)return;p.hp=Math.min(p.mhp,p.hp+v);float(laneX(p),TY,'+'+v,'#5fa596');ev('heal',{pl:p})};
@@ -565,31 +572,33 @@ O.useItem=function(pid,i){
   return true};
 /* ----- trap and event tiles: see minigames.js. The rules here lend it what it needs. ----- */
 O._sim={stepMarble,offBoard,rails,rollUps,say,ev,addItem,anyItem,offerPath,offerUpgrades,setDec,shuffle,has,saveStash,mods,pick,clamp,float,burst};
+/* each half of the screen runs its own shot: cast, flight, the hit, then out. In a pair both run at once. */
 function updateCine(dt){
-  let C=G.cine;
-  if(!C){
-    if(G.screen!=='combat'||G.phase!=='aim'||G.marbles.length||G.pending.length)return;
-    while(G.queue.length){const a=G.queue.shift();if(!G.players.includes(a.pl)||a.pl.hp<=0)continue;
-      if(a.tgt>=0){const m=G.mons[a.tgt];if(!m||m.dead){const al=alive();if(!al.length)continue;a.tgt=G.mons.indexOf(al[0])}if(G.cur!==a.tgt)loadBoard(a.tgt)}       // a shot loosed at a monster that has since fallen goes to the next
-      if(a.pl.buff&&!a.ab.instant){a.mult*=1.5;a.pl.buff=false}
-      const an=a.ang*DEG,mon=cm(),key=a.pl.id+'|'+a.ab.id,rep=!!G.seen[key];G.seen[key]=1;G.active=G.players.indexOf(a.pl);G.inspect=false;
-      const md=mods(a.pl),aid=a.ab.id;let nm=(a.ab.fan||[0]).length*(a.ab.shots||1);if((aid==='volley'&&md.fourth)||(aid==='note'&&md.chorus)||(aid==='stream'&&md.surge)||(aid==='quick'&&md.twin)||(a.ab.m&&a.ab.m.split))nm=2;
-      G.cine={st:'cast',t:0,atk:a,dmg:0,mon:mon?mon.uid:0,dir:[Math.cos(an),Math.sin(an)],d0:[Math.cos(an),Math.sin(an)],fx:launchX(a.pl),fy:O.COURSE.TEE,close:false,idle:0,rep,multi:nm>1,castT:rep?.85:1.7,panT:rep?.6:.9,hitT:2};    // the full flourish the first time an attack is used in a fight, a brisk one after
-      say(`${who(a.pl)} uses ${a.ab.name}.`.replace(/^t/,'T'));ev('cast',{pl:a.pl,rep});if(!a.ab.instant){launch(a);stage(G.cine,'flight')}break}
-    return}
-  C.t+=dt;const a=C.atk;
-  if(C.st==='cast'){if(C.t>C.castT){if(a.ab.instant){applyInstant(a);stage(C,'out')}else stage(C,'pan')}}
-  else if(C.st==='pan'){if(C.t>C.panT){launch(a);stage(C,'flight')}}
-  else if(C.st==='flight'){
-    const al=G.marbles,m=al.length?al[Math.floor((al.length-1)/2)]:null;
-    if(m){const sp=Math.hypot(m.vx,m.vy);
-      if(sp>60&&!m.in){const k=Math.min(1,dt*5);C.dir[0]+=(m.vx/sp-C.dir[0])*k;C.dir[1]+=(m.vy/sp-C.dir[1])*k;const l=Math.hypot(C.dir[0],C.dir[1])||1;C.dir[0]/=l;C.dir[1]/=l}
-      C.fx=m.x;C.fy=m.y;C.fz=Math.max(0,m.z);C.close=!!(m.near||m.in)}
-    if(!G.marbles.length&&!G.pending.length){C.idle+=dt;if(C.idle>.6){const mon=cm();
-        if(C.dmg>0&&mon){C.hitT=mon.hp<=0||C.dmg>=mon.max*.15?2:1.15;ev('monHit',{dmg:C.dmg,col:CLASSES[a.pl.cls].col,uid:mon.uid,dead:mon.hp<=0});stage(C,'hit')}else stage(C,'out')}}else C.idle=0}
-  else if(C.st==='hit'){if(C.t>C.hitT)stage(C,'out')}
-  else if(C.st==='out'){if(C.t>.45){if(!a.ab.instant){if(C.dmg<=0&&!a.ab.m.hymn){if(G.combo>1)ev('comboEnd',{});G.combo=0}if(C.sinks)a.pl.st.hits=(a.pl.st.hits||0)+1;a.pl.last=[a.pl.last[0]+1,C.dmg,C.sinks||0]}G.cine=null;afterAttack()}}
-}
+  if(!G.cn)G.cn=[null,null];
+  for(let L=0;L<2;L++){G.lnNow=L;let C=G.cn[L];
+    if(!C){
+      if(G.screen!=='combat'||G.phase!=='aim'||G.marbles.some(m=>laneOf(m.pl)===L)||G.pending.some(p=>laneOf(p.pl)===L))continue;
+      for(let qi=0;qi<G.queue.length;qi++){const a=G.queue[qi];if(laneOf(a.pl)!==L)continue;G.queue.splice(qi--,1);if(!G.players.includes(a.pl)||a.pl.hp<=0)continue;
+        if(a.tgt>=0){const m=G.mons[a.tgt];if(!m||m.dead){const al=alive();if(!al.length)continue;a.tgt=G.mons.indexOf(al[0])}if(G.cur!==a.tgt)loadBoard(a.tgt)}       // a shot loosed at a monster that has since fallen goes to the next
+        if(a.pl.buff&&!a.ab.instant){a.mult*=1.5;a.pl.buff=false}
+        const an=a.ang*DEG,mon=cm(),key=a.pl.id+'|'+a.ab.id,rep=!!G.seen[key];G.seen[key]=1;G.active=G.players.indexOf(a.pl);G.inspect=false;
+        const md=mods(a.pl),aid=a.ab.id;let nm=(a.ab.fan||[0]).length*(a.ab.shots||1);if((aid==='volley'&&md.fourth)||(aid==='note'&&md.chorus)||(aid==='stream'&&md.surge)||(aid==='quick'&&md.twin)||(a.ab.m&&a.ab.m.split))nm=2;
+        C=G.cn[L]={st:'cast',t:0,atk:a,ln:L,dmg:0,mon:mon?mon.uid:0,dir:[Math.cos(an),Math.sin(an)],d0:[Math.cos(an),Math.sin(an)],fx:launchX(a.pl),fy:O.COURSE.TEE,close:false,idle:0,rep,multi:nm>1,castT:rep?.85:1.7,panT:rep?.6:.9,hitT:2};    // the full flourish the first time an attack is used in a fight, a brisk one after
+        say(`${who(a.pl)} uses ${a.ab.name}.`.replace(/^t/,'T'));ev('cast',{pl:a.pl,rep});if(!a.ab.instant){launch(a);stage(C,'flight')}break}
+      continue}
+    C.t+=dt;const a=C.atk;
+    if(C.st==='cast'){if(C.t>C.castT){if(a.ab.instant){applyInstant(a);stage(C,'out')}else stage(C,'pan')}}
+    else if(C.st==='pan'){if(C.t>C.panT){launch(a);stage(C,'flight')}}
+    else if(C.st==='flight'){
+      const al=G.marbles.filter(q=>laneOf(q.pl)===L),m=al.length?al[Math.floor((al.length-1)/2)]:null;
+      if(m){const sp=Math.hypot(m.vx,m.vy);
+        if(sp>60&&!m.in){const k=Math.min(1,dt*5);C.dir[0]+=(m.vx/sp-C.dir[0])*k;C.dir[1]+=(m.vy/sp-C.dir[1])*k;const l=Math.hypot(C.dir[0],C.dir[1])||1;C.dir[0]/=l;C.dir[1]/=l}
+        C.fx=m.x;C.fy=m.y;C.fz=Math.max(0,m.z);C.close=!!(m.near||m.in)}
+      if(!al.length&&!G.pending.some(p=>laneOf(p.pl)===L)){C.idle+=dt;if(C.idle>.6){const mon=cm();
+          if(C.dmg>0&&mon){C.hitT=mon.hp<=0||C.dmg>=mon.max*.15?2:1.15;ev('monHit',{dmg:C.dmg,col:CLASSES[a.pl.cls].col,uid:mon.uid,dead:mon.hp<=0,ln:L});stage(C,'hit')}else stage(C,'out')}}else C.idle=0}
+    else if(C.st==='hit'){if(C.t>C.hitT)stage(C,'out')}
+    else if(C.st==='out'){if(C.t>.45){if(!a.ab.instant){if(C.dmg<=0&&!a.ab.m.hymn){if(G.combo>1)ev('comboEnd',{});G.combo=0}if(C.sinks)a.pl.st.hits=(a.pl.st.hits||0)+1;a.pl.last=[a.pl.last[0]+1,C.dmg,C.sinks||0]}G.cn[L]=null;G.cine=G.cn[0]||G.cn[1]||null;afterAttack();if(G.phase!=='aim')break}}}
+  G.cine=G.cn[0]||G.cn[1]||null}
 /* ----- one tick of everything ----- */
 function tick(dt){
   G.clock+=dt;
@@ -633,7 +642,7 @@ const mask=a=>a.map(b=>b.on?1:0).join('');
 O.publicState=()=>{const act=G.players[G.active],fight=G.screen==='combat',aim=fight&&G.phase==='aim',left=aim&&!G.cine&&!G.queue.length&&G.players.length>1&&!G.practice?Math.ceil(O.TURN-G.turnT):99;
  return{role:'host',dn:DG().name,rn:O.runOf(G.dung)+1,sg:O.RUNS[O.runOf(G.dung)].indexOf(G.dung)+1,sgn:O.RUNS[O.runOf(G.dung)].length,re:G.runEnd?1:0,nn:O.DUNGEONS[G.dung+1]&&O.runOf(G.dung+1)===O.runOf(G.dung)?O.DUNGEONS[G.dung+1].name:'',tier:G.tier,gd:G.gain,sc:G.screen,nd:G.node,ph:G.phase,rd:G.round,msg:G.msg.slice(0,140),res:G.result||'',tr:G.travel?1:0,pr:G.practice?1:0,pz:O.paused?1:0,fin:G.finale?1:0,
   cs:O.cosmMask(),nu:G.screen==='result'&&G.newUnl?G.newUnl.slice(0,8):[],
-  cu:G.cur,ac:act&&fight&&G.cine?act.id:'',sh:aim&&G.players.length>1?G.shooter||'':'',cn:G.cine||G.queue.length?1:0,ins:G.inspect?1:0,tm:left<=20?Math.max(1,left):0,
+  cu:G.cur,ac:act&&fight&&G.cine?act.id:'',sh:aim&&G.players.length>1?G.shooter||'':'',gp:fight&&G.grp?G.grp.join(','):'',spl:fight&&G.split&&G.phase==='aim'?1:0,cn:anyCine()||G.queue.length?1:0,ins:G.inspect?1:0,tm:left<=20?Math.max(1,left):0,
   mo:G.mons.map(m=>({id:m.id,n:m.name,hp:Math.ceil(m.hp),mx:m.max,d:m.dead?1:0,st:m.stun?1:0,bn:m.burn?m.burn.d:0,it:m.intent&&!m.dead?[m.intent.t,m.intent.dmg,m.intent.x,m.intent.b?1:0,m.intent.mv,m.intent.reels?m.intent.reels.map(f=>f<0?'x':f).join(''):'',m.intent.pw||1,m.intent.t2||'',m.intent.fv||0,m.intent.seq||0,m.intent.n==null?2:m.intent.n]:null})),co:G.combo||0,aw:G.screen==='result'?O.awards():null,
   /* what has changed on each living monster's wheel; a phone rebuilds the rest from the monster's own layout */
   bs:aim?G.mons.map((m,i)=>m.dead?0:[m.course.mv&&m.course.mv.broken?1:0,m.holes.map(h=>Math.min(9,Math.max(0,h.armor))).join(''),mask(m.bumps),mask(m.sand),mask(m.blocks),m.terr?[m.terr.k,m.terr.t,m.terr.spots.map(q=>[q.x,q.y,q.r]),m.terr.dir]:0,m.wk>=0?m.wk:-1,m.sg>=0?m.sg:-1,(m.lk||0)+(m.coreT>0?4:0),m.freeze?1:0]):null,
@@ -647,7 +656,7 @@ function startPractice(){if(G.screen!=='lobby'||!G.players.length||!MONSTERS.qui
 O.startPractice=startPractice;
 O.endPractice=()=>{if(G.practice)toLobby()};
 function practiceRound(){
-  G.round++;for(const p of G.players){spin(p);p.fired=false;p.oil=1;p.small=1;p.sure=false;p.cd=p.cd.map(v=>Math.max(0,v-1))}G.turnT=0;
+  G.round++;G.gi=(G.gi||0)+1;const grp=beginGroup();for(const p of G.players){if(!grp.includes(p)){p.fired=true;p.bag=[];continue}spin(p);p.fired=false;p.oil=1;p.small=1;p.sure=false;p.cd=p.cd.map(v=>Math.max(0,v-1))}G.turnT=0;
   const m=alive()[0];if(!m)return;m.rest=[];if(m.coreT>0&&--m.coreT<=0){const c=m.holes[m.core];if(c)c.armor=Math.max(1,c.armor0);m.lk=0}
   const cyc=[null,null,'mire',null,'rift',null,'rubble',null,'gale',null][(G.round-1)%10];
   if(cyc){m.terr={k:cyc,t:2,spots:mkSpots(cyc),dir:Math.random()<.5?-1:1};say(`The course is fouled: ${O.TERR[cyc].name.toLowerCase()}. ${O.TERR[cyc].note}`)}

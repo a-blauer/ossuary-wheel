@@ -776,6 +776,14 @@ em.ttl{display:block;font-style:italic;color:var(--gilt2);font-size:.85em;line-h
 .newUnl h3{margin:0 0 .5rem;font-size:1.05rem;color:var(--gilt2)}
 .nuGrid{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center}.nuGrid>div{display:flex;flex-direction:column;align-items:center;gap:.15rem;width:7.5rem;text-align:center}
 .nuGrid .ico{--s:2.8rem}.nuGrid small{font-size:.7rem;color:var(--tallow);text-transform:uppercase;letter-spacing:.06em}.nuGrid b{font-family:var(--display);font-weight:600;font-size:1rem;line-height:1.1}
+/* ---------- the split screen: a pair shooting together ---------- */
+#splitUI{position:absolute;inset:0;pointer-events:none;z-index:3}
+#splitUI>i{position:absolute;left:50%;top:0;bottom:0;width:4px;margin-left:-2px;background:linear-gradient(#0000,#c8a04c 12%,#c8a04c 88%,#0000);box-shadow:0 0 14px rgba(0,0,0,.9)}
+#splitUI .sp{position:absolute;top:clamp(4.6rem,13vh,7rem);width:50%;display:flex;justify-content:center}
+#splitUI .sp.l{left:0}#splitUI .sp.r{right:0}
+#splitUI .sp b{font-family:var(--display);font-weight:600;font-size:clamp(1rem,2.4vw,1.6rem);padding:.2rem .9rem;background:rgba(14,10,12,.82);border:1px solid var(--lc);border-bottom:3px solid var(--lc);color:#fff4dc}
+#aimPow.split{left:0;width:100%;height:0;pointer-events:none}
+#aimPow.split .ap{position:absolute;left:2.5%;bottom:0;width:min(22%,17rem)}#aimPow.split .ap.right{left:52.5%}
 </style>
 
 <section id="landing">
