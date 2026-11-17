@@ -714,6 +714,68 @@ html[data-mode=host] .card{max-width:30rem}
 .moBtn.on{border-style:solid;background:linear-gradient(#2e4a2a,#1a2a18);color:#c8ffd0}
 .moRow small{color:var(--tallow);text-align:center;font-size:.85rem}
 .mgNote.watchTv{font-size:1.05rem;font-weight:800;color:#e8c05a;text-align:center;padding:.9rem .6rem;margin:.4rem 0;border:1px dashed rgba(232,192,90,.45);border-radius:12px;background:rgba(232,192,90,.06)}
+/* ---------- reward cards: each kind of drop has its own colour and picture ---------- */
+.rwCard{--tc:#8a7a5a;display:grid;grid-template-columns:6.4rem minmax(0,1fr);text-align:left;padding:0;border:1px solid color-mix(in srgb,var(--tc) 70%,#000);border-left:5px solid var(--tc);background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 14%,#140f11),#140f11 60%);min-height:6.6rem;overflow:hidden;color:var(--bone);font:inherit;cursor:pointer;position:relative}
+button.rwCard:active{transform:translateY(1px)}button.rwCard:focus-visible{outline:2px solid var(--tc)}
+.rwCard .rwArt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35rem;padding:.5rem .3rem;background:radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--tc) 46%,transparent),color-mix(in srgb,var(--tc) 12%,#0b0809) 72%);border-right:1px solid color-mix(in srgb,var(--tc) 40%,#000);position:relative}
+.rwCard .rwArt .ico.big{--s:3.6rem;filter:drop-shadow(0 0 10px color-mix(in srgb,var(--tc) 70%,transparent))}
+.rwCard .rwTx{display:flex;flex-direction:column;gap:.18rem;padding:.6rem .75rem .65rem;min-width:0}
+.rwCard .rwType{font-style:normal;font-weight:800;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--tc);filter:brightness(1.35)}
+.rwCard .rwTx b{font-family:var(--display);font-weight:600;font-size:1.3rem;line-height:1.05}
+.rwCard .rwTx span{color:var(--tallow);font-size:.92rem;line-height:1.25}
+.rw-ab{--tc:#d0402a}.rw-upab{--tc:#e07a2a}.rw-reel{--tc:#2a9a8a}.rw-stat{--tc:#3a7ad0}.rw-pass{--tc:#8a6ad0}.rw-it{--tc:#d8a020}.rw-re{--tc:#b04ad0}
+.rw-ab::after{content:'NEW';position:absolute;top:.35rem;right:.45rem;font-size:.62rem;font-weight:900;letter-spacing:.1em;padding:.1rem .35rem;background:var(--tc);color:#fff;border-radius:3px}
+.rwBall{display:flex;flex-direction:column;align-items:center;gap:.15rem}
+.rwBall i{display:block;border-radius:50%;background:radial-gradient(circle at 34% 30%,#fff 0 9%,color-mix(in srgb,var(--c) 65%,#fff) 16%,var(--c) 46%,color-mix(in srgb,var(--c) 45%,#000) 100%);box-shadow:0 0 14px var(--c),0 0 0 2px color-mix(in srgb,var(--c) 50%,#fff) inset}
+.rwBall em{font-style:normal;font-weight:900;font-size:.95rem;color:#fff;text-shadow:0 1px 2px #000}
+.rwBall.inst .ico{--s:3.2rem}
+.rwArt .plus{position:absolute;top:.4rem;right:.5rem;font-size:1.5rem;font-weight:900;color:#fff;text-shadow:0 0 8px var(--tc)}
+.rwReel{display:flex;gap:2px;padding:3px;background:#0b0809;border:1px solid color-mix(in srgb,var(--tc) 60%,#000);border-radius:3px}
+.rwReel .cell{width:1.35rem;height:1.35rem;display:block}.rwReel.pat .cell{width:1.05rem;height:1.05rem}
+.rwArt .big{font-family:var(--display);font-size:2.1rem;line-height:1;color:#fff;text-shadow:0 0 12px var(--tc)}
+.rwArt .cap{font-size:.7rem;font-weight:700;color:#fff;opacity:.9;text-align:center;line-height:1.1}
+#decBox .rwCard{margin-bottom:2px}
+/* the same cards, small, in each fighter's column on the big screen */
+.rwCard.mini{grid-template-columns:3.2rem minmax(0,1fr);min-height:3.2rem;cursor:default;border-left-width:4px}
+.rwCard.mini .rwArt{padding:.2rem}.rwCard.mini .rwArt .ico.big{--s:2rem}.rwCard.mini .rwBall i{max-width:1.8rem;max-height:1.8rem}.rwCard.mini .rwBall.sm i{max-width:1.4rem;max-height:1.4rem}
+.rwCard.mini .rwReel .cell{width:.68rem;height:.68rem}.rwCard.mini .rwArt .big{font-size:1.15rem}.rwCard.mini .plus{font-size:1rem;top:0;right:.15rem}
+.rwCard.mini .rwTx{padding:.3rem .45rem;gap:0;justify-content:center}.rwCard.mini .rwType{font-size:.6rem;letter-spacing:.08em}.rwCard.mini .rwTx b{font-size:.98rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rwCard.mini::after{display:none}
+.rwCard.not{opacity:.25}.rwCard.took{box-shadow:0 0 0 2px var(--gilt),0 0 18px color-mix(in srgb,var(--gilt) 50%,transparent)}
+.dropCol{width:15.5rem}
+.rwRow{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:.6rem;max-width:62rem;margin:0 auto}
+/* ---------- looks: skins, trails, dyes, titles ---------- */
+.lookH{margin-top:.6rem}.looks{display:grid;gap:.6rem}.lookG h4{margin:.2rem 0 .3rem;font-size:.95rem}
+.lookRow{display:flex;flex-wrap:wrap;gap:.35rem}
+.lookRow .lk{min-width:2.6rem;height:2.6rem;padding:.2rem .35rem;display:flex;align-items:center;justify-content:center;background:#1a1416;border:1px solid var(--seam)}
+.lookRow .lk[aria-pressed="true"]{border-color:var(--gilt2);box-shadow:0 0 0 1px var(--gilt2) inset}
+.lookRow .lk.r1{border-bottom:2px solid #4aa8ff}.lookRow .lk.r2{border-bottom:2px solid #c070ff}.lookRow .lk.r3{border-bottom:2px solid #ffb12a}
+.trChip{display:inline-flex;gap:2px;align-items:center}.trChip i{width:.38rem;height:.38rem;border-radius:50%;background:var(--c);box-shadow:0 0 5px var(--c)}.trChip i:nth-child(2){opacity:.8}.trChip i:nth-child(3){opacity:.6}.trChip i:nth-child(4){opacity:.4}.trChip i:nth-child(5){opacity:.2}
+.trChip.none i{background:#5a5048;box-shadow:none}
+.dyChip{display:inline-block;width:1.6rem;height:1.6rem;border-radius:3px;background:linear-gradient(135deg,var(--c),color-mix(in srgb,var(--c) 60%,#000));border:1px solid #000}
+.dyChip.none{background:repeating-linear-gradient(45deg,#3a3034 0 4px,#241c1f 4px 8px)}
+.tiChip{font-family:var(--display);font-size:.95rem;white-space:nowrap;color:var(--bone)}
+em.ttl{display:block;font-style:italic;color:var(--gilt2);font-size:.85em;line-height:1.1}
+/* the loot box reveal */
+#boxOv .card.cosm{border:2px solid var(--rc);box-shadow:0 0 40px color-mix(in srgb,var(--rc) 55%,transparent)}
+#boxOv .card .rar{font-style:normal;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--rc);font-size:.9rem}
+#boxOv .card .cPrev{display:flex;justify-content:center;align-items:center;min-height:5rem;margin:.4rem 0}
+#boxOv .card .cPrev .ico{--s:4.4rem}#boxOv .card .cPrev .dyChip{width:4.4rem;height:4.4rem}#boxOv .card .cPrev .trChip i{width:.9rem;height:.9rem}#boxOv .card .cPrev .tiChip{font-size:1.8rem;color:var(--rc)}
+#boxOv .card.r3{animation:legend 1.2s ease-in-out infinite alternate}@keyframes legend{to{box-shadow:0 0 70px var(--rc)}}
+.odds{display:flex;flex-wrap:wrap;gap:.3rem .8rem;font-size:.85rem;font-weight:700;margin:.2rem 0 .4rem}
+.collH{margin:1rem 0 .2rem;font-size:1.15rem;color:var(--gilt2)}
+.cgrid.cosm span{border-left:3px solid var(--rc)}.cgrid.cosm span .ico{--s:1.4rem}.cgrid.cosm span .dyChip{width:1.2rem;height:1.2rem}.cgrid.cosm span .tiChip{font-size:.8rem}.cgrid.cosm span b{font-weight:600}
+.cgrid.cosm span.no .tiChip,.cgrid.cosm span.no .trChip,.cgrid.cosm span.no .dyChip,.cgrid.cosm span.no .ico{filter:grayscale(1) brightness(.4)}
+.cgrid em.from{font-style:normal;font-size:.72rem;color:var(--tallow);opacity:.8;margin-left:auto;white-space:nowrap}
+/* what each stage's first clear unlocks, on the run track */
+.unlRow{display:flex;flex-direction:column;gap:.2rem;margin-top:.45rem;padding-top:.35rem;border-top:1px dashed var(--seam)}
+.unlRow small{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--gilt)}
+.unlRow .ics{display:flex;flex-wrap:wrap;gap:.25rem}.unlRow .ics .ico{--s:1.5rem}.unlRow.done .ics .ico{opacity:.55}
+/* the win card: what this clear unlocked */
+.newUnl{margin:.7rem 0;padding:.7rem .8rem;border:1px solid var(--gilt);background:linear-gradient(rgba(200,160,76,.12),rgba(200,160,76,.03))}
+.newUnl h3{margin:0 0 .5rem;font-size:1.05rem;color:var(--gilt2)}
+.nuGrid{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center}.nuGrid>div{display:flex;flex-direction:column;align-items:center;gap:.15rem;width:7.5rem;text-align:center}
+.nuGrid .ico{--s:2.8rem}.nuGrid small{font-size:.7rem;color:var(--tallow);text-transform:uppercase;letter-spacing:.06em}.nuGrid b{font-family:var(--display);font-weight:600;font-size:1rem;line-height:1.1}
 </style>
 
 <section id="landing">

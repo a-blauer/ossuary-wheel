@@ -125,10 +125,13 @@ function heroSpot(p,i){
     if(me||aiming)return[wx(O.launchX(p)),0,wz(O.TY+20),Math.PI,true];
     const k=G.players.filter(q=>q!==p).indexOf(p)<0?i:G.players.indexOf(p);return[wx(C.cx(150)-C.half(150)-90),-.03,wz(30+k*95),Math.PI/2,false]}
   const n=G.players.length;return[(i-(n-1)/2)*1.1,-.35,.4,0,false]}
+/* a dyed fighter: their cloth colours swapped for the dye, a darker shade for the folds */
+function dyed(h,p){const D=p.dye&&O.DYES[p.dye],K=O.DYE_KEYS[p.cls];if(!D||!D.col||!K)return h;const c=new THREE.Color(D.col),dk=c.clone().multiplyScalar(.68),al=c.clone().multiplyScalar(.86);
+  h.pal=Object.assign({},h.pal);h.pal[K[0]]=Object.assign({},h.pal[K[0]],{c:'#'+c.getHexString(),alt:'#'+al.getHexString()});h.pal[K[1]]=Object.assign({},h.pal[K[1]],{c:'#'+dk.getHexString(),alt:undefined});return h}
 function syncHeroes(dt){
   for(const[id,f]of heroes)if(!G.players.find(p=>p.id===id&&p.cls===f.userData.cls)){world.remove(f);heroes.delete(id)}
   const show=G.screen==='combat'||G.screen==='lobby'||G.screen==='result'||G.screen==='map';
-  G.players.forEach((p,i)=>{let f=heroes.get(p.id);if(!f){f=V.build(V.hero(p.cls));f.userData.cls=p.cls;f.userData.snap=true;f.traverse(o=>{if(o.isMesh)o.castShadow=true});world.add(f);heroes.set(p.id,f)}
+  G.players.forEach((p,i)=>{let f=heroes.get(p.id);if(f&&f.userData.dye!==(p.dye||'')){world.remove(f);heroes.delete(p.id);f=null}if(!f){f=V.build(dyed(V.hero(p.cls),p));f.userData.cls=p.cls;f.userData.dye=p.dye||'';f.userData.snap=true;f.traverse(o=>{if(o.isMesh)o.castShadow=true});world.add(f);heroes.set(p.id,f)}
     f.visible=show;if(!show)return;const u=f.userData,P0=u.parts,[tx,ty,tz,ry]=heroSpot(p,i);
     const scr=G.screen+(mgS?mgFor:'');if(u.snap||u.scr!==scr){f.position.set(tx,ty,tz);f.rotation.y=ry;u.snap=false;u.scr=scr}
     else{const k=1-Math.exp(-dt*6),moving=Math.hypot(tx-f.position.x,tz-f.position.z)>.05;f.position.x+=(tx-f.position.x)*k;f.position.z+=(tz-f.position.z)*k;let dr=ry-f.rotation.y;dr=Math.atan2(Math.sin(dr),Math.cos(dr));f.rotation.y+=dr*Math.min(1,dt*8);u.walk=moving||!!G.travel||(!!mgS&&!!mgS.walk&&G.mg&&G.mg.st==='play')}
@@ -185,10 +188,24 @@ function ballFx(o,u,m,dt){const t=performance.now()/1000,p=o.position,R=m.r*W;u.
   else if(k==='water'){if(Math.random()<.6)P(p.x+r()*R*1.4,p.y-R*.6,p.z+r()*R*1.4,r()*.8,.8,r()*.8,.4,col,-8)}
   else if(k==='streak'||k==='gold'||k==='blade'||k==='iron'){P(p.x,p.y,p.z,0,0,0,.5,col,0);if(Math.random()<.4)P(p.x,p.y,p.z,r()*.6,.3,r()*.6,.4,'#ffffff',0)}
   else P(p.x,p.y,p.z,0,.2,0,.4,col,0)}
+/* a cosmetic wake behind a plain ball: the trail a player picked from a loot box */
+function wakeFx(p,m,T){const R=m.r*W,r=()=>(Math.random()-.5),t=performance.now()/1000,c=T.col,s=T.style;
+  if(s==='flame'){P(p.x+r()*R,p.y+R*.3,p.z+r()*R,r()*.3,.8+Math.random()*.6,r()*.3,.45,Math.random()<.5?c:'#ffd27a',1.2)}
+  else if(s==='smoke'){if(Math.random()<.7)P(p.x+r()*R,p.y+R*.2,p.z+r()*R,r()*.2,.5,r()*.2,.9,c,0)}
+  else if(s==='fall'){if(Math.random()<.7)P(p.x+r()*R*2,p.y+R*1.5,p.z+r()*R*2,r()*.3,-.3,r()*.3,1,c,0)}
+  else if(s==='rise'){if(Math.random()<.6)P(p.x+r()*R*1.4,p.y,p.z+r()*R*1.4,r()*.2,.9,r()*.2,.8,c,0)}
+  else if(s==='hang'){P(p.x+r()*R*1.6,p.y+r()*R,p.z+r()*R*1.6,0,0,0,.9,Math.random()<.4?'#ffffff':c,0)}
+  else if(s==='streak'){P(p.x,p.y,p.z,0,0,0,.55,c,0);if(Math.random()<.5)P(p.x+r()*R,p.y,p.z+r()*R,r()*.4,.3,r()*.4,.5,'#fff2b0',0)}
+  else if(s==='drip'){if(Math.random()<.5)P(p.x+r()*R*.6,p.y-R*.2,p.z+r()*R*.6,0,-.3,0,.6,c,-10)}
+  else if(s==='wander'){if(Math.random()<.4)P(p.x+r()*R*3,p.y+Math.random()*R*2,p.z+r()*R*3,r()*.8,r()*.8,r()*.8,1.2,c,0)}
+  else if(s==='spark'){if(Math.random()<.8)P(p.x,p.y,p.z,r()*2.4,Math.random()*1.2,r()*2.4,.25,Math.random()<.5?'#ffffff':c,-6)}
+  else if(s==='orbit'){const a=t*9,rr=R*1.9;P(p.x+Math.cos(a)*rr,p.y,p.z+Math.sin(a)*rr,0,.1,0,.6,c,0);P(p.x-Math.cos(a)*rr,p.y,p.z-Math.sin(a)*rr,0,.1,0,.6,c,0)}
+  else if(s==='comet'){for(let i=0;i<3;i++)P(p.x+r()*R*.6,p.y+r()*R*.6,p.z+r()*R*.6,0,0,0,.8,i?c:'#fff6d0',0)}
+  else if(s==='prism'){const h=FXH[Math.floor(t*12)%FXH.length];P(p.x,p.y,p.z,0,0,0,.7,h,0);P(p.x+r()*R,p.y,p.z+r()*R,r()*.3,.3,r()*.3,.5,FXH[(Math.floor(t*12)+3)%FXH.length],0)}}
 function syncMarbles(dt){
   const live=new Set();for(const m of G.marbles){live.add(m.id);let o=marbles.get(m.id);if(!o){o=CG.marble(m.r,m.col,m.fx,m.fxc);world.add(o);marbles.set(m.id,o)}
     const y=m.r*W+(m.off?m.z:Math.max(0,m.z))*W;o.position.set(wx(m.x),y,wz(m.y));const b=o.userData.ball;b.rotation.x-=m.vy*W*dt/(m.r*W);b.rotation.z-=m.vx*W*dt/(m.r*W);
-    const u=o.userData;if(u.fx)ballFx(o,u,m,dt);else if(Math.random()<.5)P(o.position.x,o.position.y,o.position.z,0,.2,0,.35,m.col,0)}
+    const u=o.userData;if(u.fx)ballFx(o,u,m,dt);else if(m.wk&&O.TRAILS[m.wk])wakeFx(o.position,m,O.TRAILS[m.wk]);else if(Math.random()<.5)P(o.position.x,o.position.y,o.position.z,0,.2,0,.35,m.col,0)}
   for(const[id,o]of marbles)if(!live.has(id)){world.remove(o);marbles.delete(id)}}
 /* ---------- events from the rules ---------- */
 const SFX={kick:1,blunt:1,lock:1,core:1,launch:1,sink:1,miss:1,comboEnd:1,monHit:1,monFlinch:1,monAtk:1,monSlam:1,hurt:1,heal:1,enrage:1,monDie:1,intro:1,boon:1,win:1,lose:1,cast:1};

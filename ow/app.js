@@ -52,7 +52,7 @@ function syncRemote(now){
     if(!pl&&G.screen!=='lobby'){pl=G.players.find(x=>x.away&&!x.local&&x.cls===pr.cls&&!peers.some(q=>q.presence&&q.presence.pid===x.id));if(pl){pl.id=pid;O.say(`A new hand takes up the ${CLASSES[pl.cls].animal} ${CLASSES[pl.cls].name}.`)}}      // a new phone may take over a fighter whose own phone is gone
     const fresh=!pl;if(!pl){pl=O.addPlayer(pid,pr.cls,false);if(!pl)continue}
     if(fresh||pl.peer!==p.peer){pl.peer=p.peer;pl.lastN=num(pr.shot&&pr.shot.n);pl.lastPick=num(pr.pick&&pr.pick.n);pl.lastTgt=num(pr.tgt&&pr.tgt.n);pl.lastIns=num(pr.ins);pl.lastItem=num(pr.item&&pr.item.n);pl.lastMg='';pl.lastAct=num(pr.act&&pr.act.n)}     // a phone that reloaded starts its counters again
-    pl.seen=now;if(pl.cls!==pr.cls)O.changeClass(pl,pr.cls);if((pl.skin||'')!==String(pr.skin||''))O.setSkin(pl,pr.skin);
+    pl.seen=now;if(pl.cls!==pr.cls)O.changeClass(pl,pr.cls);if((pl.skin||'')!==String(pr.skin||''))O.setSkin(pl,pr.skin);{const lk=[pr.tr||'',pr.dy||'',pr.ti||''].join('|');if(lk!==pl.lkK){pl.lkK=lk;O.setGear(pl,{tr:pr.tr,dy:pr.dy,ti:pr.ti})}}
     if(G.inspect&&Array.isArray(pr.lv)&&O.lookSet){const k=pr.lv.join(',');if(k!==pl.lastLv){pl.lastLv=k;O.lookSet(pr.lv)}}
     pl.aim=clamp(num(pr.aim,90),8,172);pl.rp=clamp(Math.floor(num(pr.rp)),0,2);pl.ch=!!pr.ch;pl.lk=!!pr.lk;pl.rdy=!!pr.rd;pl.pw=clamp(num(pr.pw),0,1);pl.ab=clamp(Math.floor(num(pr.ab)),0,11);
     const it=pr.item;if(it&&num(it.n)>pl.lastItem){pl.lastItem=num(it.n);O.useItem(pl.id,it.i)}
@@ -69,11 +69,11 @@ let lastPush=0,lastS='';
 function pushHost(now){if(!room||now-lastPush<160)return;const s=JSON.stringify(O.publicState());if(s===lastS)return;lastS=s;lastPush=now;room.presence(JSON.parse(s)).catch(()=>{})}
 
 /* ---------- controller ---------- */
-const C={armed:false,skin:LS.get('ow_skin')||'',cls:null,ab:0,rp:0,aim:90,ch:false,pw:0,seq:0,pseq:0,shot:null,pick:null,sentRd:'',sentDec:0,t0:0,key:'',tab:'play',tgt:null,tseq:0,ins:0,item:null,iseq:0,act:null,aseq:0,mg:null,mgId:0,mgGo:0,mgV:null,steady:1,spun:0,slotKey:'',pickKey:'',pull:null,lastPull:null,trail:[],trailNew:false,lmA:null,lmB:null,lmSig:'',ck0:0,ckT:0,ckSeen:-1,pushT:0};
+const C={armed:false,skin:LS.get('ow_skin')||'',wake:LS.get('ow_wake')||'',dye:LS.get('ow_dye')||'',title:LS.get('ow_title')||'',cls:null,ab:0,rp:0,aim:90,ch:false,pw:0,seq:0,pseq:0,shot:null,pick:null,sentRd:'',sentDec:0,t0:0,key:'',tab:'play',tgt:null,tseq:0,ins:0,item:null,iseq:0,act:null,aseq:0,mg:null,mgId:0,mgGo:0,mgV:null,steady:1,spun:0,slotKey:'',pickKey:'',pull:null,lastPull:null,trail:[],trailNew:false,lmA:null,lmB:null,lmSig:'',ck0:0,ckT:0,ckSeen:-1,pushT:0};
 function pushCtrl(){
   if(!C.cls)return;
-  if(isLocal()){let pl=G.players.find(p=>p.id==='local');if(!pl)pl=O.addPlayer('local',C.cls,true);if(!pl)return;if(pl.cls!==C.cls)O.changeClass(pl,C.cls);pl.aim=C.aim;pl.ch=C.ch;pl.lk=!!C.lk;pl.rdy=C.spun===2;pl.pw=C.pw;pl.ab=C.ab;pl.rp=C.rp;if((pl.skin||'')!==(C.skin||''))O.setSkin(pl,C.skin)}
-  else if(room&&joined)room.presence({role:'player',pid:PID,cls:C.cls,skin:C.skin||'',rp:C.rp,aim:Math.round(C.aim*2)/2,ch:C.ch?1:0,lk:C.lk?1:0,rd:C.spun===2?1:0,pw:Math.round(C.pw*100)/100,ab:C.ab,shot:C.shot,pick:C.pick,tgt:C.tgt,ins:C.ins,lv:C.lvOn?C.lv.map(x=>Math.round(x*1000)/1000):null,item:C.item,mg:C.mg,act:C.act}).catch(()=>{})}
+  if(isLocal()){let pl=G.players.find(p=>p.id==='local');if(!pl)pl=O.addPlayer('local',C.cls,true);if(!pl)return;if(pl.cls!==C.cls)O.changeClass(pl,C.cls);pl.aim=C.aim;pl.ch=C.ch;pl.lk=!!C.lk;pl.rdy=C.spun===2;pl.pw=C.pw;pl.ab=C.ab;pl.rp=C.rp;if((pl.skin||'')!==(C.skin||''))O.setSkin(pl,C.skin);{const lk=[C.wake,C.dye,C.title].join('|');if(lk!==pl.lkK){pl.lkK=lk;O.setGear(pl,{tr:C.wake,dy:C.dye,ti:C.title})}}}
+  else if(room&&joined)room.presence({role:'player',pid:PID,cls:C.cls,skin:C.skin||'',tr:C.wake||'',dy:C.dye||'',ti:C.title||'',rp:C.rp,aim:Math.round(C.aim*2)/2,ch:C.ch?1:0,lk:C.lk?1:0,rd:C.spun===2?1:0,pw:Math.round(C.pw*100)/100,ab:C.ab,shot:C.shot,pick:C.pick,tgt:C.tgt,ins:C.ins,lv:C.lvOn?C.lv.map(x=>Math.round(x*1000)/1000):null,item:C.item,mg:C.mg,act:C.act}).catch(()=>{})}
 /* a monster's wheel as this phone must draw it: the fixed layout every device knows, with what the host says has changed */
 const LAY={};
 function boardOf(mo,bs,i){const m=mo[i],b=Array.isArray(bs)?bs[i]:null;if(!m||!Array.isArray(b))return null;const Cc=LAY[m.id]||(LAY[m.id]=O.course(m.id)),on=(a,k)=>String(a||'')[k]==='1',lk=Math.floor(num(b[8]));
@@ -120,24 +120,31 @@ function sendAct(k){if(isLocal()){if(k==='leave')O.endPractice();}else{C.act={n:
 function sendPick(v,i,o){if(!v.dec)return;C.sentDec=v.dec.id;C.took=o||null;O.buzz(18);if(isLocal())O.pickOpt('local',v.dec.id,i);else{C.pick={n:++C.pseq,d:v.dec.id,i};pushCtrl()}C.key='';renderCtrl()}
 function decContent(v){
   const d=v.dec,me=v.me;if(!d||!me)return null;
-  if(d.k==='upgrade'){if(!me.op)return{wait:'Taken. Waiting for the others.'};return{title:d.t==='tome'?'Choose what to learn':d.t==='gate'?'Supplies at the gate: choose one':'Choose a drop',opts:me.op.map(u=>{const o=O.upInfo(u,C.cls);return{t:o.name,s:o.desc,ic:u,kd:O.kindName(u,C.cls)}})}}
+  if(d.k==='upgrade'){if(!me.op)return{wait:'Taken. Waiting for the others.'};return{title:d.t==='tome'?'Choose what to learn':d.t==='gate'?'Supplies at the gate: choose one':'Choose a drop',opts:me.op.map(u=>{const o=O.upInfo(u,C.cls);return{t:o.name,s:o.desc,ic:u,kd:O.kindName(u,C.cls),rw:u}})}}
   if(me.v||C.sentDec===d.id)return{wait:d.k==='start'?'Starting…':'Chosen. Waiting for the rest of the party.'};
   if(d.k==='start'){const R=['I','II','III','IV','V','VI','VII'][v.rn-1]||v.rn;return{title:'The party is gathered',opts:[{t:v.sg>1?`Continue Run ${R}: stage ${v.sg}`:`Begin Run ${R}`,s:`${v.sg>1?'Next':'Stage 1'}: ${v.dn}. The host chooses the run on the big screen.`,ic:'n:go'},{t:'Practice first',s:'A target that never strikes back. Learn the ramps and the pull before the real thing.',ic:'n:prac'}].slice(0,Math.max(1,d.opts.length))}}
   if(d.k==='path')return{title:d.opts.length>1?'Choose the way':'The way ahead',opts:d.opts.map((i,k)=>{const t=d.tl&&d.tl[k];return{t:t?t[0]:'Onward',s:t?t[1]+(t[2]?' '+t[2]:''):'',ic:'n:'+(t&&t[3]||'battle')}})};
-  if(d.k==='relic')return{title:'Choose one relic for the party',opts:d.opts.filter(r=>RELICS[r]).map(r=>({t:RELICS[r].name,s:RELICS[r].desc,ic:'re:'+r,kd:'Relic'}))};
+  if(d.k==='relic')return{title:'Choose one relic for the party',opts:d.opts.filter(r=>RELICS[r]).map(r=>({t:RELICS[r].name,s:RELICS[r].desc,ic:'re:'+r,kd:'Relic',rw:'re:'+r}))};
   if(d.k==='end'){const R=['I','II','III','IV','V','VI','VII'][v.rn-1]||v.rn;
-    if(v.res==='win'&&v.re)return{title:v.fin?`The last throne is empty. Run ${R} complete: the party earns ${v.gd} gold.`:`Run ${R} complete! The party earns ${v.gd} gold.`,opts:[{t:'Return to the menu',s:'Spend gold on loot boxes, then begin the next run.',ic:'n:again'}]};
-    if(v.res==='win')return{title:`${v.dn} is cleared. Stage ${v.sg} of ${v.sgn} done.`,opts:[{t:'On to stage '+(v.sg+1),s:`Enter ${v.nn||'the next dungeon'} with everything you have won.`,ic:'n:go'},{t:'Rest at the menu',s:'Your run is saved. Continue it from the menu.',ic:'n:again'}]};
+    const nu=(v.nu||[]).map(id=>(O.lockInfo(id)||{}).name).filter(Boolean),nuT=nu.length?` Unlocked for every run: ${nu.join(', ')}.`:'';
+    if(v.res==='win'&&v.re)return{title:(v.fin?`The last throne is empty. Run ${R} complete: the party earns ${v.gd} gold.`:`Run ${R} complete! The party earns ${v.gd} gold.`)+nuT,opts:[{t:'Return to the menu',s:'Spend gold on loot boxes for new looks, then begin the next run.',ic:'n:again'}]};
+    if(v.res==='win')return{title:`${v.dn} is cleared. Stage ${v.sg} of ${v.sgn} done.`+nuT,opts:[{t:'On to stage '+(v.sg+1),s:`Enter ${v.nn||'the next dungeon'} with everything you have won.`,ic:'n:go'},{t:'Rest at the menu',s:'Your run is saved. Continue it from the menu.',ic:'n:again'}]};
     return{title:'The party has fallen',opts:[{t:'Begin the run again',s:`Back to stage 1 of Run ${R}, with fresh stats.`,ic:'n:retry'},{t:'Return to the menu',s:'The run is lost.',ic:'n:again'}]}}
   return null}
 function sheetInto(box,cls,me,rel,mine){
   box.textContent='';const cl=CLASSES[cls],m=me?O.mods({cls,lv:me.lv,ups:me.up}):null,row=(key,cls2,...kids)=>{const d=el('div',cls2);d.append(O.ico(key,cls),...kids);return d};
-  const top=el('div','shTop');top.append(headCanvas(cls,84,me?LANES[me.sl]:null));const tt=el('div');tt.append(el('h3',null,`${cl.animal} ${cl.name}`),el('p',null,cl.blurb));top.appendChild(tt);box.appendChild(top);
+  const top=el('div','shTop');top.append(headCanvas(cls,84,me?LANES[me.sl]:null));const tt=el('div'),ttl=mine&&C.title&&O.TITLES[C.title]?O.TITLES[C.title].name:'';tt.append(el('h3',null,`${cl.animal} ${cl.name}`));if(ttl)tt.appendChild(el('em','ttl',ttl));tt.appendChild(el('p',null,cl.blurb));top.appendChild(tt);box.appendChild(top);
   const st=el('div','stats');const S=(k,v)=>{const d=el('div');d.append(el('small',null,k),el('b',null,v));st.appendChild(d)};
   S('Level',me?me.lv:1);S('Health',me?`${me.hp} / ${me.mhp}`:cl.hp);S('Damage',m?'+'+Math.round((m.dmg-1)*100)+'%':'+0%');S('Harm taken',m?Math.round(m.take*100)+'%':(cls==='warrior'?'70%':'100%'));box.appendChild(st);
-  if(mine){box.appendChild(el('h4',null,'Your balls'));const w=el('div','skins');for(const k of['plain','bone',...(mine.sk||[])]){const b=el('button'),K=O.SKINS[k];b.appendChild(O.ico('sk:'+k,cls));b.setAttribute('aria-pressed',(C.skin||'plain')===k);b.setAttribute('aria-label',K.name);b.title=K.name;
-      b.onclick=()=>{C.skin=k==='plain'?'':k;LS.set('ow_skin',C.skin);C.key='';pushCtrl();renderCtrl()};w.appendChild(b)}
-    box.append(w,el('p','none',(O.SKINS[C.skin||'plain']||O.SKINS.plain).name+'. '+(mine.sk&&mine.sk.length<Object.keys(O.SKINS).length-2?'More skins come out of loot boxes.':'')))}
+  if(mine){const own=id=>isLocal()?G.stash.unl.includes(id):O.cosmHas(mine.cs,id),L=el('div','looks');
+    const grp=(title,T,pre,base,cur,set,chip)=>{const ks=Object.keys(T).filter(k=>base.includes(k)||own(pre+k)),g=el('div','lookG');g.appendChild(el('h4',null,title+` · ${ks.length-base.length} of ${Object.keys(T).length-base.length}`));const w=el('div','lookRow');
+      for(const k of ks){const b=el('button','lk r'+(T[k].rar||0));b.append(chip(k,T[k]));b.setAttribute('aria-pressed',(cur||base[0])===k);b.title=T[k].name;b.onclick=()=>{set(k===base[0]?'':k);C.key='';pushCtrl();renderCtrl()};w.appendChild(b)}g.appendChild(w);
+      g.appendChild(el('p','none',(T[cur||base[0]]||T[base[0]]).name));L.appendChild(g)};
+    grp('Ball',O.SKINS,'sk:',['plain','bone'],C.skin,k=>{C.skin=k;LS.set('ow_skin',k)},k=>O.ico('sk:'+k,cls));
+    grp('Trail',O.TRAILS,'tr:',['none'],C.wake,k=>{C.wake=k;LS.set('ow_wake',k)},(k,t)=>cosmChip('tr:'+k));
+    grp('Outfit dye',O.DYES,'dy:',['none'],C.dye,k=>{C.dye=k;LS.set('ow_dye',k)},(k,t)=>cosmChip('dy:'+k,cls));
+    grp('Title',O.TITLES,'ti:',['none'],C.title,k=>{C.title=k;LS.set('ow_title',k)},(k,t)=>el('span','tiChip',k==='none'?'—':t.name));
+    box.append(el('h4','lookH','Your look'),L,el('p','none','More come out of loot boxes on the main menu.'))}
   box.appendChild(el('h4',null,'Abilities'));const own=me&&me.ow?me.ow:[0,1];cl.ab.forEach((a,i)=>{if(!own.includes(i))return;const rest=O.cdBase(a,m);box.appendChild(row('ab:'+i,'row',el('b',null,a.name),el('small',null,(a.m?O.sizeName(a.m.r)+' ball · ':'')+(rest?`rests ${rest} round${rest===1?'':'s'}`:'always ready')),el('p',null,a.desc)))});
   if(own.length<cl.ab.length){box.appendChild(el('h4',null,'Not yet learned'));cl.ab.forEach((a,i)=>{if(own.includes(i))return;box.appendChild(row('ab:'+i,'row locked',el('b',null,a.name),el('small',null,'found in drops'),el('p',null,a.desc)))})}
   box.appendChild(el('h4',null,'Upgrades'));if(me&&me.up.length)me.up.forEach(u=>box.appendChild(row(u,'row',el('b',null,UPGRADES[u].name),el('p',null,UPGRADES[u].desc))));else box.appendChild(el('p','none','None yet. Every fight drops something.'));
@@ -187,16 +194,16 @@ function renderCtrl(){
   if(me){if(C.hpSeen!=null&&me.hp<C.hpSeen){O.buzz([70,40,150]);const mb=document.querySelector('.me');mb.classList.remove('hit');void mb.offsetWidth;mb.classList.add('hit')}C.hpSeen=me.hp}
   if(me&&me.ls&&me.ls[0]!==C.lsSeen){if(C.lsSeen!=null&&me.ls[0]>C.lsSeen){C.lsRd=rdKey(v);O.buzz(me.ls[1]>0?[30,40,90]:20)}C.lsSeen=me.ls[0]}
   $('reCode').hidden=!(mode==='join'&&v.err==='nohost'&&!!code&&performance.now()-(C.noHostT||0)>2500);
-  const key=JSON.stringify([st,me,v.pa,v.mo,v.bd,v.actMe,v.cn,v.ins,v.sc,v.dec,v.mg,v.it,v.pr,v.pz,v.sk,C.skin,C.took&&C.took.t,C.tip&&performance.now()<C.tip.until?C.tip.t:0,C.bagOpen,C.mgV,C.mgGo>0,C.ab,C.rp,C.spun,C.stopped,C.ch?(C.pw<.05?1:2):0,SL.phase(),C.armed,C.tab,v.rel,sight?Math.round(C.aim):0,C.sentDec]);trackLive(v);
+  const key=JSON.stringify([st,me,v.pa,v.mo,v.bd,v.actMe,v.cn,v.ins,v.sc,v.dec,v.mg,v.it,v.pr,v.pz,v.cs,C.skin,C.wake,C.dye,C.title,v.nu,C.took&&C.took.t,C.tip&&performance.now()<C.tip.until?C.tip.t:0,C.bagOpen,C.mgV,C.mgGo>0,C.ab,C.rp,C.spun,C.stopped,C.ch?(C.pw<.05?1:2):0,SL.phase(),C.armed,C.tab,v.rel,sight?Math.round(C.aim):0,C.sentDec]);trackLive(v);
   if(key===C.key){if(C.tab==='play'&&!v.err&&v.me){C.view=v;if(!$('pad').hidden&&!$('scope').hidden)drawScope();if(!$('watch').hidden&&!$('liveWrap').hidden)drawScope(true)}return}C.key=key;         // moving parts and balls in play are redrawn between full renders
   $('tabPlay').setAttribute('aria-pressed',C.tab==='play');$('tabHero').setAttribute('aria-pressed',C.tab==='hero');$('play').hidden=C.tab!=='play';$('sheet').hidden=C.tab!=='hero';
   $('meHp').style.width=me?(100*me.hp/me.mhp)+'%':'100%';$('meHpTxt').textContent=me?`Level ${me.lv} · ${me.hp} / ${me.mhp} health`:`${cl.hp} health`;$('meLane').style.background=me?LANES[me.sl]:'transparent';
   $('swap').hidden=!(v.err||!me||v.sc==='lobby');
-  if(C.tab==='hero'){sheetInto($('sheet'),C.cls,me?Object.assign({bag:v.it||[]},me):me,v.rel||[],{sk:v.sk||[]});return}
+  if(C.tab==='hero'){sheetInto($('sheet'),C.cls,me?Object.assign({bag:v.it||[]},me):me,v.rel||[],{cs:v.cs||''});return}
   $('status').textContent=st;$('status').hidden=!st||combat;
   const db=$('decBox'),took=dc&&dc.wait&&C.took&&v.dec&&C.sentDec===v.dec.id?C.took:null;db.hidden=!((dc&&dc.opts)||took);
-  if(took){db.textContent='';const c=el('div','took'),d=el('div');d.append(el('b',null,took.t),el('span',null,v.dec.k==='upgrade'?'Yours.':'Your vote.'));c.append(O.ico(took.ic,C.cls),d);db.appendChild(c)}
-  else if(dc&&dc.opts){db.textContent='';db.appendChild(el('h3',null,dc.title));dc.opts.forEach((o,i)=>{const b=el('button','opt');b.appendChild(O.ico(o.ic||'n:go',C.cls));if(o.kd)b.appendChild(el('small',null,o.kd));b.append(el('b',null,o.t),el('span',null,o.s||''));b.onclick=()=>sendPick(v,i,o);db.appendChild(b)})}
+  if(took){db.textContent='';if(took.rw){db.append(el('h3',null,v.dec.k==='upgrade'?'Yours:':'Your vote:'),rewardCard(took.rw,C.cls,{div:1}))}else{const c=el('div','took'),d=el('div');d.append(el('b',null,took.t),el('span',null,v.dec.k==='upgrade'?'Yours.':'Your vote.'));c.append(O.ico(took.ic,C.cls),d);db.appendChild(c)}}
+  else if(dc&&dc.opts){db.textContent='';db.appendChild(el('h3',null,dc.title));dc.opts.forEach((o,i)=>{if(o.rw){db.appendChild(rewardCard(o.rw,C.cls,{onclick:()=>sendPick(v,i,o)}));return}const b=el('button','opt');b.appendChild(O.ico(o.ic||'n:go',C.cls));if(o.kd)b.appendChild(el('small',null,o.kd));b.append(el('b',null,o.t),el('span',null,o.s||''));b.onclick=()=>sendPick(v,i,o);db.appendChild(b)})}
   renderMg(mgOn?v.mg:null);
   {const tg=$('tgts'),showT=!v.err&&!!me&&v.sc==='combat'&&!dc&&!mgOn&&!v.pz&&!!v.mo&&(v.ph==='aim'||v.ph==='boss');tg.hidden=!showT;if(showT){tg.textContent='';v.mo.forEach((m,i)=>{if(m.d)return;const b=el('button',combat&&me.tg<0?'ask':null),bar=el('div','bar'),f=el('i');b.setAttribute('aria-pressed',i===me.tg);f.style.width=(100*m.hp/m.mx)+'%';bar.appendChild(f);
       const mine=!!m.it&&(m.it[0]===v.myId||m.it[7]===v.myId),pm=m.it&&m.it[4]!=null&&O.movesOf(m.id).mv[m.it[4]],it=m.st?'stunned this round':m.it&&m.it[9]===-1?'pulls its reels on its turn'+(m.it[3]?' (blunted)':''):pm?pm.name+(m.it[9]===0?' (no line)':m.it[6]>1.2?' (triple)':'')+' · '+O.intentText(m.id,{mv:m.it[4],t:m.it[0],t2:m.it[7],dmg:m.it[1],b:m.it[3],fv:m.it[8]},q=>q===v.myId?'you':'an ally'):m.it?(m.it[0]?(mine?`hits you for ${m.it[1]}`:`hits an ally for ${m.it[1]}`):`hits everyone for ${m.it[1]}`)+(m.it[3]?' (blunted)':'')+(O.TERR[m.it[2]]?', '+O.TERR[m.it[2]].it:''):`${m.hp} of ${m.mx}`;
@@ -588,7 +595,36 @@ function pullShow(){$('pwFill').style.width=(C.pw*100)+'%';setNeedle();const now
 function pullEnd(cancel){const p=C.pull;if(!p)return;
   if(p.key){C.pull=null;const pw=C.pw;C.ch=false;if(!cancel&&pw>=.05){C.lastPull={aim:C.aim,pw};doFire(pw);C.aim=SL.aim=90;setNeedle();pushCtrl()}else pushCtrl();C.pw=0;setTimeout(()=>{if(!C.ch)$('pwFill').style.width='0'},400);renderCtrl();return}
   SL.up(cancel)}
-function showBox(id){const o=O.lockInfo(id),ov=$('boxOv');if(!o)return;O.sfx('box');ov.textContent='';const ch=el('div','chest'),cd=el('div','card');cd.append(O.ico(id,null,'big'),el('small',null,'New '+o.kind),el('b',null,o.name),el('p',null,o.desc),el('i',null,'It can now turn up in every run. Press to close.'));ov.append(ch,cd);ov.hidden=false;ov.onclick=()=>{ov.hidden=true}}
+/* a small picture of a cosmetic: the ball, a trail's motes, a dye's cloth, a title's lettering */
+function cosmChip(id,cls){const p=String(id).split(':'),o=O.cosmOf(id)||{};
+  if(p[0]==='sk')return O.ico(id,cls);
+  if(p[0]==='tr'){const w=el('span','trChip');w.style.setProperty('--c',o.col||'#fff');w.dataset.st=o.style||'';if(!o.style)w.classList.add('none');for(let i=0;i<5;i++)w.appendChild(el('i'));return w}
+  if(p[0]==='dy'){const w=el('span','dyChip');w.style.setProperty('--c',o.col||'transparent');if(!o.col)w.classList.add('none');return w}
+  return el('span','tiChip',o.name||'')}
+/* the loot box reveal: rarity first, then what it is */
+function showBox(id){const o=O.lockInfo(id),ov=$('boxOv');if(!o)return;O.sfx('box');ov.textContent='';const R=O.RARITY[o.rar||0]||O.RARITY[0],ch=el('div','chest'),cd=el('div','card cosm r'+(o.rar||0));cd.style.setProperty('--rc',R.col);
+  const pv=el('div','cPrev');if(!String(id).startsWith('ti:'))pv.appendChild(cosmChip(id,G.players[0]&&G.players[0].cls));cd.append(el('em','rar',R.name),pv,el('small',null,'New '+o.kind),el('b',null,o.name),el('p',null,o.desc),el('i',null,'Press to close.'));ov.append(ch,cd);ov.hidden=false;ov.onclick=()=>{ov.hidden=true}}
+/* ---------- reward cards: every drop shows what kind of thing it is, with its own colour and picture ---------- */
+function rewardType(u){u=String(u);if(u.startsWith('it:'))return'it';if(u.startsWith('re:'))return're';if(u.startsWith('ab:'))return'ab';const U=O.UPGRADES[u.replace(/^up:/,'')];if(!U)return'pass';
+  if(U.ab)return'upab';if(/^sl_|^haste$/.test(u))return'reel';if(statOf(U))return'stat';return'pass'}
+function statOf(U){const d=U.desc;let m;if((m=d.match(/\+(\d+) maximum health/)))return{v:'+'+m[1],g:'heart',w:'health'};if((m=d.match(/(\d+)% harder/))&&/^All your|^Your small/.test(d))return{v:'+'+m[1]+'%',g:'sword',w:'damage'};
+  if((m=d.match(/take (?:a further )?(\d+)% less damage/)))return{v:'−'+m[1]+'%',g:'shield',w:'harm taken'};if((m=d.match(/^\+(\d+)% damage/)))return{v:'+'+m[1]+'%',g:'sword',w:d.replace(/^\+\d+% damage to /,'vs ').replace(/\.$/,'')};return null}
+const RW_LABEL={ab:'New ability',upab:'Ability upgrade',reel:'Reel upgrade',stat:'Stat boost',pass:'Passive upgrade',it:'Item · party bag',re:'Relic · whole party'};
+const REEL_ART={haste:['S','S','S'],sl_wild:['w','S','w'],sl_line:['S','w','S'],sl_pay:['S','S','S'],sl_jack:['S','S','S','S'],sl_mirror:['w','w','S'],sl_nail:['S','q','q'],sl_grave:['s','c','s']};
+const REEL_CAP={sl_line:'+2 lines',sl_pay:'×1.5 pays',sl_jack:'4 = 2 attacks',sl_mirror:'+20% a star',sl_nail:'always first',haste:'more often',sl_wild:'×2 stars',sl_grave:'×2 skulls'};
+function ballArt(cls,i,small){const a=O.CLASSES[cls]&&O.CLASSES[cls].ab[i];if(!a)return el('span');const w=el('span','rwBall'+(small?' sm':''));
+  if(!a.m){w.classList.add('inst');w.appendChild(O.ico('ab:'+cls+':'+i,cls));return w}
+  const fx=O.ballFx(cls,i,-1)||{c:O.CLASSES[cls].col,k:''},b=el('i');b.style.setProperty('--c',fx.c);const d=Math.round((small?18:26)+(a.m.r-10)*(small?1.3:2.1));b.style.width=b.style.height=d+'px';w.appendChild(b);
+  if(!small&&a.m.mult)w.appendChild(el('em',null,'×'+a.m.mult));return w}
+function reelArt(syms,cls){symCss();const S=(O.SIG[cls]||O.SIG.warrior)[0],w=el('span','rwReel');for(const q of syms){const c=el('span','cell');c.appendChild(el('i','sy sy-'+(q==='S'?S:q)));w.appendChild(c)}return w}
+function rewardCard(u,cls,o){o=o||{};u=String(u);const ty=rewardType(u),inf=O.upInfo(u,cls)||(u.startsWith('re:')&&RELICS[u.slice(3)])||{name:u,desc:''},card=el(o.div?'div':'button','rwCard rw-'+ty+(o.mini?' mini':'')),art=el('div','rwArt'),tx=el('div','rwTx');
+  if(ty==='ab'){const i=+u.slice(3);art.appendChild(ballArt(cls,i));const pat=O.recipes(cls)[i];if(pat&&!o.mini){const r=reelArt(pat,cls);r.classList.add('pat');art.appendChild(r)}}
+  else if(ty==='upab'){const U=O.UPGRADES[u],i=O.CLASSES[cls].ab.findIndex(a=>a.id===U.ab);if(i>=0){art.appendChild(ballArt(cls,i,true));art.appendChild(el('b','plus','+'))}else art.appendChild(O.ico(u,cls,'big'))}
+  else if(ty==='reel'){art.appendChild(reelArt(REEL_ART[u]||['S','w','S'],cls));if(!o.mini&&REEL_CAP[u])art.appendChild(el('small','cap',REEL_CAP[u]))}
+  else if(ty==='stat'){const st=statOf(O.UPGRADES[u]);art.append(el('b','big',st.v),el('small','cap',st.w))}
+  else art.appendChild(O.ico(u,cls,'big'));
+  tx.append(el('em','rwType',ty==='upab'?'Upgrades '+(O.CLASSES[cls].ab.find(a=>a.id===O.UPGRADES[u].ab)||{name:'an ability'}).name:RW_LABEL[ty]),el('b',null,inf.name.replace(/^Learn /,'')));
+  if(!o.mini)tx.appendChild(el('span',null,(inf.desc||'').replace(/^Item for the party bag\. /,'')));card.append(art,tx);if(o.onclick)card.onclick=o.onclick;return card}
 function doFire(pow){const v=getView();if(!canFire(v))return;C.pendSn=v.me.sn;C.sentAt=performance.now();C.trailNew=true;O.buzz(25);
   if(isLocal()){const pl=G.players.find(p=>p.id==='local');if(pl)O.fire(pl,C.ab,C.aim,pow,C.rp)}else C.shot={n:++C.seq,ab:C.ab,rp:C.rp,ang:Math.round(C.aim*10)/10,pow:Math.round(pow*1000)/1000};C.armed=false;
   pushCtrl();renderCtrl()}
@@ -630,7 +666,8 @@ function initCtrl(){
 
 /* ---------- host panels ---------- */
 let panelKey='',sideKey='',mgKey='',menuKey='',accent='',pauseKey='',loadKey='',armed='';
-function awardBox(){const w=el('div','awards');for(const a of O.awards()){const d=el('div');d.append(el('b',null,a[0]),el('span',null,a[1]),el('small',null,a[2]));w.appendChild(d)}return w}
+function awardBox(){const f=document.createDocumentFragment(),w=el('div','awards');for(const a of O.awards()){const d=el('div');d.append(el('b',null,a[0]),el('span',null,a[1]),el('small',null,a[2]));w.appendChild(d)}f.appendChild(w);
+  if(G.result==='win'&&G.newUnl&&G.newUnl.length){const u=el('div','newUnl');u.appendChild(el('h3',null,'Unlocked for every run from now on'));const g=el('div','nuGrid');for(const id of G.newUnl){const o=O.lockInfo(id);if(!o)continue;const c=el('div');c.append(O.ico(id,null,'big'),el('small',null,o.kind),el('b',null,o.name));g.appendChild(c)}u.appendChild(g);f.appendChild(u)}return f}
 let menuTab='dung',menuBuilt='',wheelRot=0;
 const KINDS=[['ab','Abilities'],['up','Upgrades'],['it','Items'],['re','Relics'],['sk','Ball skins']],DEPTH=['Normal','Grim','Dire','Doomed'];
 const btn2=(txt,cls,fn)=>{const b=el('button',cls||'btn');b.appendChild(el('b',null,txt));b.onclick=fn;return b};
@@ -666,7 +703,7 @@ function updDung(){
   const info=$('dInfo');info.textContent='';const D0=O.DUNGEONS[R[0]],sg=R.indexOf(i);info.style.setProperty('--dn',O.SETS&&O.SETS[R[0]]?O.SETS[R[0]].fire:'#d6ab52');
   info.append(el('div','dNo',`Run ${ROMAN[r]} · ${R.length} stages`+(done?' · complete':mid?` · stage ${sg+1} of ${R.length}`:'')),el('h2',null,R.map(d=>O.DUNGEONS[d].name.replace(/^The /,'')).join(' · ')));
   const sc=el('div','stageRow');R.forEach((d,j)=>{const D=O.DUNGEONS[d],state=mid?(j<sg?'won':j===sg?'cur':'ahead'):(j===0?'cur':'ahead'),c=el('div','stageCard '+state);
-    c.append(el('div','sNo',state==='won'?'✓':String(j+1)),el('b',null,D.name),el('small',null,`${D.rows+1} floors · Boss: ${O.MONSTERS[D.boss].name}`),el('span','sSt',state==='won'?'Cleared this run':state==='cur'?(mid?'Next':'Start here'):'Ahead'));sc.appendChild(c)});info.appendChild(sc);
+    c.append(el('div','sNo',state==='won'?'✓':String(j+1)),el('b',null,D.name),el('small',null,`${D.rows+1} floors · Boss: ${O.MONSTERS[D.boss].name}`),el('span','sSt',state==='won'?'Cleared this run':state==='cur'?(mid?'Next':'Start here'):'Ahead'));c.appendChild(unlockRow(d));sc.appendChild(c)});info.appendChild(sc);
   const facts=el('ul','dFacts'),F2=(a,b,c)=>{const li=el('li');if(a)li.append(a);li.append(el('b',null,b));if(c)li.append(c);facts.appendChild(li)};
   facts.appendChild(el('li','sk','☠'.repeat(D0.skulls+G.tier)));F2('pays ',String(O.runGold(r,G.tier)),' gold when all '+R.length+' stages are cleared');F2('begins at level ',String(D0.startLv),', fresh stats');F2('','fall',' and the run starts over');info.appendChild(facts);
   if(mt>0&&!mid){const tr=el('div','tiers');tr.setAttribute('role','group');tr.setAttribute('aria-label','Depth');tr.appendChild(el('span',null,'Depth'));DEPTH.forEach((t,k)=>{const b=el('button',null,t);b.disabled=k>mt;b.setAttribute('aria-pressed',k===G.tier);b.title=k>mt?`Complete ${DEPTH[k-1]} to open this`:k?'Tougher monsters, more gold':'';b.onclick=()=>O.setTier(k);tr.appendChild(b)});info.appendChild(tr)}
@@ -675,21 +712,30 @@ function updDung(){
   const row=el('div','goRow'),go=btn2(mid?`Continue Run ${ROMAN[r]}: stage ${sg+1}, ${O.DUNGEONS[i].name}`:(done?`Play Run ${ROMAN[r]} again`:`Begin Run ${ROMAN[r]}`),sv&&O.runOf(sv.dung)===r?'btn':'btn prime',()=>{if(G.dec)O.pickOpt('host',G.dec.id,0)});go.id='goRun';go.disabled=!n;
   const pb=btn2('Practice course','btn',()=>{if(G.dec)O.pickOpt('host',G.dec.id,1)});pb.id='goPrac';pb.disabled=!n;row.append(go,pb);info.appendChild(row);
   if(mid){const ab=sure('Abandon this run','Press again to abandon',()=>{st.keep=null;O.saveStash();G.dung=R[0];menuKey=''},'btn ghost');info.appendChild(ab)}
-  const left=O.LOCKS.length-st.unl.length,cost=O.boxCost(st.opened),lb=el('button','lootLink');lb.append(el('span','box'),el('b',null,left?`Loot box · ${cost} gold`:'Every unlock found'),el('small',null,left?(st.gold>=cost?'You can open one now':`${cost-st.gold} more gold needed`):'You have unlocked everything'));lb.onclick=()=>{menuTab='stash';menuKey=''};info.appendChild(lb);
+  const left=O.cosmLeft(),cost=O.boxCost(st.opened),lb=el('button','lootLink');lb.append(el('span','box'),el('b',null,left?`Loot box · ${cost} gold`:'Every cosmetic found'),el('small',null,left?(st.gold>=cost?'A new look: you can open one now':`${cost-st.gold} more gold needed`):'You own every look'));lb.onclick=()=>{menuTab='stash';menuKey=''};info.appendChild(lb);
   if(!st.prac&&!st.clear.length)info.appendChild(el('p','dTip','New here? The practice course teaches putts, chips, lobs and power with nothing striking back.'));
   const js=$('joinSlot');js.textContent='';const jc=joinCard(false);if(jc)js.appendChild(jc)}
 const ROMAN=['I','II','III','IV','V','VI','VII','VIII'];
 function runTrail(r,done){const w=el('div','runTrail');O.RUNS[r].forEach((d,k)=>{const s=el('span',k<done?'on':'');s.append(el('b',null,String(k+1)),el('small',null,O.DUNGEONS[d].name.replace(/^The /,'')));w.appendChild(s)});return w}
+/* what a dungeon's first clear unlocks, as a row of icons; dimmed until it has been cleared */
+function unlockRow(d){const L=O.DUNG_UNLOCKS[d]||[],done=G.stash.clear.includes(d),w=el('div','unlRow'+(done?' done':''));w.appendChild(el('small',null,done?'Unlocked':'First clear unlocks'));const g=el('span','ics');
+  for(const id of L){const o=O.lockInfo(id),ic=O.ico(id,null,'sm');if(o)ic.title=o.name+': '+o.desc;g.appendChild(ic)}w.appendChild(g);return w}
+const CKINDS=[['sk','Ball skins'],['tr','Trails'],['dy','Outfit dyes'],['ti','Titles']];
 function fillStash(body){
-  body.className='mBody stashV';body.textContent='';const st=G.stash,left=O.LOCKS.length-st.unl.length,cost=O.boxCost(st.opened),lc=el('div','lootCol'),ob=el('button','btn prime');ob.id='boxBtn';
-  ob.appendChild(el('b',null,left?`Open for ${cost} gold`:'Everything is unlocked'));ob.disabled=!left||st.gold<cost;ob.onclick=()=>{const id=O.openBox();if(id)showBox(id)};
-  lc.append(el('div','box'),el('h3',null,'Loot box'),el('p',null,'Each box unlocks one new ability, upgrade, item or relic. From then on it can turn up in every run.'),ob);
+  body.className='mBody stashV';body.textContent='';const st=G.stash,left=O.cosmLeft(),cost=O.boxCost(st.opened),lc=el('div','lootCol'),ob=el('button','btn prime');ob.id='boxBtn';
+  ob.appendChild(el('b',null,left?`Open for ${cost} gold`:'You own every look'));ob.disabled=!left||st.gold<cost;ob.onclick=()=>{const id=O.openBox();if(id){showBox(id);menuKey=''}};
+  lc.append(el('div','box'),el('h3',null,'Loot box'),el('p',null,`Each box holds one new look: a ball skin, a trail, an outfit dye or a title. Nothing in it changes how the game plays. ${left} of ${O.COSM.length} still to find.`),ob);
+  const odds=el('div','odds');O.RARITY.forEach((R,k)=>{const n=O.COSM.filter(x=>(O.cosmOf(x)||{}).rar===k),h=n.filter(x=>st.unl.includes(x)).length,sp=el('span');sp.style.color=R.col;sp.textContent=`${R.name} ${h}/${n.length}`;odds.appendChild(sp)});lc.appendChild(odds);
   if(left&&st.gold<cost)lc.append(el('p',null,`${cost-st.gold} more gold needed. Completing a run pays gold.`));
   const li=st.last&&O.lockInfo(st.last);if(li){const w=el('div','won');w.append(el('p',null,'Last opened'),el('b',null,li.name),el('span',null,li.desc));lc.append(w)}
   const bl=el('div','bless'),bb=btn2(st.bless?'A blessing waits at the gate':`Buy a blessing · ${O.BLESS} gold`,'btn',()=>{if(O.buyBlessing())menuKey=''});bb.id='blessBtn';bb.disabled=!!st.bless||st.gold<O.BLESS;
   bl.append(el('h3',null,'Blessing'),el('p',null,'The next run starts with a relic in hand and one more pick of supplies at the gate.'),bb);lc.append(bl);
-  const cl=el('div','coll');for(const[k,t]of KINDS){const ids=O.LOCKS.filter(id=>id.startsWith(k+':')),h=el('h4',null,t),g=el('div','cgrid');h.appendChild(el('small',null,`${ids.filter(id=>st.unl.includes(id)).length} of ${ids.length}`));
-    for(const id of ids){const o=O.lockInfo(id),has=st.unl.includes(id),c=el('span',has?'':'no');c.append(O.ico(id,null,'sm'),o?o.name:id);if(o)c.title=(has?'':'Locked. ')+o.desc;g.appendChild(c)}cl.append(h,g)}
+  const cl=el('div','coll');cl.appendChild(el('h3','collH','Looks from loot boxes'));
+  for(const[k,t]of CKINDS){const ids=O.COSM.filter(id=>id.startsWith(k+':')),h=el('h4',null,t),g=el('div','cgrid cosm');h.appendChild(el('small',null,`${ids.filter(id=>st.unl.includes(id)).length} of ${ids.length}`));
+    for(const id of ids){const o=O.lockInfo(id),has=st.unl.includes(id),c=el('span',(has?'':'no ')+'r'+(o.rar||0));c.style.setProperty('--rc',O.RARITY[o.rar||0].col);c.append(cosmChip(id),el('b',null,has?o.name:'?'));c.title=has?o.name:'Not found yet ('+O.RARITY[o.rar||0].name.toLowerCase()+')';g.appendChild(c)}cl.append(h,g)}
+  cl.appendChild(el('h3','collH','Unlocked by clearing dungeons'));
+  for(const[k,t]of KINDS){if(k==='sk')continue;const ids=O.LOCKS.filter(id=>id.startsWith(k+':')),h=el('h4',null,t),g=el('div','cgrid');h.appendChild(el('small',null,`${ids.filter(id=>st.unl.includes(id)).length} of ${ids.length}`));
+    for(const id of ids){const o=O.lockInfo(id),has=st.unl.includes(id),d=O.unlockFrom(id),c=el('span',has?'':'no');c.append(O.ico(id,null,'sm'),o?o.name:id);if(!has&&d>=0)c.appendChild(el('em','from','clear '+O.DUNGEONS[d].name.replace(/^The /,'')));if(o)c.title=(has?'':'Locked. ')+o.desc;g.appendChild(c)}cl.append(h,g)}
   cl.firstChild.style.marginTop=0;body.append(lc,cl)}
 /* every creature the party has destroyed, by dungeon; the ones not yet met stay in shadow */
 function fillBest(body){
@@ -762,19 +808,19 @@ function hostPanels(){
     else if(d&&G.screen==='map'&&!g){bar.hidden=false;
       if(d.k==='upgrade'){bar.appendChild(el('h3',null,d.t==='tome'?'Learning from the library':d.t==='gate'?'Supplies at the gate':'Choosing drops'));
         if(mode==='host'){const row=el('div','dropRow');for(const p of G.players){if(!p.opts)continue;const c=el('div','dropCol'+(p.picked?' done':'')),hd=el('div','dh');hd.append(headCanvas(p.cls,40,LANES[p.slot]),el('b',null,CLASSES[p.cls].animal),el('small',null,p.away?'away':p.picked?'chosen':'choosing'));c.appendChild(hd);
-            p.opts.forEach((u,i)=>{const o=O.upInfo(u,p.cls);if(!o)return;const it=el('div','di'+(p.picked?(p.took===i?' took':' not'):''));it.append(O.ico(u,p.cls),el('span',null,o.name.replace(/^Learn /,'')));c.appendChild(it)});row.appendChild(c)}bar.appendChild(row)}      // the big screen lays out what each fighter has been offered, and marks what they take
+            p.opts.forEach((u,i)=>{const o=O.upInfo(u,p.cls);if(!o)return;const it=rewardCard(u,p.cls,{div:1,mini:1});if(p.picked)it.classList.add(p.took===i?'took':'not');c.appendChild(it)});row.appendChild(c)}bar.appendChild(row)}      // the big screen lays out what each fighter has been offered, and marks what they take
         bar.appendChild(el('p',null,mode==='solo'?'Choose below.':`${picked} of ${n} chosen. Pick on your phones.`))}
       else if(d.k==='path'){bar.classList.add('slim');bar.appendChild(el('p',null,mode==='solo'?'Press a floor on the map, or choose below.':votes?`${votes} of ${n} voted. The host can also press a floor on the map.`:'Vote on your phones, or press a floor on the map.'))}
       else{bar.appendChild(el('h3',null,'Choose one relic for the party'));
-        const row=el('div','optRow');d.opts.forEach((o,i)=>{const b=el('button','opt');b.append(el('b',null,RELICS[o].name),el('span',null,RELICS[o].desc));b.onclick=()=>O.pickOpt('host',d.id,i);row.appendChild(b)});
+        const row=el('div','optRow rwRow');d.opts.forEach((o,i)=>{row.appendChild(rewardCard('re:'+o,null,{onclick:()=>O.pickOpt('host',d.id,i)}))});
         if(mode==='host')bar.appendChild(row);bar.appendChild(el('p',null,mode==='solo'?'Choose below.':votes?`${votes} of ${n} voted.`:'Vote on your phones, or tap a choice here.'))}}
   }
-  const sk=JSON.stringify([G.players.map(p=>[p.id,p.cls,p.hp,p.mhp,p.lv,p.fired,p.away,p.ups.length,p.owned.length,p.rp||0,p.ab||0,p.tgt,p.ch?Math.round((p.pw||0)*20):-1]),G.cur,G.active,G.items,G.relics,G.log[0],G.screen,G.phase,O.inspect,code,G.dec&&G.dec.k]);
+  const sk=JSON.stringify([G.players.map(p=>[p.id,p.cls,p.title||'',p.hp,p.mhp,p.lv,p.fired,p.away,p.ups.length,p.owned.length,p.rp||0,p.ab||0,p.tgt,p.ch?Math.round((p.pw||0)*20):-1]),G.cur,G.active,G.items,G.relics,G.log[0],G.screen,G.phase,O.inspect,code,G.dec&&G.dec.k]);
   if(sk!==sideKey){sideKey=sk;const ul=$('party');ul.textContent='';const aim=G.screen==='combat'&&G.phase==='aim';
     const state=p=>p.hp<=0?'down':p.away?'away':aim?(G.players[G.active]===p?'attacking':p.fired?'done':G.players.length>1&&G.shooter&&G.shooter!==p.id?'waiting':p.ch?`aiming ${Math.round((p.pw||0)*100)}%`:p.tgt>=0&&!CLASSES[p.cls].ab[p.ab||0].instant?O.RAMPS[p.rp||0].short.toLowerCase()+' ready':'choosing'):'';
     for(const p of G.players){const cl=CLASSES[p.cls],li=el('li');li.tabIndex=0;li.setAttribute('role','button');li.setAttribute('aria-pressed',O.inspect===p.id);
       const dd=el('div'),nm=el('div','nm');nm.append(el('span',null,`${cl.animal} ${cl.name}`),el('small',null,state(p)||'Lv '+p.lv));
-      const bar=el('div','bar'),i=el('i');i.style.width=(100*p.hp/p.mhp)+'%';bar.appendChild(i);dd.append(nm,bar);li.append(headCanvas(p.cls,44,LANES[p.slot]),dd);
+      const bar=el('div','bar'),i=el('i');i.style.width=(100*p.hp/p.mhp)+'%';bar.appendChild(i);dd.append(nm);if(O.titleOf(p))dd.appendChild(el('em','ttl',O.titleOf(p)));dd.appendChild(bar);li.append(headCanvas(p.cls,44,LANES[p.slot]),dd);
       const tog=()=>{O.inspect=O.inspect===p.id?null:p.id;sideKey='';panelKey=''};li.onclick=tog;li.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){tog();e.preventDefault()}};ul.appendChild(li)}
     const ps=$('partyStrip'),showPs=G.screen==='combat'||(G.screen==='map'&&mode==='host'&&!(G.dec&&G.dec.k==='upgrade'));ps.hidden=!showPs;ps.classList.toggle('top',G.screen==='map');ps.textContent='';
     if(showPs)for(const p of G.players){const cl=CLASSES[p.cls],stt=state(p),ready=aim&&!p.fired&&p.hp>0&&!p.away,c=el('div','pc'+(p.hp<=0?' down':p.away?' away':stt==='attacking'?' act':ready?' ready':'')),d=el('div'),pn=el('div','pn');c.style.borderLeft='3px solid '+LANES[p.slot];

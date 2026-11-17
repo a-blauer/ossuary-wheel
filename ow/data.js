@@ -201,18 +201,94 @@ O.RELICS={
  idol:{name:'Bone Idol',desc:'The first fighter to fall in each fight rises at once with a third of their health.'},
  purse:{name:'Miser’s Purse',desc:'The dungeon pays a quarter more gold.'}
 };
-/* Ball skins: how a fighter's balls look on the big screen. Chosen on the phone; all but the first two come from loot boxes. */
+/* ---------- cosmetics: what loot boxes hold. None of it changes how the game plays. ----------
+   rar: 0 common, 1 rare, 2 epic, 3 legendary. Ball skins colour your plain ball; trails follow it across the course;
+   dyes recolour your fighter's cloth; titles ride under your name. */
+O.RARITY=[{name:'Common',col:'#b8ad98'},{name:'Rare',col:'#4aa8ff'},{name:'Epic',col:'#c070ff'},{name:'Legendary',col:'#ffb12a'}];
 O.SKINS={
- plain:{name:'Class colours',desc:'The colour of your calling.'},
- bone:{name:'Old Bone',col:'#e6dcc2',glow:'#b8a888',desc:'Polished knucklebone.'},
- ember:{name:'Ember',col:'#ff7a2a',glow:'#ff4a10',desc:'A coal that will not go out.'},
- verdigris:{name:'Verdigris',col:'#58b8a0',glow:'#2f8f7a',desc:'Bronze gone green in the damp.'},
- blood:{name:'Heartblood',col:'#c8261c',glow:'#8a100a',desc:'It never quite dries.'},
- moon:{name:'Moonstone',col:'#bcd6ff',glow:'#7fa8f0',desc:'Cold light from a clear night.'},
- obsidian:{name:'Obsidian',col:'#2a2230',glow:'#8a5ad0',desc:'Black glass with a violet edge.'},
- gilded:{name:'Gilded',col:'#f0c044',glow:'#d89a18',desc:'For those who have opened a great many boxes.'},
- venom:{name:'Venom',col:'#9adf3a',glow:'#5aa80e',desc:'Do not lick it.'},
- rose:{name:'Grave Rose',col:'#e88aa8',glow:'#b84a70',desc:'Pressed between the pages of a psalter.'}
+ plain:{name:'Class colours',desc:'The colour of your calling.',rar:0},
+ bone:{name:'Old Bone',col:'#e6dcc2',glow:'#b8a888',desc:'Polished knucklebone.',rar:0},
+ ember:{name:'Ember',col:'#ff7a2a',glow:'#ff4a10',desc:'A coal that will not go out.',rar:0},
+ verdigris:{name:'Verdigris',col:'#58b8a0',glow:'#2f8f7a',desc:'Bronze gone green in the damp.',rar:0},
+ ash:{name:'Ash',col:'#8a8580',glow:'#5a5550',desc:'What is left of the pyre.',rar:0},
+ rust:{name:'Rust',col:'#a0522d',glow:'#6a3014',desc:'An old cannonball, flaking.',rar:0},
+ peat:{name:'Bog Oak',col:'#5a4430',glow:'#3a2a1a',desc:'Black wood from under the marsh.',rar:0},
+ tallow:{name:'Tallow',col:'#e8dcb0',glow:'#c8b880',desc:'A church candle, rolled smooth.',rar:0},
+ slate:{name:'Slate',col:'#5a6a78',glow:'#3a4858',desc:'Split from a grave roof.',rar:0},
+ moss:{name:'Moss',col:'#6a8a3a',glow:'#4a6a1a',desc:'Grown over in a single damp night.',rar:0},
+ brick:{name:'Kiln Brick',col:'#b0563a',glow:'#80301a',desc:'Still warm at the middle.',rar:0},
+ blood:{name:'Heartblood',col:'#c8261c',glow:'#8a100a',desc:'It never quite dries.',rar:1},
+ moon:{name:'Moonstone',col:'#bcd6ff',glow:'#7fa8f0',desc:'Cold light from a clear night.',rar:1},
+ venom:{name:'Venom',col:'#9adf3a',glow:'#5aa80e',desc:'Do not lick it.',rar:1},
+ rose:{name:'Grave Rose',col:'#e88aa8',glow:'#b84a70',desc:'Pressed between the pages of a psalter.',rar:1},
+ pearl:{name:'Pearl',col:'#f0ece0',glow:'#c8d0e0',desc:'Prised from a drowned king.',rar:1},
+ jade:{name:'Jade',col:'#3aa070',glow:'#1a7a50',desc:'Carved for an emperor nobody remembers.',rar:1},
+ amethyst:{name:'Amethyst',col:'#9a5ad0',glow:'#6a2aa0',desc:'Said to keep the drinker sober.',rar:1},
+ sapphire:{name:'Sapphire',col:'#2a5ad8',glow:'#1a3aa0',desc:'Deep water, frozen in a stone.',rar:1},
+ amber:{name:'Amber',col:'#e89a20',glow:'#b86a00',desc:'There is a beetle inside.',rar:1},
+ coral:{name:'Coral',col:'#ff7a6a',glow:'#d04a3a',desc:'From the reef that sank the fleet.',rar:1},
+ ink:{name:'Squid Ink',col:'#1a1a3a',glow:'#4a6aff',desc:'Writes its own name as it rolls.',rar:1},
+ obsidian:{name:'Obsidian',col:'#2a2230',glow:'#8a5ad0',desc:'Black glass with a violet edge.',rar:2},
+ sunfire:{name:'Sunfire',col:'#ffcc33',glow:'#ff6a00',desc:'Noon, caught and rolled into a ball.',rar:2},
+ abyss:{name:'Abyssal',col:'#0a1430',glow:'#20c0ff',desc:'Lit from inside by something that swims.',rar:2},
+ wraith:{name:'Wraithglass',col:'#c8f0ff',glow:'#80ffd0',desc:'You can see the course through it.',rar:2},
+ witch:{name:'Witchfire',col:'#4aff6a',glow:'#10a030',desc:'Green flame that burns cold.',rar:2},
+ ruby:{name:'Ruby',col:'#e01040',glow:'#ff4a7a',desc:'Cut from a dragon’s eye.',rar:2},
+ gilded:{name:'Gilded',col:'#f0c044',glow:'#d89a18',desc:'For those who have opened a great many boxes.',rar:3},
+ starlight:{name:'Starlight',col:'#ffffff',glow:'#ffe080',desc:'A star that fell and was polished.',rar:3},
+ voidheart:{name:'Voidheart',col:'#14001a',glow:'#ff20ff',desc:'Where it rolls, the light bends.',rar:3},
+ dragon:{name:'Dragon Egg',col:'#ff3a10',glow:'#ffd000',desc:'Something inside is turning over.',rar:3}
+};
+/* trails: the wake your plain balls leave. style picks how the motes move on the big screen */
+O.TRAILS={
+ none:{name:'No trail',desc:'Just the ball.',style:'',col:'#ffffff',rar:0},
+ cinder:{name:'Cinders',desc:'Sparks off a forge bellows.',style:'flame',col:'#ff7a2a',rar:0},
+ smoke:{name:'Pipe Smoke',desc:'A lazy grey curl.',style:'smoke',col:'#9a9490',rar:0},
+ ash:{name:'Falling Ash',desc:'Soft and grey, like a burned letter.',style:'fall',col:'#6a6460',rar:0},
+ dust:{name:'Tomb Dust',desc:'Kicked up from a thousand years of floor.',style:'smoke',col:'#c8b48a',rar:0},
+ bubble:{name:'Bubbles',desc:'As if it were still under the sea.',style:'rise',col:'#8ad8ff',rar:0},
+ frost:{name:'Hoarfrost',desc:'Ice crystals hang where it passed.',style:'hang',col:'#cfefff',rar:1},
+ gilt:{name:'Gilt Dust',desc:'A thief’s trail of gold.',style:'streak',col:'#ffd04a',rar:1},
+ blood:{name:'Blood Drops',desc:'Something is bleeding. Hopefully not you.',style:'drip',col:'#c8101a',rar:1},
+ petal:{name:'Grave Petals',desc:'Roses scattered on the way to the pit.',style:'fall',col:'#f08ab0',rar:1},
+ snow:{name:'First Snow',desc:'Flakes that never reach the ground.',style:'fall',col:'#ffffff',rar:1},
+ firefly:{name:'Fireflies',desc:'They follow it for the warmth.',style:'wander',col:'#e8ff6a',rar:1},
+ spark:{name:'Lightning',desc:'It crackles as it rolls.',style:'spark',col:'#9adcff',rar:2},
+ witch:{name:'Witchlight',desc:'Green motes circling, chanting.',style:'orbit',col:'#5aff7a',rar:2},
+ ghost:{name:'Ghost Wake',desc:'Pale faces rise behind it and fade.',style:'rise',col:'#d8f8ff',rar:2},
+ void:{name:'Void Motes',desc:'Little holes in the world, closing.',style:'orbit',col:'#b04aff',rar:2},
+ comet:{name:'Comet',desc:'A blazing tail the length of the course.',style:'comet',col:'#ffb040',rar:3},
+ prism:{name:'Prism',desc:'Every colour, one after another.',style:'prism',col:'#ffffff',rar:3}
+};
+/* dyes: one colour for your fighter's cloth (the badger's tabard, the toad's doublet, the owl's robe, the hare's tunic) */
+O.DYES={
+ none:{name:'Own colours',desc:'As they came.',col:'',rar:0},
+ crimson:{name:'Crimson',col:'#8a1a1a',desc:'Dyed in something red.',rar:0},
+ midnight:{name:'Midnight',col:'#1c2252',desc:'The blue of an unlit chapel.',rar:0},
+ forest:{name:'Forest',col:'#2a5a2a',desc:'For hunting what hunts you.',rar:0},
+ ochre:{name:'Ochre',col:'#a07a20',desc:'Earth from the dry valley.',rar:0},
+ plum:{name:'Plum',col:'#5a2a5a',desc:'A bruise of a colour.',rar:0},
+ teal:{name:'Teal',col:'#1a6a6a',desc:'The sea before a storm.',rar:0},
+ sable:{name:'Sable',col:'#1e1a1c',desc:'Mourning black.',rar:1},
+ bone:{name:'Bone White',col:'#d8ccb0',desc:'Bleached in a desert of skulls.',rar:1},
+ rose:{name:'Dusk Rose',col:'#b06080',desc:'Faded from crimson by long years.',rar:1},
+ royal:{name:'Royal Violet',col:'#3a2a90',desc:'Worn only by the dead kings.',rar:1},
+ rustd:{name:'Rust',col:'#8a4a1a',desc:'Like armour left in the rain.',rar:1},
+ gold:{name:'Gold Leaf',col:'#c89a30',desc:'Thread of real gold. Heavy.',rar:2},
+ ghost:{name:'Ghost White',col:'#e8f0f0',desc:'Like a shroud on a line.',rar:2},
+ ember:{name:'Ember',col:'#e0501a',desc:'Glows a little in the dark.',rar:2},
+ abyss:{name:'Abyssal',col:'#0a2a3a',desc:'From the deepest trench.',rar:3}
+};
+/* the palette entries each fighter's dye recolours: [main, darker] */
+O.DYE_KEYS={warrior:['tabard','tabard_d'],bard:['dub','dub_d'],mage:['robe','robe_d'],archer:['tun','tun_d']};
+O.TITLES={
+ none:{name:'No title',rar:0},
+ unlucky:{name:'the Unlucky',rar:0},lucky:{name:'the Lucky',rar:0},gambler:{name:'the Gambler',rar:0},patient:{name:'the Patient',rar:0},hasty:{name:'the Hasty',rar:0},
+ mudlark:{name:'Mudlark',rar:0},crawler:{name:'Crypt Crawler',rar:0},gutter:{name:'Gutterball',rar:0},coinbiter:{name:'Coin-Biter',rar:0},tilted:{name:'the Tilted',rar:0},
+ rim:{name:'of the Rim',rar:1},bones:{name:'Bone Collector',rar:1},lidbreaker:{name:'Lidbreaker',rar:1},twice:{name:'Twice-Dead',rar:1},rimwalker:{name:'Rimwalker',rar:1},
+ dice:{name:'Dicebones',rar:1},bogwalker:{name:'Bogwalker',rar:1},unbowed:{name:'the Unbowed',rar:1},ricochet:{name:'the Ricochet',rar:1},
+ hole:{name:'Hole-in-One',rar:2},jackpot:{name:'Jackpot Fiend',rar:2},sinks:{name:'Saint of Sinks',rar:2},moon:{name:'Moon-Touched',rar:2},doomed:{name:'the Doomed',rar:2},storm:{name:'Stormcaller',rar:2},
+ last:{name:'Last Ball Standing',rar:3},dread:{name:'Dread Putter',rar:3},magnificent:{name:'the Magnificent',rar:3},wheel:{name:'Breaker of Wheels',rar:3}
 };
 O.MAP=[{type:'start',name:'Gate',x:0,z:7.4,next:[]}];      // filled in place by O.genMap for the chosen dungeon
 O.encRank=e=>e.some(i=>O.MONSTERS[i].rank==='boss')?'boss':e.some(i=>O.MONSTERS[i].rank==='mini')?'mini':'lesser';
@@ -339,10 +415,25 @@ for(const c in O.CLASSES)O.CLASSES[c].ab.forEach((a,i)=>{if(i>=4)O.LOCKS.push('a
 for(const k in O.UPGRADES)if(!BASE_UP.includes(k))O.LOCKS.push('up:'+k);
 for(const k in O.ITEMS)if(!BASE_IT.includes(k))O.LOCKS.push('it:'+k);
 for(const k in O.RELICS)if(!BASE_REL.includes(k))O.LOCKS.push('re:'+k);
-for(const k in O.SKINS)if(k!=='plain'&&k!=='bone')O.LOCKS.push('sk:'+k);
+/* ---------- dungeons unlock the game: each first clear adds a fixed handful, spread so every run brings abilities for every fighter ---------- */
+O.DUNG_UNLOCKS=O.DUNGEONS.map(()=>[]);
+{const N=O.DUNGEONS.length,spread=list=>list.forEach((id,j)=>O.DUNG_UNLOCKS[Math.min(N-1,Math.floor(j*N/list.length))].push(id)),ab=[];
+  for(let i=4;i<11;i++)for(const c of['warrior','bard','mage','archer'])if(O.LOCKS.includes('ab:'+c+':'+i))ab.push('ab:'+c+':'+i);
+  spread(ab);spread(O.LOCKS.filter(x=>x.startsWith('up:')));spread(O.LOCKS.filter(x=>x.startsWith('it:')));spread(O.LOCKS.filter(x=>x.startsWith('re:')))}
+O.unlockFrom=id=>O.DUNG_UNLOCKS.findIndex(L=>L.includes(id));
+/* ---------- the cosmetics loot boxes hold ---------- */
+O.COSM=[];
+for(const k in O.SKINS)if(k!=='plain'&&k!=='bone')O.COSM.push('sk:'+k);
+for(const k in O.TRAILS)if(k!=='none')O.COSM.push('tr:'+k);
+for(const k in O.DYES)if(k!=='none')O.COSM.push('dy:'+k);
+for(const k in O.TITLES)if(k!=='none')O.COSM.push('ti:'+k);
+O.cosmOf=id=>{const p=String(id).split(':'),T={sk:O.SKINS,tr:O.TRAILS,dy:O.DYES,ti:O.TITLES}[p[0]];return T&&T[p[1]]||null};
 O.lockInfo=id=>{const p=String(id).split(':');
   if(p[0]==='ab'){const c=O.CLASSES[p[1]],a=c&&c.ab[+p[2]];return a?{kind:c.name+' ability',name:a.name,desc:a.desc}:null}
-  if(p[0]==='sk'){const k=O.SKINS[p[1]];return k?{kind:'ball skin',name:k.name,desc:k.desc+' Choose it on your phone, under Character.'}:null}
+  if(p[0]==='sk'){const k=O.SKINS[p[1]];return k?{kind:'ball skin',name:k.name,desc:k.desc+' Choose it on your phone, under Character.',rar:k.rar}:null}
+  if(p[0]==='tr'){const k=O.TRAILS[p[1]];return k?{kind:'ball trail',name:k.name,desc:k.desc+' Choose it on your phone, under Character.',rar:k.rar}:null}
+  if(p[0]==='dy'){const k=O.DYES[p[1]];return k?{kind:'outfit dye',name:k.name,desc:k.desc+' Choose it on your phone, under Character.',rar:k.rar}:null}
+  if(p[0]==='ti'){const k=O.TITLES[p[1]];return k?{kind:'title',name:k.name,desc:'Shown with your name on the big screen. Choose it on your phone, under Character.',rar:k.rar}:null}
   const t={up:[O.UPGRADES,'Upgrade'],it:[O.ITEMS,'Item'],re:[O.RELICS,'Relic']}[p[0]],o=t&&t[0][p[1]];return o?{kind:(o.cls?O.CLASSES[o.cls].name+' ':'')+t[1].toLowerCase(),name:o.name,desc:o.desc}:null};
 /* how each special ball looks: a colour and an effect, chosen from what the ball does. The basic ball keeps the plain gem. */
 const BALLFX={sunder:['#ff7a10','ember'],quake:['#ff5a00','ember'],ram:['#a89070','iron'],shatter:['#3aa8ff','shard'],cleave:['#ff2a1a','blade'],leech:['#d0102a','blood'],ric:['#28a8ff','spark'],
@@ -350,5 +441,5 @@ const BALLFX={sunder:['#ff7a10','ember'],quake:['#ff5a00','ember'],ram:['#a89070
   skim:['#10c8b0','water'],mark:['#ffbe0a','gold'],sure:['#ffbe0a','gold'],pierce:['#ffe040','streak'],weak:['#d0102a','blood'],seek:['#2aff7a','arcane'],splash:['#ff4ad8','shard']};
 const BALLFX_ID={rage:['#ff1a1a','flame'],twin:['#ffc21a','gold'],meteor:['#ff5a00','ember'],stasis:['#10b8ff','frost'],deadeye:['#ffbe0a','gold'],rain:['#28a8ff','spark'],stream:['#8a3aff','arcane'],aimed:['#ffe040','streak'],echo:['#ffb81a','note'],discord:['#9a2aff','dark'],dirge:['#ff4a00','flame']};
 O.ballFx=(cls,i,owned0)=>{const c=O.CLASSES[cls],a=c&&c.ab[i];if(!a||!a.m||i===(owned0||0))return null;const f=BALLFX_ID[a.id]||Object.keys(a.m).map(k=>BALLFX[k]).find(Boolean)||['#ffbe0a','gold'];return{c:f[0],k:f[1]}};
-O.boxCost=opened=>40+3*opened;                 // half what it was: loot boxes are how the party grows stronger over many runs
+O.boxCost=opened=>Math.min(100,25+2*opened);   // boxes hold only cosmetics now; the game itself unlocks by clearing dungeons
 })();

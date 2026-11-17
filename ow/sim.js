@@ -29,11 +29,13 @@ const ev=(k,o)=>G.ev.push(Object.assign({k},o));
 const SKEY='ow_stash1';
 function loadStash(){let s=null;try{s=JSON.parse(localStorage.getItem(SKEY)||'null')}catch(e){}s=s&&typeof s==='object'?s:{};
   const ints=(o,ok,max)=>{const r={};if(o&&typeof o==='object')for(const k in o){const v=Math.floor(num(o[k]));if(ok(k)&&v>0)r[k]=Math.min(max,v)}return r};
-  return{gold:Math.max(0,Math.floor(num(s.gold))),opened:Math.max(0,Math.floor(num(s.opened))),unl:Array.isArray(s.unl)?s.unl.filter(x=>O.LOCKS.includes(x)):[],clear:Array.isArray(s.clear)?s.clear.filter(x=>Number.isInteger(x)&&x>=0&&x<O.DUNGEONS.length):[],
+  return{gold:Math.max(0,Math.floor(num(s.gold))),opened:Math.max(0,Math.floor(num(s.opened))),unl:Array.isArray(s.unl)?s.unl.filter(x=>O.LOCKS.includes(x)||O.COSM.includes(x)):[],clear:Array.isArray(s.clear)?s.clear.filter(x=>Number.isInteger(x)&&x>=0&&x<O.DUNGEONS.length):[],
     tier:ints(s.tier,k=>!!O.DUNGEONS[k],4),runs:Array.isArray(s.runs)?s.runs.filter(x=>Number.isInteger(x)&&x>=0&&x<20):[],kills:ints(s.kills,k=>!!MONSTERS[k],99999),bless:s.bless?1:0,fin:!!s.fin,prac:!!s.prac,last:'',keep:s.keep&&typeof s.keep==='object'&&Number.isInteger(s.keep.set)?s.keep:null,own:(o=>{const r={};if(o&&typeof o==='object')for(const k of['warrior','bard','mage','archer'])if(Array.isArray(o[k]))r[k]=o[k].filter(v=>Number.isInteger(v)&&v>=0&&v<40).slice(0,40);return r})(s.own)}}
 function saveStash(){const s=G.stash;try{localStorage.setItem(SKEY,JSON.stringify({gold:s.gold,opened:s.opened,unl:s.unl,clear:s.clear,runs:s.runs||[],tier:s.tier,kills:s.kills,bless:s.bless,fin:s.fin,prac:s.prac,keep:s.keep||null}))}catch(e){}}
-O.saveStash=saveStash;O.resetStash=()=>{try{localStorage.removeItem(SKEY);localStorage.removeItem('ow_run1')}catch(e){}G.stash=loadStash();G.dung=0;G.tier=0};
-G.stash=loadStash();G.dung=0;G.gatePicks=0;G.mapVer=0;G.gain=0;G.newDung=false;G.wins=0;
+O.saveStash=saveStash;O.resetStash=()=>{try{localStorage.removeItem(SKEY);localStorage.removeItem('ow_run1')}catch(e){}G.stash=loadStash();grantCleared();G.dung=0;G.tier=0};
+/* every dungeon already cleared hands over what it unlocks (saves from before unlocks moved out of the loot boxes) */
+const grantCleared=()=>{for(const d of G.stash.clear)for(const id of O.DUNG_UNLOCKS[d]||[])if(!G.stash.unl.includes(id))G.stash.unl.push(id)};
+G.stash=loadStash();grantCleared();G.dung=0;G.gatePicks=0;G.mapVer=0;G.gain=0;G.newDung=false;G.wins=0;
 /* Every three dungeons make a run. A run is played in order, stage by stage; what the party wins carries from one stage to the next.
    A run opens when the run before it is complete. Dying sends the party back to the first stage of its run. */
 O.RUNS=[];O.DUNGEONS.forEach((d,i)=>{(O.RUNS[O.setOf(i)]=O.RUNS[O.setOf(i)]||[]).push(i)});
@@ -51,7 +53,15 @@ O.maxTier=d=>{const r=O.runOf(d),f=O.RUNS[r][0];return Math.min(3,Math.max(O.run
 O.setTier=t=>{t=Math.floor(num(t));const kp=G.stash.keep,mid=kp&&kp.set===O.runOf(G.dung)&&kp.next===G.dung;if(G.screen==='lobby'&&!mid&&t>=0&&t<=O.maxTier(G.dung))G.tier=t};
 O.goldFor=(d,t)=>Math.round(O.DUNGEONS[d].gold*(1+.5*t));
 O.BLESS=150;O.buyBlessing=()=>{const st=G.stash;if(st.bless||st.gold<O.BLESS)return false;st.gold-=O.BLESS;st.bless=1;saveStash();return true};
-O.openBox=function(){const st=G.stash,cost=O.boxCost(st.opened),left=O.LOCKS.filter(x=>!st.unl.includes(x));if(!left.length||st.gold<cost)return null;st.gold-=cost;st.opened++;const id=pick(left);st.unl.push(id);st.last=id;saveStash();return id};
+/* a loot box holds one cosmetic the party does not own yet; the rarer, the less often it turns up */
+O.RARW=[1,.5,.24,.1];
+O.openBox=function(){const st=G.stash,cost=O.boxCost(st.opened),left=O.COSM.filter(x=>!st.unl.includes(x));if(!left.length||st.gold<cost)return null;st.gold-=cost;st.opened++;
+  const w=left.map(x=>O.RARW[(O.cosmOf(x)||{}).rar||0]),tot=w.reduce((a,b)=>a+b,0);let q=Math.random()*tot,id=left[left.length-1];for(let i=0;i<left.length;i++){q-=w[i];if(q<=0){id=left[i];break}}
+  st.unl.push(id);st.last=id;saveStash();return id};
+/* which cosmetics the party owns, as hex digits over O.COSM, so the phones' list stays small */
+O.cosmMask=()=>{let h='';for(let i=0;i<O.COSM.length;i+=4){let n=0;for(let j=0;j<4;j++)if(G.stash.unl.includes(O.COSM[i+j]))n|=1<<j;h+=n.toString(16)}return h};
+O.cosmHas=(mask,id)=>{const i=O.COSM.indexOf(id);if(i<0)return false;return!!((parseInt(String(mask||'')[i>>2]||'0',16)>>(i&3))&1)};
+O.cosmLeft=()=>O.COSM.filter(x=>!G.stash.unl.includes(x)).length;
 const has=id=>!O.LOCKS.includes(id)||G.stash.unl.includes(id),DG=()=>O.DUNGEONS[G.dung];
 O.HPB=1;                 // balls find holes far more often on a rimmed wheel, so monsters carry more health to keep fights the same length
 const HPK=()=>DG().hpK*(1+.35*G.tier)*O.HPB,DMGK=()=>O.MDMG*Math.pow(DG().dmgK,.45)*(1+.22*G.tier)*(O.PARTY_DMG[G.players.length-1]||1);
@@ -112,6 +122,9 @@ function addPlayer(id,cls,local){
 function changeClass(pl,cls){if(G.screen!=='lobby'||!CLASSES[cls])return;pl.cls=cls;pl.owned=ownedFor(cls);pl.mhp=maxHp(pl);pl.hp=pl.mhp;pl.cd=noCd(cls)}
 O.addPlayer=addPlayer;O.changeClass=changeClass;
 O.setSkin=(pl,k)=>{k=String(k||'');pl.skin=k&&O.SKINS[k]&&(k==='bone'||G.stash.unl.includes('sk:'+k))?k:''};
+/* the rest of a fighter's look: wake (ball trail), dye, title; each must be owned */
+O.setGear=(pl,lk)=>{lk=lk||{};const ok=(T,pre,k)=>{k=String(k||'');return k&&T[k]&&G.stash.unl.includes(pre+k)?k:''};pl.wake=ok(O.TRAILS,'tr:',lk.tr);pl.dye=ok(O.DYES,'dy:',lk.dy);pl.title=ok(O.TITLES,'ti:',lk.ti)};
+O.titleOf=pl=>pl&&pl.title&&O.TITLES[pl.title]?O.TITLES[pl.title].name:'';
 function addItem(id){if(!ITEMS[id]||G.items.length>=O.BAG)return false;G.items.push(id);return true}
 const anyItem=()=>pick(Object.keys(ITEMS).filter(k=>has('it:'+k)));
 function rollUps(pl,what){
@@ -304,7 +317,7 @@ function spawn(p){
   G.marbles.push({id:++G.mid,x,y:ty,vx:Math.cos(a)*v,vy:Math.sin(a)*v,r,size:sz,mult,heavy:m.heavy,sunder:m.sunder,hymn:m.hymn,homing:m.homing,ram:m.ram,skim:m.skim,arc:m.arc||0,cleave:m.cleave||0,
     mark:m.mark,sure:m.sure||p.sure,pierce:m.pierce,split:m.split,shatter:m.shatter,chain:0,leech:m.leech||0,vuln:m.vuln,weak:m.weak,pl:p.pl,md,
     ric:m.ric||0,burn:p.fb||m.burn||((id==='note'&&md.kindle)||(id==='stream'&&md.ember)?.4:0),settle:m.settle||0,seek:m.seek||0,splash:m.splash||0,quake:m.quake||0,glow:sk&&sk.glow||'',
-    capK:md.capv*(m.capx||1),z:rmp.fly?.1:0,vz:rmp.fly?v*rmp.tan:0,keep:rmp.k==='high'?.22:.62,fly:rmp.fly?1:0,in:null,still:0,pull:360*md.orb,burst:md.burst,col,fx:fx?fx.k:'',fxc:fx?fx.c:'',lane:LANES[p.pl.slot],age:0,told:null,skips:0});
+    capK:md.capv*(m.capx||1),z:rmp.fly?.1:0,vz:rmp.fly?v*rmp.tan:0,keep:rmp.k==='high'?.22:.62,fly:rmp.fly?1:0,in:null,still:0,pull:360*md.orb,burst:md.burst,col,fx:fx?fx.k:'',fxc:fx?fx.c:'',wk:fx?'':(p.pl.wake||''),lane:LANES[p.pl.slot],age:0,told:null,skips:0});
   burst(x,ty,col,16);ev('ring',{x,y:ty,col,R:70});ev('shake',{v:.2});ev('launch',{cls:p.pl.cls,r:m.r})}
 /* a Prism ball breaks into three the first time it strikes something solid */
 function splitM(m){if(!m.split)return;m.split=0;m.r=Math.min(m.r,8);const sp=Math.hypot(m.vx,m.vy)||1;burst(m.x,m.y,m.col,14);
@@ -589,7 +602,7 @@ function tick(dt){
   if(G.slowT>0)G.slowT-=dt;const tense=(G.marbles.length===1&&(G.marbles[0].in||G.marbles[0].near))||G.slowT>0;G.ts+=((tense?.55:1)-G.ts)*Math.min(1,dt*9);
   if(G.phase==='intro'){if(G.introT<.05&&G.holdT<25&&O.hold&&O.hold()){G.holdT+=dt;return}G.introT+=dt;if(G.introT>(G.practice?1.6:3.4))startRound();return}     // the fight waits for its models to arrive
   if(G.phase==='won'){G.deathT+=dt;if(G.deathT>2.8){const rank=O.encRank(G.enc);
-      if(rank==='boss'){const st=G.stash,r=O.runOf(G.dung),R=O.RUNS[r],last=G.dung===R[R.length-1],firstRun=!O.runDone(r);if(!st.clear.includes(G.dung))st.clear.push(G.dung);st.runs=st.runs||[];
+      if(rank==='boss'){const st=G.stash,r=O.runOf(G.dung),R=O.RUNS[r],last=G.dung===R[R.length-1],firstRun=!O.runDone(r);G.newUnl=[];if(!st.clear.includes(G.dung)){st.clear.push(G.dung);for(const id of O.DUNG_UNLOCKS[G.dung]||[])if(!st.unl.includes(id)){st.unl.push(id);G.newUnl.push(id)}}st.runs=st.runs||[];
         if(last){G.gain=Math.round(O.runGold(r,G.tier)*(G.relics.includes('purse')?1.25:1));st.gold+=G.gain;if(!st.runs.includes(r))st.runs.push(r);st.tier[R[0]]=Math.max(st.tier[R[0]]||0,G.tier+1);
           G.runEnd=true;G.newDung=firstRun&&!!O.RUNS[r+1];st.keep=null}
         else{G.gain=0;G.runEnd=false;G.newDung=false;
@@ -619,7 +632,7 @@ O.awards=function(){
 const mask=a=>a.map(b=>b.on?1:0).join('');
 O.publicState=()=>{const act=G.players[G.active],fight=G.screen==='combat',aim=fight&&G.phase==='aim',left=aim&&!G.cine&&!G.queue.length&&G.players.length>1&&!G.practice?Math.ceil(O.TURN-G.turnT):99;
  return{role:'host',dn:DG().name,rn:O.runOf(G.dung)+1,sg:O.RUNS[O.runOf(G.dung)].indexOf(G.dung)+1,sgn:O.RUNS[O.runOf(G.dung)].length,re:G.runEnd?1:0,nn:O.DUNGEONS[G.dung+1]&&O.runOf(G.dung+1)===O.runOf(G.dung)?O.DUNGEONS[G.dung+1].name:'',tier:G.tier,gd:G.gain,sc:G.screen,nd:G.node,ph:G.phase,rd:G.round,msg:G.msg.slice(0,140),res:G.result||'',tr:G.travel?1:0,pr:G.practice?1:0,pz:O.paused?1:0,fin:G.finale?1:0,
-  sk:G.stash.unl.filter(u=>u.startsWith('sk:')).map(u=>u.slice(3)),
+  cs:O.cosmMask(),nu:G.screen==='result'&&G.newUnl?G.newUnl.slice(0,8):[],
   cu:G.cur,ac:act&&fight&&G.cine?act.id:'',sh:aim&&G.players.length>1?G.shooter||'':'',cn:G.cine||G.queue.length?1:0,ins:G.inspect?1:0,tm:left<=20?Math.max(1,left):0,
   mo:G.mons.map(m=>({id:m.id,n:m.name,hp:Math.ceil(m.hp),mx:m.max,d:m.dead?1:0,st:m.stun?1:0,bn:m.burn?m.burn.d:0,it:m.intent&&!m.dead?[m.intent.t,m.intent.dmg,m.intent.x,m.intent.b?1:0,m.intent.mv,m.intent.reels?m.intent.reels.map(f=>f<0?'x':f).join(''):'',m.intent.pw||1,m.intent.t2||'',m.intent.fv||0,m.intent.seq||0,m.intent.n==null?2:m.intent.n]:null})),co:G.combo||0,aw:G.screen==='result'?O.awards():null,
   /* what has changed on each living monster's wheel; a phone rebuilds the rest from the monster's own layout */
