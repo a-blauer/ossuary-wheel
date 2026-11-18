@@ -328,7 +328,7 @@ function mgControl(g,d,sl,t,x0){const send=v=>{sendMg(g.id,v);C.mgK=''},V=C.mgV|
   else if(g.k==='shrine'){if(!x.querySelector('#vigilCv')){x.textContent='';const cv=document.createElement('canvas');cv.id='vigilCv';cv.className='mgLock';x.appendChild(cv);C.vg={prev:null,fl:null};
       /* three candles; tap the one that flickers */
       cv.addEventListener('pointerdown',e=>{e.preventDefault();const gv=getView().mg;if(!gv||gv.st!=='play')return;const r=cv.getBoundingClientRect(),k=Math.max(0,Math.min(2,Math.floor((e.clientX-r.left)/r.width*3))),c=(gv.d.c||{})[sl]||[],bz=(gv.d.bz||{})[sl]||0,t=mgNow(gv);
-        if(c[k]===2)return;if(t<bz){O.buzz(60);return}send(String(k));if(c[k]===1){O.buzz([20,30,40]);mgFlash('Shielded!',true);C.vg.fl={k,t:performance.now(),ok:1}}else{O.buzz(160);mgFlash('Hands full!',false);C.vg.fl={k,t:performance.now(),ok:0}}});
+        if(c[k]===2)return;if(t<bz){O.buzz(60);return}C.vgN=(C.vgN||0)+1;send(k+'.'+C.vgN);   /* numbered, so a second tap on the same candle is not mistaken for a repeat of the first */if(c[k]===1){O.buzz([20,30,40]);mgFlash('Shielded!',true);C.vg.fl={k,t:performance.now(),ok:1}}else{O.buzz(160);mgFlash('Hands full!',false);C.vg.fl={k,t:performance.now(),ok:0}}});
       const loop=()=>{if(!cv.isConnected)return;drawVigil(cv,getView().mg,sl);requestAnimationFrame(loop)};requestAnimationFrame(loop)}}
   else if(g.k==='forge'){if(!x.querySelector('#mgLane')){x.textContent='';const cv=document.createElement('canvas');cv.id='mgLane';cv.className='mgLane small';
       /* a strike: from the button, or from a swing of the phone (the jolt comes a moment after the swing's peak, so it is taken a touch earlier) */
