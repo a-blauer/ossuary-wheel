@@ -68,8 +68,12 @@ function applyTheme(){
   for(const L of torches)L.color.set(S.fire);for(const t of aimArrows)t.visible=false;courseKey=''}
 /* ---------- the course for the monster in front of the party ---------- */
 /* which hole size the course lights up: the ball in flight, or the one fighter lining up (in a pair, each half its own) */
-function fitFor(L){if(G.phase!=='aim')return 0;const ci=L<0?G.cine:G.cn&&G.cn[L];if(ci&&!ci.atk.ab.instant&&ci.atk.ab.m)return O.mSize(ci.atk.ab.m.r);
-  const aimers=G.players.filter(p=>p.hp>0&&!p.fired&&(L<0?(G.players.length===1||p.id===G.shooter):inGrp(p)&&(p.lane||0)===L));if(aimers.length===1){const p=aimers[0],ab=CLASSES[p.cls].ab[p.ab];if(ab&&ab.m)return Math.max(1,O.mSize(ab.m.r)-(O.mods(p).sizeDown||0)-(p.small<1?1:0))}return 0}
+function fitFor(L){if(G.phase!=='aim')return 0;
+  /* a ball already rolling: the size it really is (in a pair, this half's balls) */
+  const ms=G.marbles.filter(m=>!m.dead&&(L<0||O.laneOf(m.pl)===L));if(ms.length)return ms.some(m=>m.hymn)?99:Math.min(...ms.map(m=>m.size));
+  const ci=L<0?G.cine:G.cn&&G.cn[L];if(ci&&!ci.atk.ab.instant&&ci.atk.ab.m)return O.ballSize(ci.atk.pl,ci.atk.ab,ci.atk.small);
+  /* lining up: the ball this fighter has picked, after every upgrade and buff */
+  const aimers=G.players.filter(p=>p.hp>0&&!p.fired&&(L<0?(G.players.length===1||p.id===G.shooter):inGrp(p)&&(p.lane||0)===L));if(aimers.length===1){const p=aimers[0];return O.ballSize(p,CLASSES[p.cls].ab[p.ab],p.small)}return 0}
 function syncCourse(){
   const mo=G.mons[0],C=G.screen==='combat'&&mo?mo.course:null,key=C?mo.uid+':'+mo.id:'';
   if(key!==courseKey){courseKey=key;if(courseG){world.remove(courseG);courseG=null;course=null}if(terrG){world.remove(terrG);terrG=null;terrKey=''}
@@ -208,10 +212,12 @@ function wakeFx(p,m,T){const R=m.r*W,r=()=>(Math.random()-.5),t=performance.now(
   else if(s==='orbit'){const a=t*9,rr=R*1.9;P(p.x+Math.cos(a)*rr,p.y,p.z+Math.sin(a)*rr,0,.1,0,.6,c,0);P(p.x-Math.cos(a)*rr,p.y,p.z-Math.sin(a)*rr,0,.1,0,.6,c,0)}
   else if(s==='comet'){for(let i=0;i<3;i++)P(p.x+r()*R*.6,p.y+r()*R*.6,p.z+r()*R*.6,0,0,0,.8,i?c:'#fff6d0',0)}
   else if(s==='prism'){const h=FXH[Math.floor(t*12)%FXH.length];P(p.x,p.y,p.z,0,0,0,.7,h,0);P(p.x+r()*R,p.y,p.z+r()*R,r()*.3,.3,r()*.3,.5,FXH[(Math.floor(t*12)+3)%FXH.length],0)}}
+const DUST=new T.Color('#5a5248');
 function syncMarbles(dt){
   const live=new Set();for(const m of G.marbles){live.add(m.id);let o=marbles.get(m.id);if(!o){o=CG.marble(m.r,m.col,m.fx,m.fxc);world.add(o);marbles.set(m.id,o)}
     const y=m.r*W+(m.off?m.z:Math.max(0,m.z))*W;o.position.set(wx(m.x),y,wz(m.y));const b=o.userData.ball;b.rotation.x-=m.vy*W*dt/(m.r*W);b.rotation.z-=m.vx*W*dt/(m.r*W);
-    const u=o.userData;u.ln=O.laneOf(m.pl);PLN=G.split?u.ln:2;if(u.fx)ballFx(o,u,m,dt);else if(m.wk&&O.TRAILS[m.wk])wakeFx(o.position,m,O.TRAILS[m.wk]);else if(Math.random()<.5)P(o.position.x,o.position.y,o.position.z,0,.2,0,.35,m.col,0)}
+    const u=o.userData;u.ln=O.laneOf(m.pl);PLN=G.split?u.ln:2;
+    if(m.dk>0&&u.ball){const b=u.ball.material;if(!u.c0)u.c0=b.color.clone();b.color.copy(u.c0).lerp(DUST,m.dk*.85);b.emissiveIntensity=.25*(1-m.dk);if(Math.random()<m.dk*.6)P(o.position.x,o.position.y,o.position.z,(Math.random()-.5)*.3,.15,(Math.random()-.5)*.3,.7,'#8a8070',-1)}   /* on rotting turf it greys and sheds dust before it crumbles */if(u.fx)ballFx(o,u,m,dt);else if(m.wk&&O.TRAILS[m.wk])wakeFx(o.position,m,O.TRAILS[m.wk]);else if(Math.random()<.5)P(o.position.x,o.position.y,o.position.z,0,.2,0,.35,m.col,0)}
   PLN=2;for(const[id,o]of marbles)if(!live.has(id)){world.remove(o);marbles.delete(id)}}
 /* ---------- events from the rules ---------- */
 const SFX={kick:1,blunt:1,lock:1,core:1,launch:1,sink:1,miss:1,comboEnd:1,monHit:1,monFlinch:1,monAtk:1,monSlam:1,hurt:1,heal:1,enrage:1,monDie:1,intro:1,boon:1,win:1,lose:1,cast:1};
@@ -353,7 +359,7 @@ function hud(){foes();aimPow();
     else sub=(q.target?`strikes the ${CLASSES[q.target.cls].animal}${q.t2?' and the '+CLASSES[q.t2.cls].animal:''}`:'strikes the whole party')+(q.dmg?` for ${q.dmg}`:'')+(O.TERR[q.x]?' and '+O.TERR[q.x].it:'')}
   else if(C&&!C.rep&&(C.st==='cast'||C.st==='pan')){title=C.atk.ab.name;sub=`${CLASSES[C.atk.pl.cls].animal} ${CLASSES[C.atk.pl.cls].name}`+(C.atk.ab.m?' · '+O.SIZE_NAMES[O.mSize(C.atk.ab.m.r)].toLowerCase()+' ball':'')}
   const ter=mon&&mon.terr;
-  const key=[G.screen,!!G.dec,!!G.mg,G.phase,G.round,ter?ter.k+ter.t:'',mon?Math.ceil(mon.hp):0,mon?mon.enraged:0,mon&&mon.stun,mon&&mon.intent?mon.intent.t+mon.intent.t2+mon.intent.dmg:0,mon&&mon.burn?mon.burn.d+':'+mon.burn.t:0,G.combo,G.msg,title,sub,tag,wait,left<=20?left:0,G.practice].join('|');
+  const key=[G.screen,!!G.dec,!!G.mg,G.phase,G.round,mon?mon.uid:0,ter?ter.k+ter.t:'',mon?Math.ceil(mon.hp):0,mon?mon.enraged:0,mon&&mon.stun,mon&&mon.intent?mon.intent.t+mon.intent.t2+mon.intent.dmg:0,mon&&mon.burn?mon.burn.d+':'+mon.burn.t:0,G.combo,G.msg,title,sub,tag,wait,left<=20?left:0,G.practice].join('|');
   if(key===hudKey)return;hudKey=key;
   $('hudTop').hidden=!fight||G.phase==='intro'||!mon||mon.dead||!!(C&&C.st==='cast'&&!C.rep);$('hudMsg').hidden=G.screen==='lobby'||G.screen==='result'||!G.msg||!!title||(G.screen==='map'&&(!!G.dec||!!G.mg));$('hudMsg').textContent=G.msg;
   if(mon){const d=MONSTERS[mon.id];$('bossName').textContent=mon.name+(d.title?', '+d.title:'')+(mon.enraged?' · enraged':'');$('bossBar').style.width=(100*mon.hp/(mon.max||1))+'%';$('bossHpN').textContent=`${Math.ceil(mon.hp)} / ${mon.max}`;

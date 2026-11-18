@@ -230,7 +230,7 @@ function loadBoard(i){
   if(m){G.C=m.course;G.holes=m.holes;G.bumps=m.bumps;G.divots=[];G.walls=[];G.rot=0;G.boss=m.id;G.boardVer++}}
 function startFight(enc){
   const n=Math.max(1,G.players.length),sc=.45+.55*n;enc=[enc[0]];G.enc=enc;G.cur=-1;          // one monster per fight, grown to the size of the party
-  G.mons=enc.map(id=>{const d=MONSTERS[id],C=O.course(id),lesser=d.rank==='lesser',hp=Math.round(d.hp*sc*(lesser?1.35*(1+(HPK()-1)*.55):(d.rank==='boss'?.6:.85)*HPK()));
+  G.mons=enc.map(id=>{const d=MONSTERS[id],C=O.addFeatures(O.course(id),G.dung||0,d.rank!=='lesser'),lesser=d.rank==='lesser',hp=Math.round(d.hp*sc*(lesser?1.35*(1+(HPK()-1)*.55):(d.rank==='boss'?.6:.85)*HPK()));
     return{uid:++G.uid,id,name:d.name,rank:d.rank,hp,max:hp,enraged:false,dead:false,freeze:false,rot:0,atk:null,terr:null,course:C,holes:C.holes,bumps:C.bumps,sand:C.sand,blocks:C.blocks,divots:[],walls:[],mv:C.mv,locks:C.locks,core:C.core,rest:[],sg:-1,blunt:false,lk:0,coreT:0,wk:-1}});
   const c={};G.mons.forEach(m=>{c[m.id]=(c[m.id]||0)+1});const seen={};G.mons.forEach(m=>{if(c[m.id]>1){seen[m.id]=(seen[m.id]||0)+1;m.name+=' '+'ABCD'[seen[m.id]-1]}});
   G.C=G.mons[0].course;G.marbles=[];G.pending=[];G.queue=[];G.cine=null;G.cn=[null,null];G.gi=0;G.grp=[];G.split=false;G.round=0;G.dec=null;G.after=null;G.travel=null;G.mg=null;G.ward=1;G.combo=0;G.stop=0;G.active=-1;G.actor=-1;G.inspect=false;G.focus=-1;G.turnT=0;G.holdT=0;G.seen={};G.spin=0;G.ck=0;
@@ -238,6 +238,7 @@ function startFight(enc){
   for(const p of G.players){p.mhp=maxHp(p);if(p.hp<=0)p.hp=Math.round(p.mhp*.35);p.cd=noCd(p.cls);p.buff=false;p.fired=false;p.tgt=-1;p.barUsed=false;p.wardUsed=false;p.oil=1;p.small=1;p.sure=false;p.whet=1;p.twice=false;p.extra=0;p.dot=null;p.deb=null;p.hex=1;p.trail=null}
   G.idolUsed=false;G.fervorOn=false;if(G.practice)G.fervor=0;
   const lead=MONSTERS[enc[0]];if(G.practice)G.mons.forEach(m=>{m.hp=m.max=999});say(G.practice?'The practice yard. Nothing here strikes back.':enc.length===1&&lead.intro?`${lead.name}${lead.title?', '+lead.title:''}. ${lead.intro}`:`${O.encName(enc)} ${enc.length>1?"block":"blocks"} the way.`);ev('intro',{});
+  {const F=(G.C.feats||[]).map(k=>O.FEATS[k].note);if(F.length&&!G.practice)G.after={t:3.2,fn:()=>say(F.join(' '))}}                 // name the course's tricks once the monster has been introduced
   try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(e){}
 }
 O.startFight=startFight;
@@ -323,7 +324,7 @@ function launch(a){
   if(a.twice){const n=G.pending.length;for(let i=0;i<n;i++){const q=G.pending[i];G.pending.push(Object.assign({},q,{t:q.t+.7}))}}}                 // a Twinning Mirror looses the whole attack again
 function spawn(p){
   const C=G.C,rmp=O.RAMPS[p.rp||0],m=p.ab.m,md=mods(p.pl),x=launchX(p.pl),sk=O.SKINS[p.pl.skin],col=(sk&&sk.col)||CLASSES[p.pl.cls].col,id=p.ab.id;const fx=O.ballFx(p.pl.cls,CLASSES[p.pl.cls].ab.indexOf(p.ab),p.pl.owned[0]);
-  const sz=Math.max(1,O.mSize(m.r)-(md.sizeDown||0)-(p.small<=.5?2:p.small<1?1:0)),r=Math.min(m.r,[0,11,16,30][sz]),v=O.strokeV(O.powD(C.len,p.pow),rmp),a=p.ang*DEG,ty=O.COURSE.TEE;
+  const sz=O.ballSize(p.pl,p.ab,p.small),r=Math.min(m.r,[0,11,16,30][sz]),v=O.strokeV(O.powD(C.len,p.pow),rmp),a=p.ang*DEG,ty=O.COURSE.TEE;
   let mult=m.mult*p.mult*md.dmg;if(p.ab.id==='quick')mult*=md.draw;if(m.homing&&md.orb>1)mult*=1.4;if(sz===1)mult*=md.focus;
   G.marbles.push({id:++G.mid,x,y:ty,vx:Math.cos(a)*v,vy:Math.sin(a)*v,r,size:sz,mult,heavy:m.heavy,sunder:m.sunder,hymn:m.hymn,homing:m.homing,ram:m.ram,skim:m.skim,arc:m.arc||0,cleave:m.cleave||0,
     mark:m.mark,sure:m.sure||p.sure,pierce:m.pierce,split:m.split,shatter:m.shatter,chain:0,leech:m.leech||0,vuln:m.vuln,weak:m.weak,pl:p.pl,md,
@@ -377,6 +378,9 @@ function sinkInto(m,h,hx,hy){
    and are drawn into the dish round any open hole they fit. A slow ball over a hole drops in; a fast one lips out and is turned aside. */
 const KICK=470;
 const fitsH=(m,h)=>O.fitsSize(m.size,h.size);
+/* the size class a fighter's ball will have, after every upgrade and buff that shrinks it: 1 small, 2 medium, 3 large.
+   A hymn never drops into a hole at all (99). The board's grates and the phone both ask this. */
+O.ballSize=(pl,ab,small)=>{if(!ab||!ab.m)return 0;if(ab.m.hymn)return 99;const md=mods(pl),s=small==null?(pl.small==null?1:pl.small):small;return Math.max(1,O.mSize(ab.m.r)-(md.sizeDown||0)-(s<=.5?2:s<1?1:0))};
 const fits=fitsH;
 O.holeR=(m,h)=>h.rad;
 const lidOn=h=>h.armor>0||(!!h.shut&&O.shutAt(h,G.ck));
@@ -396,13 +400,22 @@ function stepMarble(m,dt){
   /* in the air: nothing on the ground touches it but the rails */
   /* over the edge: it keeps falling past the board and is lost */
   if(m.off){m.vz-=GRAV*dt;m.x+=m.vx*dt;m.y+=m.vy*dt;m.z+=m.vz*dt;m.offT+=dt;if(m.offT>.55)m.dead=true;return}
-  if(m.z>0||m.vz>0){m.vz-=GRAV*dt;m.x+=m.vx*dt;m.y+=m.vy*dt;m.z+=m.vz*dt;if(!offBoard(m,C))rails(m,C,m.z);
+  if(m.z>0||m.vz>0){m.vz-=GRAV*dt;m.x+=m.vx*dt;m.y+=m.vy*dt;m.z+=m.vz*dt;if(!offBoard(m,C))rails(m,C,m.rampd?0:m.z);                 /* a ball thrown off a ramp still meets the rails, so a jump never leaves the course */
     if(m.z<=0&&offBoard(m,C)){m.off=1;m.offT=0;m.vx*=.8;m.vy*=.8;m.vz=Math.min(0,m.vz);float(m.x,m.y,'off the edge','#8f8597');ev('miss',{});return}
     if(m.z<=0){m.z=0;const hit=-m.vz;m.vz=0;
       for(const h of G.holes){if(lidOn(h)||!fitsH(m,h)||m.hymn)continue;if(Math.hypot(m.x-h.x,m.y-h.y)<h.rad-m.r*.2){sinkInto(m,h,h.x,h.y);return}}       // dropped straight in from the air
-      if(m.fly){m.vx*=m.keep;m.vy*=m.keep;m.fly=0}
+      if(m.fly){m.vx*=m.keep;m.vy*=m.keep;m.fly=0}m.rampd=0;
       if(hit>260){m.vz=hit*.28;burst(m.x,m.y,'#b8a890',Math.min(14,Math.round(hit/50)))}ev('tick',{x:m.x,y:m.y})}
     return}
+  /* the course's own features */
+  if(C.portals&&C.portals.length&&!(m.ptT>0)){for(const q of C.portals){const da=Math.hypot(m.x-q.ax,m.y-q.ay),db=Math.hypot(m.x-q.bx,m.y-q.by);if(da<q.r||db<q.r){const[ox,oy]=da<q.r?[q.bx,q.by]:[q.ax,q.ay],sp=Math.hypot(m.vx,m.vy)||1;
+      burst(m.x,m.y,'#c070ff',14);m.x=ox+m.vx/sp*(q.r+m.r+4);m.y=oy+m.vy/sp*(q.r+m.r+4);m.ptT=.7;burst(m.x,m.y,'#c070ff',14);float(m.x,m.y,'through the portal','#d8a0ff');ev('tick',{x:m.x,y:m.y});break}}}
+  if(m.ptT>0)m.ptT-=dt;
+  if(C.moats)for(const q of C.moats){const d=Math.hypot(m.x-q.x,m.y-q.y);if(d>q.r0&&d<q.r1){burst(m.x,m.y,'#4a8ab8',18);float(m.x,m.y,'into the moat','#9fd0ff');ev('miss',{});m.dead=true;return}}
+  if(C.ramps)for(const q of C.ramps){const px=m.x-q.x,py=m.y-q.y,u=px*q.ux+py*q.uy,v=-px*q.uy+py*q.ux;if(u<0||u>q.len||Math.abs(v)>q.w/2)continue;const va=m.vx*q.ux+m.vy*q.uy;
+    if(va>140&&!m.rampd){m.rampd=1;m.z=.1;m.vz=Math.min(560,va*.62);m.fly=0;float(m.x,m.y,'jump!','#ffd27a');ev('tick',{x:m.x,y:m.y});return}}
+  if(C.belts)for(const q of C.belts)if(Math.abs(m.y-q.y)<q.h/2)m.vx+=q.dir*q.v*dt*1.6;
+  if(C.rot&&!m.in){m.roll=(m.roll||0)+Math.hypot(m.vx,m.vy)*dt;m.dk=Math.min(1,m.roll/C.rot);if(m.roll>C.rot){                 /* distance rolled on the ground; time in the air is free */burst(m.x,m.y,'#8a8070',22);float(m.x,m.y,'crumbled to dust','#c8bca0');ev('miss',{});m.dead=true;return}}
   if(ter&&ter.k==='rift'){const s=inSpot(m,'rift');if(s){if(m.skim&&Math.hypot(m.vx,m.vy)>120){m.vz=160;m.z=.1;m.skips++;m.mult*=1.4;burst(m.x,m.y,'#7ab8e0',12);float(m.x,m.y,'skip!','#9fd0ff');ev('tick',{x:m.x,y:m.y})}
       else{burst(m.x,m.y,'#5a9ad0',18);float(m.x,m.y,'into the water','#9fd0ff');ev('miss',{});m.dead=true;return}}}
   /* rolling: friction, more in sand; gravel knocks the ball about */

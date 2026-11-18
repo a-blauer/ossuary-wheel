@@ -58,12 +58,61 @@ function rateHoles(C){const H=C.holes;if(!H.length)return;const tee=[C.cx(O.COUR
     for(const o of H)if(o!==h&&o.y<h.y-o.rad&&near(o.x,o.y,o.rad*.8))obs+=.5;                                           // another hole to roll over first
     if(C.mv&&C.mv.k==='mill'&&C.mv.y<h.y)obs+=1;if(C.mv&&C.mv.k==='boulder'&&C.mv.y<h.y)obs+=.8;
     for(const b of C.blocks)if(b.y<h.y&&near(b.x,b.y,b.w))obs+=.7;
+    if(C.moats&&C.moats.some(q=>q.h===h.i))obs+=2.2;
     h.diff=1.05*(L/C.len)+.5*Math.max(0,Math.min(1,(32-h.rad)/16))+.45*out/n+.14*Math.min(4,obs)+.16*(h.armor||0)+(h.lock?.28:0)+(h.core?.35:0)}
   const w=H.map(h=>Math.pow(.32+h.diff,1.35)),ws=w.reduce((a,b)=>a+b,0);
   H.forEach((h,i)=>{h.dmg=Math.max(4,Math.round(tot*w[i]/ws))});
   const s=H.map(h=>h.dmg).sort((a,b)=>a-b),q1=s[Math.floor(s.length/3)],q2=s[Math.floor(s.length*2/3)];
   for(const h of H)h.tier=h.dmg>=q2&&h.dmg>q1?2:h.dmg>=q1&&h.dmg>s[0]?1:0}
 O.rateHoles=rateHoles;
+
+/* ---------- board features: as the dungeons get harder, creatures' courses get stranger ----------
+   ramp:   a wedge; a ball crossing it fast enough leaves the ground and flies, onto an island or over trouble
+   spring: some stones become spring bumpers that kick a ball away
+   island: a hole ringed by a moat; a ball rolling into the moat is lost, so you land on the island from the air
+   belt:   a strip of moving floor that drags a ball sideways
+   rot:    the whole turf is rotten; a ball that rolls too long crumbles to dust
+   portal: two rings; a ball rolling into one comes out of the other, still rolling
+   lvl is the dungeon (0-19). The first run keeps to plain courses. */
+O.FEATS={ramp:{name:'Ramps',note:'Hit a ramp fast and your ball flies.',from:3},spring:{name:'Spring bumpers',note:'Spring bumpers kick your ball away.',from:3},
+  island:{name:'Island holes',note:'Island holes sit in a moat: roll in and the ball is lost. Chip, lob or jump a ramp onto them.',from:6},belt:{name:'Moving floor',note:'Moving floor drags your ball sideways.',from:6},
+  rot:{name:'Rotting turf',note:'Rotting turf: a ball that rolls too far crumbles to dust. Loft it: time in the air does not count.',from:9},portal:{name:'Portals',note:'A ball rolling into one portal comes out of the other.',from:9}};
+O.addFeatures=function(C,lvl,big){
+  const r=O.rng(O.hash('feat'+C.id+':'+lvl)),pool=Object.keys(O.FEATS).filter(k=>lvl>=O.FEATS[k].from);if(!pool.length)return C;
+  let n=lvl<6?1:lvl<9?2:lvl<14?2+(r()<.5?1:0):3;if(big)n++;n=Math.min(n,pool.length);
+  const pick=[];const bag=pool.slice();while(pick.length<n&&bag.length){const k=bag.splice(Math.floor(r()*bag.length),1)[0];pick.push(k)}
+  C.feats=[];C.ramps=[];C.moats=[];C.belts=[];C.portals=[];C.rot=0;
+  const T=O.COURSE.TEE,free=(x,y,R)=>C.holes.every(h=>Math.hypot(h.x-x,h.y-y)>h.rad+O.COURSE.IND+R)&&C.bumps.every(b=>b.on===false||Math.hypot(b.x-x,b.y-y)>b.rad+R)&&Math.abs(x-C.cx(y))<C.half(y)-R-14&&C.ramps.every(q=>Math.hypot(q.x-x,q.y-y)>q.len+R)&&C.portals.every(q=>Math.hypot(q.ax-x,q.ay-y)>60+R&&Math.hypot(q.bx-x,q.by-y)>60+R)&&C.moats.every(q=>Math.hypot(q.x-x,q.y-y)>q.r1+R);
+  /* nothing in the way on the straight line from the tee to a point: no stone, no hole's dish */
+  const clearTo=(x,y)=>{const x0=C.cx(T),dx=x-x0,dy=y-T,L=Math.hypot(dx,dy);for(let k=1;k<30;k++){const f=k/30,px=x0+dx*f,py=T+dy*f;if(Math.abs(px-C.cx(py))>C.half(py)-14)return false;
+      if(C.bumps.some(b=>b.on!==false&&Math.hypot(b.x-px,b.y-py)<b.rad+16)||C.holes.some(h=>Math.hypot(h.x-px,h.y-py)<h.rad+O.COURSE.IND*.6))return false}return true};
+  const islandOf=h=>{const r0=h.rad+30,r1=r0+34;return{x:h.x,y:h.y,r0,r1,h:h.i}};
+  for(const k of pick){
+    if(k==='island'){/* one or two of the richer holes away from the tee become islands */
+      const cand=C.holes.filter(h=>!h.armor&&!h.core&&h.y>620&&C.holes.every(o=>o===h||Math.hypot(o.x-h.x,o.y-h.y)>o.rad+h.rad+90)).sort((a,b)=>b.dmg-a.dmg);
+      const m=Math.min(cand.length,big?2:1+(lvl>=12?1:0));for(let i=0;i<m;i++){const I=islandOf(cand[i]);if(C.bumps.some(b=>b.on!==false&&Math.hypot(b.x-I.x,b.y-I.y)<I.r1+b.rad))C.bumps=C.bumps.filter(b=>b.guard||Math.hypot(b.x-I.x,b.y-I.y)>=I.r1+b.rad);C.moats.push(I)}
+      if(C.moats.length)C.feats.push('island')}
+    else if(k==='ramp'){/* a ramp on an open line from the tee, pointing the way the ball travels; the best spots throw it toward an island or a rich hole */
+      const want=lvl>=12?2:1,cand=[],tg=C.holes.map(h=>({h,w:(C.moats.some(q=>q.h===h.i)?3:1)*h.dmg}));
+      for(let a=62;a<=118;a+=4)for(let d=360;d<=Math.min(760,C.len-420);d+=40){const ar=a*Math.PI/180,ux=Math.cos(ar),uy=Math.sin(ar),x=C.cx(T)+ux*d,y=T+uy*d;if(!free(x,y,60)||!clearTo(x,y))continue;
+          let sc=0;for(const o of tg){const px=o.h.x-x,py=o.h.y-y,u=px*ux+py*uy,v=Math.abs(-px*uy+py*ux);if(u>150&&u<520&&v<o.h.rad+30)sc+=o.w*(1-v/(o.h.rad+30))}cand.push({x,y,ux,uy,sc:sc+r()*.5})}
+      cand.sort((p,q)=>q.sc-p.sc);for(const c of cand){if(C.ramps.length>=want)break;if(C.ramps.some(q=>Math.hypot(q.x-c.x,q.y-c.y)<220))continue;C.ramps.push({x:c.x,y:c.y,ux:c.ux,uy:c.uy,w:90,len:80})}
+      if(C.ramps.length)C.feats.push('ramp')}
+    else if(k==='spring'){/* stones become spring bumpers; a couple more join them */
+      let c=0;for(const b of C.bumps)if(!b.guard&&!b.kick&&b.kind!=='post'&&r()<.6){b.kick=true;b.kind='spring';c++}
+      for(let i=0;i<8&&c<3;i++){const y=380+r()*(C.len-560),x=C.cx(y)+(r()*2-1)*(C.half(y)-60);if(free(x,y,40)){C.bumps.push({x,y,rad:15,kind:'spring',kick:true,on:true});c++}}
+      if(c)C.feats.push('spring')}
+    else if(k==='belt'){/* a strip of moving floor across an open stretch of the fairway */
+      for(let i=0;i<14;i++){const y=360+r()*(C.len-600);if(C.holes.some(h=>Math.abs(h.y-y)<h.rad+O.COURSE.IND+40)||C.ramps.some(q=>Math.abs(q.y-y)<90))continue;C.belts.push({y,h:64,dir:r()<.5?-1:1,v:520});break}
+      if(C.belts.length)C.feats.push('belt')}
+    else if(k==='rot'){C.rot=lvl>=15?820:lvl>=12?900:1000;C.feats.push('rot')}                 // how far a ball may roll on the ground before it crumbles (the far holes sit 1000-1600 from the tee)
+    else if(k==='portal'){/* in near the middle, out deep down the course */
+      for(let i=0;i<20;i++){const ay=380+r()*240,ax=C.cx(ay)+(r()*2-1)*(C.half(ay)-90),by=C.len-260-r()*200,bx=C.cx(by)+(r()*2-1)*(C.half(by)-90);
+        if(free(ax,ay,40)&&free(bx,by,40)){C.portals.push({ax,ay,bx,by,r:24});break}}
+      if(C.portals.length)C.feats.push('portal')}}
+  /* the busier the course, the fewer plain stones it keeps */
+  const extra=C.feats.length;if(extra>=2){let cut=extra-1;C.bumps=C.bumps.filter(b=>{if(cut>0&&!b.guard&&!b.kick&&b.kind!=='post'&&b.kind!=='spring'&&r()<.6){cut--;return false}return true})}
+  rateHoles(C);return C};
 
 /* where the moving parts are at a moment */
 O.millAng=(mv,t)=>mv.ph+mv.w*t;

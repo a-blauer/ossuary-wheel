@@ -9,7 +9,7 @@ G.wx=wx;G.wz=wz;
 
 /* palettes per dungeon look: turf felt, rails, stone */
 G.LOOKS={
- ossuary:{turf:{c:'#4c5e3c',n:.06,alt:'#465736',p:.3},turf2:{c:'#53673f',n:.06,alt:'#4c5e3a',p:.3},dish:{c:'#3f4f32',n:.06},dish2:{c:'#35442b',n:.06},rim:{c:'#bdb39b',n:.08},cup:{c:'#0d0b0c',n:0},
+ ossuary:{moat:{c:'#14303e',n:.04},moat_e:{c:'#4a4440',n:.08},rot:{c:'#4a3c26',n:.1},rot2:{c:'#5a3e52',n:.1},turf:{c:'#4c5e3c',n:.06,alt:'#465736',p:.3},turf2:{c:'#53673f',n:.06,alt:'#4c5e3a',p:.3},dish:{c:'#3f4f32',n:.06},dish2:{c:'#35442b',n:.06},rim:{c:'#bdb39b',n:.08},cup:{c:'#0d0b0c',n:0},
    sand:{c:'#b49a6a',n:.1,alt:'#a28a5c',p:.4},rail:{c:'#d8cdb2',n:.08,alt:'#c4b897',p:.25},rail_t:{c:'#ece3cc',n:.05},rail_d:{c:'#8e846c',n:.08},stone:{c:'#3a3640',n:.1,alt:'#332f38',p:.35},stone_d:{c:'#2a2730',n:.1},
    floor:{c:'#2b2730',n:.12,alt:'#25222a',p:.35},tee:{c:'#7a6a50',n:.08},tee_l:{c:'#9a8a6a',n:.06}}};
 
@@ -29,7 +29,9 @@ function turfModel(C,look){
     if(inY&&dx<=0){
       let top=-1,col=(Math.floor(yc/64)%2)?'turf':'turf2';
       if(yc<O.COURSE.TEE+40&&yc>-40){col=Math.abs(xc-c)<hw-14?'tee':'tee_l'}
+      if(C.rot&&yc>O.COURSE.TEE+40){const hz=V.hash(i,j,7);if(hz<.16)col=hz<.07?'rot2':'rot'}                 // rotting turf: dark blotches of mould
       for(const s of C.sand)if(Math.hypot(xc-s.x,yc-s.y)<s.r){top=-2;col='dish'}
+      for(const q of C.moats||[]){const d=Math.hypot(xc-q.x,yc-q.y);if(d>q.r0&&d<q.r1){top=-6;col=d<q.r0+5||d>q.r1-5?'moat_e':'moat'}}
       for(const h of C.holes){const d=Math.hypot(xc-h.x,yc-h.y);
         if(d<h.rad){top=-9;col='cup';break}
         if(d<h.rad+5){top=Math.min(top,-3);col='rim'}
@@ -45,6 +47,7 @@ function bumpModel(kind,rad,kick){
   const P=new V.Part('b',[0,0,0]),r=Math.max(3,Math.round(rad/5)),pal={bone:{c:'#ddd3bb',n:.08},bone_d:{c:'#a99c7f',n:.08},st:{c:'#5a5560',n:.1},st_l:{c:'#77727e',n:.08},iron:{c:'#47454a',n:.06},iron_l:{c:'#7d7a82',n:.05},kick:{c:'#ff8a3a',glow:1},kick2:{c:'#ffd27a',glow:1}};
   const disc=(y,rr,c)=>{for(let x=-rr;x<rr;x++)for(let z=-rr;z<rr;z++)if((x+.5)**2+(z+.5)**2<=rr*rr)P.set(x,y,z,c)};
   if(kind==='tooth'||kind==='fang'||kind==='spike'){for(let y=0;y<r*3;y++)disc(y,Math.max(1,Math.round(r*(1-y/(r*3.3)))),y<2?'bone_d':'bone')}
+  else if(kind==='spring'){for(let y=0;y<r*2;y++)disc(y,y%2?Math.max(1,r-2):r,y%2?'iron':'iron_l');disc(r*2,r,'kick2')}
   else if(kind==='rivet'){for(let y=0;y<4;y++)disc(y,r,y===3?'iron_l':'iron');disc(4,Math.max(1,r-1),'iron_l')}
   else{for(let y=0;y<r*1.6;y++)disc(y,Math.max(1,Math.round(r*Math.sqrt(1-Math.pow((y-r*.4)/(r*1.3),2)))),y<1?'st':'st_l')}
   if(kick){disc(0,r+1,'kick');P.cut(-r+1,r-2,0,0,-r+1,r-2);disc(Math.round(r*1.2),Math.max(1,r-1),'kick2')}
@@ -60,7 +63,8 @@ function label(text,sub,col,grey){
 
 /* build the course scene. Returns {group, update(t), setFit(size), holes:[...]} */
 G.build=function(C,opt){
-  opt=opt||{};const look=opt.pal||G.LOOKS[opt.look||'ossuary'],grp=new T.Group(),S=[CS*W,VH,CS*W];
+  opt=opt||{};let look=opt.pal||G.LOOKS[opt.look||'ossuary'];const grp=new T.Group(),S=[CS*W,VH,CS*W];
+  if(C.rot)look=Object.assign({},look,{turf:{c:mix(look.turf.c,'#5a5030',.45),n:.07,alt:mix(look.turf.c,'#3a3020',.5),p:.3},turf2:{c:mix(look.turf2.c,'#5a5030',.4),n:.07,alt:mix(look.turf2.c,'#3a3020',.45),p:.3}});
   const tm=turfModel(C,look),geo=V.geom(tm.parts[0],tm.pal,S);const turf=new T.Mesh(geo.solid,V.matSolid());turf.receiveShadow=true;turf.castShadow=true;grp.add(turf);
   /* dungeon floor around the course */
   const fl=new V.Part('f',[0,0,0]);for(let i=-26;i<26;i++)for(let j=-6;j<Math.ceil(C.len/40)+12;j++)fl.set(i,0,-j,'floor');
@@ -106,14 +110,31 @@ G.build=function(C,opt){
     boulder=V.build({pal:{s:{c:'#6b6670',n:.15,alt:'#57535c',p:.4}},parts:[P]},.05);grp.add(boulder)}
   /* blocks (a shield wall) */
   const blocks=C.blocks.map(q=>{const m=new T.Mesh(new T.BoxGeometry(q.w*W,.3,q.h*W),new T.MeshLambertMaterial({color:'#7a7f8a'}));m.position.set(wx(q.x),.15,wz(q.y));m.castShadow=true;grp.add(m);return{q,m}});
+  /* ---- the course's features ---- */
+  const feat={moats:[],ramps:[],belts:[],portals:[]};
+  for(const q of C.moats||[]){const m=new T.Mesh(new T.RingGeometry(q.r0*W,q.r1*W,48),new T.MeshLambertMaterial({color:'#1a4a6e',transparent:true,opacity:.85,emissive:'#082436'}));m.rotation.x=-Math.PI/2;m.position.set(wx(q.x),-.1,wz(q.y));grp.add(m);feat.moats.push(m)}
+  for(const q of C.ramps||[]){const L=q.len*W,Wd=q.w*W,H=.24,g=new T.Group(),geo=new T.BufferGeometry(),hw=Wd/2;
+    const v=[-hw,0,0, hw,0,0, hw,H,-L, -hw,H,-L, -hw,0,-L, hw,0,-L];geo.setAttribute('position',new T.Float32BufferAttribute(v,3));geo.setIndex([0,1,2,0,2,3, 3,2,5,3,5,4, 0,3,4, 1,5,2, 0,4,5,0,5,1]);geo.computeVertexNormals();
+    const w=new T.Mesh(geo,new T.MeshLambertMaterial({color:'#6e4c2c',side:T.DoubleSide,flatShading:true}));w.castShadow=true;w.receiveShadow=true;g.add(w);
+    for(let k=0;k<2;k++){const f=(k+.7)/2.6;for(const s of[-1,1]){const ch=new T.Mesh(new T.BoxGeometry(Wd*.42,.014,.06),new T.MeshBasicMaterial({color:'#ffd27a',toneMapped:false}));ch.position.set(s*Wd*.17,H*f+.014,-L*f);ch.rotation.set(Math.atan2(H,L),s*.6,0);g.add(ch)}}
+    const dx=q.ux,dz=-q.uy;g.rotation.y=Math.atan2(-dx,-dz);g.position.set(wx(q.x),0,wz(q.y));grp.add(g);feat.ramps.push(g)}
+  for(const q of C.belts||[]){const c=document.createElement('canvas');c.width=128;c.height=32;const x=c.getContext('2d');x.fillStyle='#2a2622';x.fillRect(0,0,128,32);x.fillStyle='#c8a04c';for(let k=0;k<4;k++){const o=k*32;x.beginPath();x.moveTo(o+8,4);x.lineTo(o+22,16);x.lineTo(o+8,28);x.lineTo(o+14,28);x.lineTo(o+28,16);x.lineTo(o+14,4);x.fill()}
+    const tx=new T.CanvasTexture(c);tx.wrapS=tx.wrapT=T.RepeatWrapping;const wd=(C.half(q.y)*2+10)*W;tx.repeat.set(wd/(q.h*W)/1.1,1);if(q.dir<0){tx.center.set(.5,.5);tx.rotation=Math.PI}
+    const m=new T.Mesh(new T.PlaneGeometry(wd,q.h*W),new T.MeshBasicMaterial({map:tx,toneMapped:false}));m.rotation.x=-Math.PI/2;m.position.set(wx(C.cx(q.y)),.006,wz(q.y));grp.add(m);feat.belts.push({m,tx,q})}
+  for(const q of C.portals||[]){for(const[k,px,py]of[[0,q.ax,q.ay],[1,q.bx,q.by]]){const g=new T.Group(),col=k?'#4ad8ff':'#c070ff';
+      const ring=new T.Mesh(new T.TorusGeometry(q.r*W,.025,8,32),new T.MeshBasicMaterial({color:col,toneMapped:false}));ring.rotation.x=Math.PI/2;g.add(ring);
+      const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');for(let a=0;a<6;a++){x.strokeStyle=col;x.lineWidth=3;x.beginPath();for(let s=0;s<40;s++){const t=s/40,R=t*30,an=a/6*Math.PI*2+t*4;x.lineTo(32+Math.cos(an)*R,32+Math.sin(an)*R)}x.stroke()}
+      const sw=new T.Mesh(new T.CircleGeometry(q.r*W*.95,32),new T.MeshBasicMaterial({map:new T.CanvasTexture(c),transparent:true,toneMapped:false,depthWrite:false}));sw.rotation.x=-Math.PI/2;sw.position.y=.004;g.add(sw);
+      g.position.set(wx(px),.02,wz(py));grp.add(g);feat.portals.push({g,sw,k})}}
   let fit=0;
-  const api={group:grp,holes,bumps,sand,
+  const api={group:grp,holes,bumps,sand,feat,
     setFit(ms){fit=ms||0;for(const o of holes){const lid=o.h.armor>0,no=fit&&!O.fitsSize(fit,o.h.size)&&!lid;o.gr.visible=!!no;o.glow.visible=!!fit&&!no&&!lid;o.sp.material.map=o.sp.userData.tx[no?0:1];o.sp.material.needsUpdate=true}},
     update(t,cam){
       for(const o of holes){if(o.shut){const on=O.shutAt(o.h,t);o.shut.position.y+=((on?.03:-.14)-o.shut.position.y)*.2}
         o.arm.children.forEach((p,k)=>p.visible=k<o.h.armor);
         if(o.glow.visible)o.glow.material.opacity=.55+.35*Math.sin(t*5+o.h.i);
         if(cam){const d=cam.position.distanceTo(o.g.position);o.sp.scale.copy(o.base).multiplyScalar(Math.max(1,Math.sqrt(d/6)))}}
+      for(const m of feat.moats)m.material.opacity=.72+.08*Math.sin(t*1.7);for(const b of feat.belts)b.tx.offset.x=-(t*b.q.v/(b.q.h*1.1))%1;for(const p of feat.portals)p.sw.rotation.z=(p.k?-1:1)*t*2.4;
       if(mill)mill.userData.rot.rotation.y=O.millAng(C.mv,t);
       if(boulder){boulder.position.set(wx(O.boulderX(C,C.mv,t)),0,wz(C.mv.y));boulder.rotation.z=-O.boulderX(C,C.mv,t)*W/(C.mv.rad*W)}
       for(const o of blocks)o.m.visible=o.q.on;for(const o of sand)o.m.visible=o.s.on!==false;for(const o of bumps)o.m.visible=o.b.on!==false;if(mill)mill.visible=!C.mv.broken;if(boulder)boulder.visible=!C.mv.broken}};
