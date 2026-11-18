@@ -14,7 +14,8 @@ O.reach=(x0,ang,pow)=>O.powD(G.C?G.C.len:1400,pow);O.powTo=(x0,ang,dist)=>O.powO
 const GRAV=1200;
 /* the speed a shot must leave the tee with to travel D in all. A putt only rolls; a chip hops low and keeps most of its pace; a lob flies high and nearly stops where it lands. */
 O.strokeV=(D,R)=>{const FRc=O.COURSE.FR;if(!R||!R.fly)return Math.sqrt(2*FRc*Math.max(10,D));const keep=R.k==='high'?.22:.62;
-  const T=v=>{const vz=v*R.tan,fl=2*v*vz/GRAV,v2=v*keep;return fl+v2*v2/(2*FRc)};let lo=20,hi=2400;for(let i=0;i<26;i++){const mid=(lo+hi)/2;if(T(mid)<D)lo=mid;else hi=mid}return(lo+hi)/2};
+  /* in the air, the landing hop (a hard landing bounces back up at .28 of its fall, with no friction while airborne), then the roll */
+  const T=v=>{const vz=v*R.tan,v2=v*keep;let fl=2*v*vz/GRAV,h=vz;for(let k=0;k<4&&h>260;k++){h*=.28;fl+=v2*2*h/GRAV}return fl+v2*v2/(2*FRc)};let lo=20,hi=2400;for(let i=0;i<26;i++){const mid=(lo+hi)/2;if(T(mid)<D)lo=mid;else hi=mid}return(lo+hi)/2};
 
 const G=O.G={screen:'lobby',node:0,visited:[0],relics:[],players:[],dec:null,decSeq:0,travel:null,after:null,result:null,
   phase:'idle',round:0,enc:[],mons:[],cur:-1,active:-1,actor:-1,inspect:false,turnT:0,

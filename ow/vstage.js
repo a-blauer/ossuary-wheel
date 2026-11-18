@@ -167,7 +167,7 @@ function syncHeroes(dt){
     if(on){const ab=CLASSES[p.cls].ab[p.ab||0];on=!!(ab&&ab.sight)||!!(O.mods(p).eye)||!!G.practice}r.visible=on;if(!on)return;
     const a=p.aim*Math.PI/180,d=O.powD(C.len,p.pw||0);r.position.set(wx(O.launchX(p)+Math.cos(a)*d),.05,wz(O.COURSE.TEE+Math.sin(a)*d));r.material.color.set(LANES[p.slot])});
   aimArrows.forEach((g,i)=>{const p=G.players[i],C=G.mons[0]&&G.mons[0].course;const on=!!p&&!!C&&G.screen==='combat'&&G.phase==='aim'&&!cineOf(p)&&p.ch&&!p.fired;g.visible=on;if(!on)return;const u=g.userData,pw=clamp(p.pw||0,0,1);
-    g.position.set(wx(O.launchX(p)),.03,wz(O.COURSE.TEE)-.55);g.scale.setScalar(1.7);g.rotation.y=(p.aim-90)*Math.PI/180;poseSling(g,p,pw)})
+    const a=p.aim*Math.PI/180;g.position.set(wx(O.launchX(p)+Math.cos(a)*55),.03,wz(O.COURSE.TEE+Math.sin(a)*55));g.scale.setScalar(1.7);g.rotation.y=(p.aim-90)*Math.PI/180;poseSling(g,p,pw)})
 }
 /* a sling for the big screen: posts, a band, the ball drawn back and an arrow the way it will leave (local -z is forward) */
 function mkSling(){const g=new T.Group(),lane=new T.MeshBasicMaterial({color:'#fff',transparent:true,opacity:.95,depthTest:false}),wood=new T.MeshBasicMaterial({color:K0lin('#7a5a3a')}),band=new T.MeshBasicMaterial({color:K0lin('#e8c8a0')});
@@ -606,6 +606,7 @@ O.renderStage=function(dt){
     for(const o of hide)o.visible=true;renderer.setScissorTest(false);renderer.setViewport(0,0,w,h);maskParticles(-1);course&&course.setFit(fitFor(-1))}
   else{splitUI(false);renderer.render(scene,cam)}};
 /* one half of the split: hide the other fighter's ball, aim, trail and figure at the tee, and their particles; light the holes this ball fits */
+O.camDbg=()=>({cam,cam2,W,canvas,T,aimArrows,heroes});
 function passLane(L,hide){for(const o of hide)o.visible=true;hide.length=0;const off=o=>{if(o&&o.visible){o.visible=false;hide.push(o)}};
   for(const o of marbles.values())if((o.userData.ln||0)!==L)off(o);
   G.players.forEach((p,i)=>{if(!inGrp(p)||(p.lane||0)===L)return;off(aimRings[i]);off(aimArrows[i]);off(trails[i]);off(heroes.get(p.id))});
