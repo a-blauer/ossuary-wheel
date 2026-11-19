@@ -559,7 +559,7 @@ function mgCall(m){const el=$('mgCall');if(!el)return;const B=O.MG_BRIEF||7;let 
   if(m.st==='brief'&&m.t>B-3)t=String(Math.ceil(B-m.t));else if(m.st==='brief'&&m.t>B-4.2)t='Ready?';
   else if(m.st==='play'&&m.t<.9){t='GO!';cls='go'}
   else if(m.st==='done'&&m.t<1.6){t='FINISH!';cls='fin'}
-  else if(m.st==='done'){const ps=G.players.filter(p=>!p.away),n=ps.filter(p=>m.d.pass[p.slot]).length,ev=m.kind!=='trap';t=ev?'Done!':n===ps.length?(ps.length>1?'All clear!':'Through!'):n===0?(ps.length>1?'All caught!':'Caught!'):`${n} of ${ps.length} through`;cls=n===ps.length||ev?'win':'fin'}
+  else if(m.st==='done'){const ps=G.players.filter(p=>!p.away),n=ps.filter(p=>m.d.pass[p.slot]).length,ev=m.kind!=='trap';t=ev?'Done!':n===ps.length?(ps.length>1?'All clear!':'Through!'):n===0?(m.d.prz?'No one through':ps.length>1?'All caught!':'Caught!'):`${n} of ${ps.length} through`;cls=n===ps.length||ev?'win':'fin'}
   if(t!==callTxt){callTxt=t;el.textContent=t;el.className=cls;el.hidden=!t;if(t){void el.offsetWidth;el.classList.add('pop');if(/^\d$/.test(t))O.sfx('mgCount');else if(cls==='go')O.sfx('trapGo');else if(cls==='fin')O.sfx('mgFinish');else if(cls==='win')O.sfx('mgWin')}}}
 /* ---------- options the menu toggles ---------- */
 const pxRatio=()=>pixOn?Math.min(1,420/Math.max(1,canvas.clientHeight)):(detailOn?Math.min(2,window.devicePixelRatio||1):Math.min(1,window.devicePixelRatio||1));

@@ -100,8 +100,16 @@ O.symOf=(i)=>(O.DSYM[G.dung]||O.DSYM[0])[i%6];
 const MG={};O.MG=MG;O.MG_BY=[];
 O.addMg=function(def){MG[def.id]=def;if(def.kind!=='event'){def.kind='trap';(O.MG_BY[def.dun]=O.MG_BY[def.dun]||[]).push(def.id)}};
 O.MG_TRAPS=[];
-O.trapFor=function(dung){const own=O.MG_BY[dung]||[],all=Object.keys(MG).filter(k=>MG[k].kind==='trap');const pool=own.length?own:all;
-  const last=G.lastTrap;const fresh=pool.filter(k=>k!==last);const k=(fresh.length?fresh:pool)[Math.floor(Math.random()*(fresh.length?fresh:pool).length)];G.lastTrap=k;return k};
+/* which game a floor plays. Anything played in the last 12 floors is set aside (the record lives in the stash, so it holds across sessions); of the rest, a floor's own event comes first, then this dungeon's traps, then its set's, then earlier dungeons', then any. An event floor whose own game was played lately is played with a trap game for the same prize. */
+O.MG_FRESH=12;
+O.pickMg=function(ev){if(ev==='gamble')return{k:'gamble'};const st=G.stash,h=st.mgh=st.mgh&&typeof st.mgh==='object'?st.mgh:{},n=st.mgn|0,d=G.dung|0,set=Math.floor(d/3);
+  const traps=Object.keys(MG).filter(k=>MG[k].kind==='trap'),all=(ev&&MG[ev]?[ev]:[]).concat(traps);
+  const rank=k=>{if(k===ev)return 0;const dn=MG[k].dun|0;return dn===d?1:Math.floor(dn/3)===set?2:dn<d?3:4},fresh=k=>h[k]==null||n-h[k]>=O.MG_FRESH;
+  let pool=all.filter(fresh);if(!pool.length){const lo=Math.min(...all.map(k=>h[k]==null?-1:h[k]));pool=all.filter(k=>(h[k]==null?-1:h[k])===lo)}
+  const r0=Math.min(...pool.map(rank)),top=pool.filter(k=>rank(k)===r0),k=top[Math.floor(Math.random()*top.length)];
+  return{k,prize:ev&&k!==ev?ev:null}};
+O.noteMg=k=>{const st=G.stash;st.mgh=st.mgh&&typeof st.mgh==='object'?st.mgh:{};st.mgn=(st.mgn|0)+1;st.mgh[k]=st.mgn};
+O.trapFor=dung=>O.pickMg(null).k;
 O.bladeDown=(b,t)=>Math.abs(Math.sin(t*Math.PI*2/b[1]+b[2]))<.32;
 /* the shrine's own short course: a narrow cup at the end behind a fence of posts */
 O.shrineCourse=()=>{const len=560,hw=y=>y<120?130:110;const N=Math.ceil(len/20)+1,arr=new Float32Array(N);for(let k=0;k<N;k++)arr[k]=hw(k*20);
@@ -201,17 +209,35 @@ O.EVNAMES=[
  ['The Throne Lock','The Shadow Vigil','The Night Forge','The Unwritten Library','The Pale Croupier']];
 const EVK=['lock','shrine','forge','tome','gamble'];O.mgName=(k)=>{const i=EVK.indexOf(k);return i>=0?((O.EVNAMES[G.dung]||O.EVNAMES[0])[i]):(MG[k]&&MG[k].name)||''};
 
+/* an event floor played with a trap game: nobody is hurt, and the share of the party that gets through sets the prize */
+const PRIZE={
+ lock:{note:'Played for the reliquary. Nobody is hurt here: every fighter who gets through opens more of it.',
+  give(g,ps,f){const cnt=2+(f>=.5?1:0)+(f>=1?1:0),left=S().shuffle(Object.keys(O.RELICS).filter(r=>!G.relics.includes(r)&&S().has('re:'+r))).slice(0,Math.min(4,cnt)),gold=Math.round(f*15*ps.length/5)*5;if(gold&&!G.practice){G.stash.gold+=gold;S().saveStash()}
+    for(const p of ps)g.d.rw[p.slot]=`${g.d.pass[p.slot]?'You got through':'You were caught'}. The reliquary opens${gold?`: ${gold} gold and`:' to'} a choice of ${left.length} relics.`;
+    if(left.length)return()=>{S().say(`The reliquary opens. Choose a relic from ${left.length}.`);S().setDec('relic',left);return true}}},
+ shrine:{note:'Played at the shrine. Nobody is hurt here: the more of the party that gets through, the more everyone heals.',
+  give(g,ps,f){if(f>=.34)for(const p of G.players)if(p.hp<=0){p.hp=Math.round(p.mhp*.5);S().ev('heal',{pl:p,col:'#f0cc5c'})}const fr=Math.min(.8,.1+.7*f);for(const p of G.players)heal(p,p.mhp*fr);
+    for(const p of ps)g.d.rw[p.slot]=`${g.d.pass[p.slot]?'You got through':'You were caught'}. Everyone heals ${Math.round(fr*100)}%.`;S().ev('boon',{});S().say(`The shrine answers. The party heals ${Math.round(fr*100)}%.`)}},
+ forge:{note:'Played for the smithy. Nobody is hurt here: get through and your work offers more upgrades, and if the whole party does, one of them is a new ability.',
+  give(g,ps,f){for(const p of ps){const ok=!!g.d.pass[p.slot];p.mgN=2+(ok?1:0)+(ok&&f>=1?1:0);p.mgAb=ok&&f>=1?1:0;g.d.rw[p.slot]=`${ok?'You got through':'You were caught'}: your work offers ${p.mgN} choices${p.mgAb?', one of them a new ability':''}.`}
+    return()=>{S().say('The smithy rings again. Everyone chooses from their work.');S().offerUpgrades('forge');return true}}},
+ tome:{note:'Played for the library. Nobody is hurt here: the more of the party that gets through, the more everyone learns.',
+  give(g,ps,f){const n=Math.min(4,1+Math.round(f*3));for(const p of ps){p.mgN=n;g.d.rw[p.slot]=`${g.d.pass[p.slot]?'You got through':'You were caught'}: you choose from ${n}.`}
+    return()=>{S().say('The pages open. Everyone chooses something to learn.');S().offerUpgrades('tome');return true}}}};
+O.PRIZE=PRIZE;
+
 /* ---------- the shared machinery ---------- */
 const BRIEF=7,DONE=6;O.MG_BRIEF=BRIEF;const SW=25;O.MG_SW=SW;
-O.startMg=function(k){const def=MG[k]||MG[O.trapFor(G.dung)];if(!def)return;k=def.id;
+O.startMg=function(k,prize){const def=MG[k]||MG[O.trapFor(G.dung)];if(!def)return;k=def.id;if(def.kind!=='trap'||!PRIZE[prize])prize=null;O.noteMg(k);S().saveStash();
   const g=G.mg={id:++G.decSeq,k,kind:def.kind,st:'brief',t:0,seed:1+Math.floor(Math.random()*1e9),v:{},at:{},out:{},won:false,d:{out:{},hp:{},rw:{},pass:{},pr:{},sw:{},swn:{},rdy:{},dung:G.dung},dur:30,end:0,item:''};
-  if(def.hearts)H.hearts(g,def.hearts===true?3:def.hearts);def.setup.call(def,g);g.d.name=O.mgName(k);S().say(g.d.name+'! Look at your phones.');S().ev('mgStart',{k})};
+  if(def.hearts)H.hearts(g,def.hearts===true?3:def.hearts);def.setup.call(def,g);g.d.name=prize?O.mgName(prize)+': '+def.name:O.mgName(k);if(prize){g.prize=prize;g.d.prz=PRIZE[prize].note}S().say(g.d.name+'! Look at your phones.');S().ev('mgStart',{k})};
 O.mgInput=function(pid,id,v){const g=G.mg,p=G.players.find(q=>q.id===pid);if(g&&g.id===id&&p&&g.st==='brief'&&v==='ready'&&!g.go){(g.d.rdy=g.d.rdy||{})[p.slot]=1;S().ev('mgTap',{});return}if(!g||g.id!==id||!p||g.st!=='play')return;v=String(v==null?'':v).slice(0,240);const def=MG[g.k];
   if(v[0]==='!'){const n=Math.floor(num(+v.slice(1)));if(def.hearts&&g.d.out[p.slot]!=null&&!g.d.sw[p.slot]){g.d.swn[p.slot]=Math.min(SW,n);if(n>=SW){delete g.d.out[p.slot];g.d.hp[p.slot]=1;g.d.sw[p.slot]=1;S().ev('mgRevive',{slot:p.slot});S().say(`${O.CLASSES[p.cls].animal} climbs back in!`)}}return}
   if(def.input)def.input.call(def,g,p,v,g.t);g.v[pid]=v;g.at[pid]=g.t};
 function wrapUp(g,def){g.st='done';g.t=0;const ps=here(),d=g.d;
   const passF=def.pass||((g2,p)=>g2.d.out[p.slot]==null);for(const p of ps){const ok=!!passF.call(def,g,p);d.pass[p.slot]=ok;g.out[p.id]=ok?1:0;if(def.prog)d.pr[p.slot]=def.prog.call(def,g,p)}
-  if(def.kind==='trap'){const frac=.12+.008*G.dung;
+  if(g.prize){const f=ps.length?ps.filter(p=>d.pass[p.slot]).length/ps.length:0;g.won=true;g.after=PRIZE[g.prize].give(g,ps,f)}
+  else if(def.kind==='trap'){const frac=.12+.008*G.dung;
     for(const p of ps){if(d.pass[p.slot])d.rw[p.slot]='Through! No damage.';else{const v=hurt(p,frac);d.rw[p.slot]=`Caught! The trap takes ${v} health.`}}
     g.won=ps.length>0&&ps.every(p=>d.pass[p.slot]);if(g.won){const it=S().anyItem();g.item=S().addItem(it)?O.ITEMS[it].name:'';if(g.item)for(const p of ps)d.rw[p.slot]+=` All clear: ${g.item} for the bag.`}
     const n=ps.filter(p=>!d.pass[p.slot]).length;S().say(g.won?`All clear!${g.item?` Behind the mechanism: ${g.item}.`:''}`:ps.length===1?'Caught by the trap.':`${n} of ${ps.length} caught.`)}

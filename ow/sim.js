@@ -23,16 +23,16 @@ const G=O.G={screen:'lobby',node:0,visited:[0],relics:[],players:[],dec:null,dec
   items:[],mg:null,ward:1,
   marbles:[],pending:[],queue:[],cine:null,ev:[],msg:'',log:[],clock:0,ts:1,bossT:0,introT:0,deathT:0,boardVer:0,mid:0,uid:0,
   seed:1,tier:0,practice:false,focus:-1,holdT:0,seen:{},bonus:0,finale:false};
-O.TURN=60;O.PARTY_DMG=[.52,.78,.95,1.05];O.MDMG=1.5;O.TIERS=['','Grim','Dire','Doomed'];
+O.TURN=60;O.PARTY_DMG=[.44,.78,.95,1.05];O.MDMG=1.5;O.TIERS=['','Grim','Dire','Doomed'];
 
 const ev=(k,o)=>G.ev.push(Object.assign({k,ln:G.split&&G.phase==='aim'?(G.lnNow||0):2},o));       // in a pair, which half of the screen it happened on
 /* ----- the host's stash: gold, loot boxes opened, what they unlocked, dungeons cleared. Kept on the host's device. ----- */
 const SKEY='ow_stash1';
 function loadStash(){let s=null;try{s=JSON.parse(localStorage.getItem(SKEY)||'null')}catch(e){}s=s&&typeof s==='object'?s:{};
   const ints=(o,ok,max)=>{const r={};if(o&&typeof o==='object')for(const k in o){const v=Math.floor(num(o[k]));if(ok(k)&&v>0)r[k]=Math.min(max,v)}return r};
-  return{gold:Math.max(0,Math.floor(num(s.gold))),opened:Math.max(0,Math.floor(num(s.opened))),unl:Array.isArray(s.unl)?s.unl.filter(x=>O.LOCKS.includes(x)||O.COSM.includes(x)):[],clear:Array.isArray(s.clear)?s.clear.filter(x=>Number.isInteger(x)&&x>=0&&x<O.DUNGEONS.length):[],
+  return{mgh:ints(s.mgh,k=>/^[a-z0-9_]{1,24}$/.test(k),1e9),mgn:Math.max(0,Math.floor(num(s.mgn))),gold:Math.max(0,Math.floor(num(s.gold))),opened:Math.max(0,Math.floor(num(s.opened))),unl:Array.isArray(s.unl)?s.unl.filter(x=>O.LOCKS.includes(x)||O.COSM.includes(x)):[],clear:Array.isArray(s.clear)?s.clear.filter(x=>Number.isInteger(x)&&x>=0&&x<O.DUNGEONS.length):[],
     tier:ints(s.tier,k=>!!O.DUNGEONS[k],4),runs:Array.isArray(s.runs)?s.runs.filter(x=>Number.isInteger(x)&&x>=0&&x<20):[],kills:ints(s.kills,k=>!!MONSTERS[k],99999),bless:s.bless?1:0,fin:!!s.fin,prac:!!s.prac,last:'',keep:s.keep&&typeof s.keep==='object'&&Number.isInteger(s.keep.set)?s.keep:null,own:(o=>{const r={};if(o&&typeof o==='object')for(const k of['warrior','bard','mage','archer'])if(Array.isArray(o[k]))r[k]=o[k].filter(v=>Number.isInteger(v)&&v>=0&&v<40).slice(0,40);return r})(s.own)}}
-function saveStash(){const s=G.stash;try{localStorage.setItem(SKEY,JSON.stringify({gold:s.gold,opened:s.opened,unl:s.unl,clear:s.clear,runs:s.runs||[],tier:s.tier,kills:s.kills,bless:s.bless,fin:s.fin,prac:s.prac,keep:s.keep||null}))}catch(e){}}
+function saveStash(){const s=G.stash;try{localStorage.setItem(SKEY,JSON.stringify({mgh:s.mgh||{},mgn:s.mgn|0,gold:s.gold,opened:s.opened,unl:s.unl,clear:s.clear,runs:s.runs||[],tier:s.tier,kills:s.kills,bless:s.bless,fin:s.fin,prac:s.prac,keep:s.keep||null}))}catch(e){}}
 O.saveStash=saveStash;O.resetStash=()=>{try{localStorage.removeItem(SKEY);localStorage.removeItem('ow_run1')}catch(e){}G.stash=loadStash();grantCleared();G.dung=0;G.tier=0};
 /* every dungeon already cleared hands over what it unlocks (saves from before unlocks moved out of the loot boxes) */
 const grantCleared=()=>{for(const d of G.stash.clear)for(const id of O.DUNG_UNLOCKS[d]||[])if(!G.stash.unl.includes(id))G.stash.unl.push(id)};
@@ -64,8 +64,10 @@ O.cosmMask=()=>{let h='';for(let i=0;i<O.COSM.length;i+=4){let n=0;for(let j=0;j
 O.cosmHas=(mask,id)=>{const i=O.COSM.indexOf(id);if(i<0)return false;return!!((parseInt(String(mask||'')[i>>2]||'0',16)>>(i&3))&1)};
 O.cosmLeft=()=>O.COSM.filter(x=>!G.stash.unl.includes(x)).length;
 const has=id=>!O.LOCKS.includes(id)||G.stash.unl.includes(id),DG=()=>O.DUNGEONS[G.dung];
-O.HPB=1;                 // balls find holes far more often on a rimmed wheel, so monsters carry more health to keep fights the same length
-const HPK=()=>DG().hpK*(1+.35*G.tier)*O.HPB,DMGK=()=>O.MDMG*Math.pow(DG().dmgK,.45)*(1+.22*G.tier)*(O.PARTY_DMG[G.players.length-1]||1)*(G.grpK||1);
+O.HPB=1;O.HPX=3;O.HPR={mini:1.05,boss:1.25};          /* with a true aim line one good ball used to take half a monster's health: they carry about three times as much now */
+O.MDS=[.6,.75,.9,1,1.05,1.1,1.15];          /* and since fights run longer, monsters strike softer in the early runs */
+                 // balls find holes far more often on a rimmed wheel, so monsters carry more health to keep fights the same length
+const HPK=()=>DG().hpK*(1+.35*G.tier)*O.HPB,DMGK=()=>O.MDMG*(O.MDS[O.setOf(G.dung|0)]||1)*Math.pow(DG().dmgK,.45)*(1+.22*G.tier)*(O.PARTY_DMG[G.players.length-1]||1)*(G.grpK||1);
 function say(t){G.msg=t;G.log.unshift(t);if(G.log.length>30)G.log.pop()}
 const float=(x,y,txt,col)=>ev('text',{x,y,txt,col});
 const burst=(x,y,col,n)=>ev('burst',{x,y,col,n});
@@ -209,12 +211,12 @@ function offerPath(){G.screen='map';const nx=MAP[G.node].next;if(nx.length)setDe
 function arrive(n){
   G.node=n;G.visited.push(n);const t=MAP[n];
   if(t.type==='battle')G.after={t:.7,fn:()=>startFight(t.enc)};
-  else if(t.type==='treasure')G.after={t:.6,fn:()=>O.startMg('lock')};
-  else if(t.type==='shrine')G.after={t:.6,fn:()=>O.startMg('shrine')};
-  else if(t.type==='forge')G.after={t:.6,fn:()=>O.startMg('forge')};
-  else if(t.type==='tome')G.after={t:.6,fn:()=>O.startMg('tome')};
-  else if(t.type==='gamble')G.after={t:.6,fn:()=>O.startMg('gamble')};
-  else if(t.type==='trap')G.after={t:.6,fn:()=>O.startMg(O.trapFor(G.dung))};
+  else if(t.type==='treasure')G.after={t:.6,fn:()=>{const q=O.pickMg('lock');O.startMg(q.k,q.prize)}};
+  else if(t.type==='shrine')G.after={t:.6,fn:()=>{const q=O.pickMg('shrine');O.startMg(q.k,q.prize)}};
+  else if(t.type==='forge')G.after={t:.6,fn:()=>{const q=O.pickMg('forge');O.startMg(q.k,q.prize)}};
+  else if(t.type==='tome')G.after={t:.6,fn:()=>{const q=O.pickMg('tome');O.startMg(q.k,q.prize)}};
+  else if(t.type==='gamble')G.after={t:.6,fn:()=>{const q=O.pickMg('gamble');O.startMg(q.k,q.prize)}};
+  else if(t.type==='trap')G.after={t:.6,fn:()=>O.startMg(O.pickMg(null).k)};
 }
 function offerUpgrades(what){G.screen='map';G.players.forEach(p=>{p.opts=rollUps(p,what);p.picked=false;p.took=-1});setDec('upgrade',[]);G.dec.t=what||'drop'}
 
@@ -229,8 +231,8 @@ function loadBoard(i){
   G.terr=m?m.terr||null:null;G.mv=m?m.mv:null;
   if(m){G.C=m.course;G.holes=m.holes;G.bumps=m.bumps;G.divots=[];G.walls=[];G.rot=0;G.boss=m.id;G.boardVer++}}
 function startFight(enc){
-  const n=Math.max(1,G.players.length),sc=.45+.55*n;enc=[enc[0]];G.enc=enc;G.cur=-1;          // one monster per fight, grown to the size of the party
-  G.mons=enc.map(id=>{const d=MONSTERS[id],C=O.addFeatures(O.course(id),G.dung||0,d.rank!=='lesser'),lesser=d.rank==='lesser',hp=Math.round(d.hp*sc*(lesser?1.35*(1+(HPK()-1)*.55):(d.rank==='boss'?.6:.85)*HPK()));
+  const n=Math.max(1,G.players.length),sc=n===1?.7:.45+.55*n;enc=[enc[0]];G.enc=enc;G.cur=-1;          // one monster per fight, grown to the size of the party
+  G.mons=enc.map(id=>{const d=MONSTERS[id],C=O.addFeatures(O.course(id),G.dung||0,d.rank!=='lesser'),lesser=d.rank==='lesser',hp=Math.round(d.hp*sc*(lesser?1.35*(1+(HPK()-1)*.55):(d.rank==='boss'?.6:.85)*HPK())*O.HPX*(O.HPR[d.rank]||1));
     return{uid:++G.uid,id,name:d.name,rank:d.rank,hp,max:hp,enraged:false,dead:false,freeze:false,rot:0,atk:null,terr:null,course:C,holes:C.holes,bumps:C.bumps,sand:C.sand,blocks:C.blocks,divots:[],walls:[],mv:C.mv,locks:C.locks,core:C.core,rest:[],sg:-1,blunt:false,lk:0,coreT:0,wk:-1}});
   const c={};G.mons.forEach(m=>{c[m.id]=(c[m.id]||0)+1});const seen={};G.mons.forEach(m=>{if(c[m.id]>1){seen[m.id]=(seen[m.id]||0)+1;m.name+=' '+'ABCD'[seen[m.id]-1]}});
   G.C=G.mons[0].course;G.marbles=[];G.pending=[];G.queue=[];G.cine=null;G.cn=[null,null];G.gi=0;G.grp=[];G.split=false;G.round=0;G.dec=null;G.after=null;G.travel=null;G.mg=null;G.ward=1;G.combo=0;G.stop=0;G.active=-1;G.actor=-1;G.inspect=false;G.focus=-1;G.turnT=0;G.holdT=0;G.seen={};G.spin=0;G.ck=0;
